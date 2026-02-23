@@ -5,16 +5,21 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Catalog from './pages/Catalog';
 import AdminPage from './pages/AdminPage';
+import CategoriesPage from './pages/CategoriesPage';
 
 function App() {
     return (
         <BrowserRouter>
             <Routes>
-                {/* Обычный интерфейс для гостей и юзеров */}
+                <Route path="/login" element={<LoginPage />} />
                 <Route path="/" element={<Catalog />} />
-
-                {/* Админка */}
-                <Route path="/admin" element={<AdminPage />} />
+                <Route path="/catalog" element={<CategoriesPage />} />
+                {/* Защищенная админка */}
+                <Route path="/admin" element={
+                    <AdminRoute>
+                        <AdminPage />
+                    </AdminRoute>
+                } />
             </Routes>
         </BrowserRouter>
     );

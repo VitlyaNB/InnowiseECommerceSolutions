@@ -2,6 +2,8 @@ import '../bootstrap';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { ShoppingCart, Search, Menu, Zap, ShieldCheck, Truck } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
 
 function Catalog() {
     const [products, setProducts] = useState([]);
@@ -51,8 +53,8 @@ function Catalog() {
                         {/* Ссылки и корзина */}
                         <div className="flex items-center gap-6">
                             <div className="hidden md:flex items-center gap-4 text-sm font-medium text-gray-700">
-                                <a href="#" className="hover:text-indigo-600 transition-colors">Каталог</a>
-                                <a href="#" className="hover:text-indigo-600 transition-colors">О нас</a>
+                                <Link to="/CategoriesPage.jsx" className="hover:text-indigo-600 transition-colors">Каталог</Link>
+                                <a href="/CategoriesPage.jsx" className="hover:text-indigo-600 transition-colors">О нас</a>
                             </div>
                             <button className="relative p-2 text-gray-600 hover:text-indigo-600 transition-colors">
                                 <ShoppingCart className="h-6 w-6" />
