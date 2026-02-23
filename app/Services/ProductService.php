@@ -15,10 +15,13 @@ class ProductService
         private readonly ProductRepositoryInterface $productRepository
     ) {}
 
-
-    public function getAllProducts(int $perPage = 15): LengthAwarePaginator
+    /**
+     * Получить каталог товаров.
+     * Здесь можно добавить логику фильтрации или кэширования.
+     */
+    public function getAllProducts(): LengthAwarePaginator
     {
-        return $this->productRepository->getAll($perPage);
+        return $this->productRepository->getAll();
     }
 
     /**

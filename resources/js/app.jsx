@@ -9,6 +9,7 @@ import CategoriesPage from './pages/CategoriesPage';
 import LoginPage from './pages/LoginPage';
 import AdminRoute from './components/AdminRoute';
 
+
 function App() {
     return (
         <BrowserRouter>

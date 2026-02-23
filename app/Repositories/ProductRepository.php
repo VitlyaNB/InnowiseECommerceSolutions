@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 
+
 class ProductRepository implements ProductRepositoryInterface
 {
 
