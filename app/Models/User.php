@@ -2,9 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Interfaces\Auth\MustVerifyEmail;
-
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -13,24 +10,19 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
-    use HasFactory, Notifiable;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
+     * Атрибуты, которые можно массово назначать.
      */
     protected $fillable = [
         'name',
         'email',
         'password',
-        'role',
+        'role', // Поле role используется в репозитории
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
+     * Атрибуты, которые должны быть скрыты при преобразовании в массив или JSON.
      */
     protected $hidden = [
         'password',
@@ -38,15 +30,22 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * Преобразование типов данных (casts).
      */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password' => 'hashed', // Автоматическое хэширование пароля
         ];
+    }
+
+    /**
+     * Хелпер для проверки, является ли пользователь администратором.
+     * Полезно для чистого кода в других частях системы.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
     }
 }
