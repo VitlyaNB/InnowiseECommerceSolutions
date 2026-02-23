@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Catalog from './pages/Catalog';
 import AdminPage from './pages/AdminPage';
+
 function App() {
     return (
         <BrowserRouter>
@@ -12,7 +13,7 @@ function App() {
                 {/* Обычный интерфейс для гостей и юзеров */}
                 <Route path="/" element={<Catalog />} />
 
-                {/* Админка (позже защитим её логином) */}
+                {/* Админка */}
                 <Route path="/admin" element={<AdminPage />} />
             </Routes>
         </BrowserRouter>

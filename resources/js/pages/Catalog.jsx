@@ -1,11 +1,9 @@
 import '../bootstrap';
-import '../css/app.css';
 import React, { useEffect, useState } from 'react';
-import { createRoot } from 'react-dom/client';
 import axios from 'axios';
 import { ShoppingCart, Search, Menu, Zap, ShieldCheck, Truck } from 'lucide-react';
 
-function App() {
+function Catalog() {
     const [products, setProducts] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -24,7 +22,7 @@ function App() {
     return (
         <div className="min-h-screen bg-gray-50 font-sans text-gray-900 selection:bg-black selection:text-white">
 
-            {/* Навигация (Navbar) с эффектом стекла */}
+            {/* Навигация (Navbar) */}
             <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-20">
@@ -36,7 +34,7 @@ function App() {
                             </span>
                         </div>
 
-                        {/* Поиск (визуальный) */}
+                        {/* Поиск */}
                         <div className="hidden md:flex flex-1 max-w-md mx-8">
                             <div className="relative w-full">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -45,12 +43,12 @@ function App() {
                                 <input
                                     type="text"
                                     className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-full leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all"
-                                    placeholder="Поиск кроссовок, худи, аксессуаров..."
+                                    placeholder="Поиск..."
                                 />
                             </div>
                         </div>
 
-                        {/* Иконки справа */}
+                        {/* Ссылки и корзина */}
                         <div className="flex items-center gap-6">
                             <div className="hidden md:flex items-center gap-4 text-sm font-medium text-gray-700">
                                 <a href="#" className="hover:text-indigo-600 transition-colors">Каталог</a>
@@ -80,7 +78,7 @@ function App() {
                         Новая коллекция уже здесь
                     </h1>
                     <p className="mt-6 text-xl text-gray-300 max-w-3xl">
-                        Открой для себя стиль, который говорит за тебя. Премиальное качество, эксклюзивные дропы и бесплатная доставка при заказе от 5000 ₽.
+                        Премиальное качество, эксклюзивные дропы и бесплатная доставка.
                     </p>
                     <div className="mt-10 flex gap-4">
                         <button className="px-8 py-4 border border-transparent text-base font-bold rounded-full text-black bg-white hover:bg-gray-100 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-1">
@@ -107,7 +105,7 @@ function App() {
                         <div className="flex flex-col items-center pt-4 md:pt-0">
                             <Zap className="h-8 w-8 text-indigo-600 mb-3" />
                             <h3 className="font-bold text-gray-900">Эксклюзивные дропы</h3>
-                            <p className="text-sm text-gray-500 mt-1">Будь первым в новом стиле</p>
+                            <p className="text-sm text-gray-500 mt-1">Будь первым</p>
                         </div>
                     </div>
                 </div>
@@ -124,52 +122,29 @@ function App() {
                     <div className="flex justify-center items-center h-64">
                         <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-600"></div>
                     </div>
-                ) : products.length === 0 ? (
-                    <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300">
-                        <p className="text-gray-500 text-lg">Каталог пока пуст.</p>
-                    </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         {products.map((product) => (
                             <div key={product.id} className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-300 flex flex-col">
-                                {/* Картинка товара */}
                                 <div className="aspect-[4/5] w-full overflow-hidden bg-gray-200 relative">
                                     <img
                                         src={`https://picsum.photos/seed/${product.id + 100}/600/800`}
-                                        alt={product.name}
                                         className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                                     />
-                                    {/* Бейдж новинки (показываем рандомно для красоты) */}
                                     {product.id % 3 === 0 && (
                                         <div className="absolute top-4 left-4 bg-white text-gray-900 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
                                             New
                                         </div>
                                     )}
                                 </div>
-
-                                {/* Информация о товаре */}
                                 <div className="p-6 flex flex-col flex-1">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h3 className="text-lg font-bold text-gray-900 line-clamp-1" title={product.name}>
-                                            {product.name}
-                                        </h3>
-                                    </div>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">{product.name}</h3>
                                     <p className="text-sm text-gray-500 line-clamp-2 mb-4 flex-1">
-                                        {product.description || 'Идеальный выбор для вашего повседневного гардероба.'}
+                                        {product.description || 'Идеальный выбор для вашего гардероба.'}
                                     </p>
-
                                     <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
-                                        <div className="flex flex-col">
-                                            {product.old_price && (
-                                                <span className="text-xs text-gray-400 line-through font-medium">
-                                                    {product.old_price} ₽
-                                                </span>
-                                            )}
-                                            <span className="text-xl font-black text-gray-900">
-                                                {product.price} ₽
-                                            </span>
-                                        </div>
-                                        <button className="bg-gray-900 text-white p-3 rounded-2xl hover:bg-indigo-600 transition-colors duration-300 shadow-md">
+                                        <span className="text-xl font-black text-gray-900">{product.price} ₽</span>
+                                        <button className="bg-gray-900 text-white p-3 rounded-2xl hover:bg-indigo-600 transition-colors shadow-md">
                                             <ShoppingCart className="h-5 w-5" />
                                         </button>
                                     </div>
@@ -180,20 +155,11 @@ function App() {
                 )}
             </main>
 
-            {/* Подвал (Footer) */}
-            <footer className="bg-white border-t border-gray-200 mt-12">
-                <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center">
-                    <p className="text-gray-400 text-sm">
-                        &copy; 2026 INNOSHOP. Все права защищены. Разработано с душой.
-                    </p>
-                </div>
+            <footer className="bg-white border-t border-gray-200 py-12 text-center text-gray-400 text-sm">
+                &copy; 2026 INNOSHOP. Все права защищены.
             </footer>
         </div>
     );
 }
 
-const container = document.getElementById('root');
-if (container) {
-    const root = createRoot(container);
-    root.render(<App />);
-}
+export default Catalog;
