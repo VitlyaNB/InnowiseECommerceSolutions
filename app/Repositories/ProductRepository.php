@@ -1,24 +1,20 @@
 <?php
 
 namespace App\Repositories;
-use App\Models\Product;
-use App\DTO\ProductDTO;
 
-class ProductRepository
+use App\Models\Product;
+use App\Repositories\Contracts\ProductRepositoryInterface;
+use Illuminate\Database\Eloquent\Collection;
+
+class ProductRepository implements ProductRepositoryInterface
 {
-    public function create(ProductDTO $data): Product
-    {
-        return Product::create([
-            'name' => $data->name,
-            'price' => $data->price,
-            'category_id' => $data->category_id,
-            'description' => $data->description,
-            'quantity' => 0, // Значение по умолчанию или из DTO
-            'is_active' => true,
-        ]);
-    }
-    public function getAllActive()
+    public function getAllActive(): Collection
     {
         return Product::where('is_active', true)->get();
+    }
+
+    public function create(array $data): Product
+    {
+        return Product::create($data);
     }
 }
