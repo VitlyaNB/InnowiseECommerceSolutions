@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Catalog from './pages/Catalog';
 import AdminPage from './pages/AdminPage';
 import CategoriesPage from './pages/CategoriesPage';
+import LoginPage from './pages/LoginPage';
+import AdminRoute from './components/AdminRoute';
 
 function App() {
     return (
