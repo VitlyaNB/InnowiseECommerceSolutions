@@ -53,8 +53,9 @@ function Catalog() {
                         {/* Ссылки и корзина */}
                         <div className="flex items-center gap-6">
                             <div className="hidden md:flex items-center gap-4 text-sm font-medium text-gray-700">
-                                <Link to="/CategoriesPage.jsx" className="hover:text-indigo-600 transition-colors">Каталог</Link>
-                                <a href="/CategoriesPage.jsx" className="hover:text-indigo-600 transition-colors">О нас</a>
+                                // СТАЛО:
+                                <Link to="/catalog" className="hover:text-indigo-600 transition-colors">Каталог</Link>
+                                <Link to="/login" className="hover:text-indigo-600 transition-colors">Войти</Link>
                             </div>
                             <button className="relative p-2 text-gray-600 hover:text-indigo-600 transition-colors">
                                 <ShoppingCart className="h-6 w-6" />
