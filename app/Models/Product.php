@@ -9,8 +9,6 @@ class Product extends Model
 {
     use HasFactory;
 
-    public $timestamps = false;
-
     protected $fillable = [
         'category_id',
         'name',
