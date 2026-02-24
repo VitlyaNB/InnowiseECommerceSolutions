@@ -17,7 +17,7 @@ class ProductFactory extends Factory
     public function definition(): array
     {
         return [
-            'category_id' => \App\Models\Category::factory(), // Создаст категорию автоматически
+            'category_id' => \App\Models\Category::factory(),
             'name' => fake()->words(3, true),
             'description' => fake()->sentence(),
             'price' => fake()->randomFloat(2, 100, 10000),

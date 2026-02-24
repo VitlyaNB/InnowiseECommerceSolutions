@@ -39,4 +39,13 @@ class AuthController extends Controller
             'user'         => $result['user'],
         ]);
     }
+    public function index(\Illuminate\Http\Request $request)
+    {
+        if ($request->user() && $request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+        $users = $this->authService->getAllUsers();
+
+        return response()->json($users);
+    }
 }

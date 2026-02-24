@@ -22,6 +22,11 @@ class AuthService
         return ['user' => $user, 'token' => $token];
     }
 
+    public function getAllUsers()
+    {
+        return $this->userRepository->getAll();
+    }
+
     public function login(LoginDTO $data): array
     {
         $user = $this->userRepository->findByEmail($data->email);

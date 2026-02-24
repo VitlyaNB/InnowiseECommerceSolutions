@@ -18,14 +18,19 @@ const LoginPage = () => {
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
-        // Очищаем ошибку при вводе
         if (errors[e.target.name]) {
             setErrors({ ...errors, [e.target.name]: null });
         }
     };
 
-    // Обработчик отправки формы
     const handleSubmit = async (e) => {
+        setTimeout(() => {
+            if (response.data.user.role === 'admin') {
+                window.location.href = '/admin';
+            } else {
+                window.location.href = '/';
+            }
+        }, 1000);
         e.preventDefault();
         setLoading(true);
         setErrors({});
@@ -148,7 +153,10 @@ const LoginPage = () => {
                         className="text-blue-500 hover:text-blue-700 text-sm font-bold"
                     >
                         {isLogin ? 'Нет аккаунта? Зарегистрируйтесь' : 'Уже есть аккаунт? Войдите'}
+
                     </button>
+                    admin@example.com
+                    password
                 </div>
             </div>
         </div>
