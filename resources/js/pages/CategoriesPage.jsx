@@ -9,7 +9,7 @@ export default function CategoriesPage() {
         { id: 2, name: "Обувь", img: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=500&q=80" },
         { id: 3, name: "Товары для дома", img: "https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=500&q=80" },
         { id: 4, name: "Инструменты", img: "https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?w=500&q=80" },
-        { id: 5, name: "Товары 18+", img: "https://images.unsplash.com/photo-1512413914402-45e0d4cfa24b?w=500&q=80" },
+        { id: 5, name: "Товары 18+", img: "https://sc01.alicdn.com/kf/H1f1e580dafa3427987c7072d51e599b47.jpg" },
         { id: 6, name: "Электроника", img: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=500&q=80" },
     ];
 
