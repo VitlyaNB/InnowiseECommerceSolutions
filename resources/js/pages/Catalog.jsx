@@ -12,7 +12,7 @@ function Catalog() {
     useEffect(() => {
         axios.get('/api/products')
             .then(response => {
-                setProducts(response.data);
+                setProducts(response.data.data || response.data);
                 setIsLoading(false);
             })
             .catch(error => {

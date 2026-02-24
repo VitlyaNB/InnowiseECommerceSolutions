@@ -10,7 +10,7 @@ export default function CategoriesPage() {
     useEffect(() => {
         axios.get('/api/categories')
             .then(res => {
-                setCategories(res.data);
+                setCategories(res.data.data || res.data);
                 setLoading(false);
             });
     }, []);
