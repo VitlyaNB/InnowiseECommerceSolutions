@@ -3,7 +3,9 @@ import '../css/app.css';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
 
+import Navbar from './components/Navbar';
 import Catalog from './pages/Catalog';
 import CategoriesPage from './pages/CategoriesPage';
 import AboutPage from './pages/AboutPage';
@@ -13,25 +15,32 @@ import AdminRoute from './components/AdminRoute';
 
 function App() {
     return (
-        <BrowserRouter>
-            <Routes>
-                {/* Публичные страницы */}
-                <Route path="/" element={<Catalog />} />
-                <Route path="/catalog" element={<CategoriesPage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/login" element={<LoginPage />} />
+        <AuthProvider>
+            <BrowserRouter>
+                {/* Шапка теперь рендерится один раз для всего приложения */}
+                <Navbar />
 
-                {/* Заглушка для товаров конкретной категории */}
-                <Route path="/catalog/:id" element={<div className="p-20 text-center text-2xl font-bold">Здесь будут товары выбранной категории</div>} />
+                {/* Отступ pt-20 нужен, чтобы контент не залезал под фиксированную шапку */}
+                <div className="pt-20">
+                    <Routes>
+                        <Route path="/" element={<Catalog />} />
+                        <Route path="/catalog" element={<CategoriesPage />} />
+                        {/* Динамические роуты (пока заглушки, мы сделаем их на следующем этапе) */}
+                        <Route path="/catalog/:categoryId" element={<div className="p-20 text-center text-2xl font-bold">Товары категории</div>} />
+                        <Route path="/product/:productId" element={<div className="p-20 text-center text-2xl font-bold">Страница товара</div>} />
 
-                {/* Защищенная админка */}
-                <Route path="/admin" element={
-                    <AdminRoute>
-                        <AdminPage />
-                    </AdminRoute>
-                } />
-            </Routes>
-        </BrowserRouter>
+                        <Route path="/about" element={<AboutPage />} />
+                        <Route path="/login" element={<LoginPage />} />
+
+                        <Route path="/admin" element={
+                            <AdminRoute>
+                                <AdminPage />
+                            </AdminRoute>
+                        } />
+                    </Routes>
+                </div>
+            </BrowserRouter>
+        </AuthProvider>
     );
 }
 

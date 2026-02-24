@@ -2,16 +2,12 @@
 
 namespace App\Repositories;
 
-use App\DTO\ProductDTO;
 use App\Models\Product;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
-use Illuminate\Pagination\LengthAwarePaginator;
-
 
 class ProductRepository implements ProductRepositoryInterface
 {
-
-    public function getAll(int $perPage = 15): LengthAwarePaginator
+    public function getAll(int $perPage = 15)
     {
         return Product::query()
             ->with('category')
@@ -19,36 +15,21 @@ class ProductRepository implements ProductRepositoryInterface
             ->paginate($perPage);
     }
 
-    public function findById(int $id): ?Product
+    public function getByCategory(int $categoryId)
     {
-        return Product::query()
-            ->with('category')
-            ->find($id);
+        return Product::with('category')
+            ->where('category_id', $categoryId)
+            ->orderBy('created_at', 'desc')
+            ->get();
     }
 
-
-    public function create(ProductDTO $data): Product
+    public function getById(int $id)
     {
-        return Product::create($data->toArray());
+        return Product::with('category')->findOrFail($id);
     }
 
-
-    public function update(int $id, ProductDTO $data): bool
+    public function create(array $data)
     {
-        $product = Product::query()->findOrFail($id);
-
-        return $product->update(array_filter($data->toArray(), fn($value) => $value !== null));
-    }
-
-
-    public function delete(int $id): bool
-    {
-        $product = Product::query()->find($id);
-
-        if (!$product) {
-            return false;
-        }
-
-        return (bool) $product->delete();
+        return Product::create($data);
     }
 }

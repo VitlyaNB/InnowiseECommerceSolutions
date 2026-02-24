@@ -1,20 +1,22 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\ProductController;
 
-// Открытые маршруты
+// Авторизация
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+// Базовый каталог (пока оставляем на старых контроллерах)
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/categories', [CategoryController::class, 'index']);
 
-// Защищенные маршруты (только с токеном)
+Route::get('/categories/{categoryId}/products', \App\Http\Controllers\Api\Product\GetCategoryProductsAction::class);
+Route::get('/products/{id}', \App\Http\Controllers\Api\Product\GetProductByIdAction::class);
+
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/products', [ProductController::class, 'store']);
-    // Добавляем маршрут для получения списка юзеров
     Route::get('/users', [AuthController::class, 'index']);
+    Route::post('/products', \App\Http\Controllers\Api\Product\StoreProductAction::class);
 });

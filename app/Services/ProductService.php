@@ -2,76 +2,34 @@
 
 namespace App\Services;
 
-use App\DTO\ProductDTO;
-use App\Models\Product;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ProductService
 {
+    protected ProductRepositoryInterface $productRepository;
 
-    public function __construct(
-        private readonly ProductRepositoryInterface $productRepository
-    ) {}
+    public function __construct(ProductRepositoryInterface $productRepository)
+    {
+        $this->productRepository = $productRepository;
+    }
 
-    /**
-     * Получить каталог товаров.
-     * Здесь можно добавить логику фильтрации или кэширования.
-     */
-    public function getAllProducts(): LengthAwarePaginator
+    public function getAllProducts()
     {
         return $this->productRepository->getAll();
     }
 
-    /**
-     * Найти конкретный товар.
-     * @throws ModelNotFoundException
-     */
-    public function getProductById(int $id): Product
+    public function getProductsByCategory(int $categoryId)
     {
-        $product = $this->productRepository->findById($id);
-
-        if (!$product) {
-            throw new ModelNotFoundException("Product with ID {$id} not found.");
-        }
-
-        return $product;
+        return $this->productRepository->getByCategory($categoryId);
     }
 
-    /**
-     * Создаём новый товар.
-     */
-    public function createProduct(ProductDTO $data): Product
+    public function getProductById(int $id)
+    {
+        return $this->productRepository->getById($id);
+    }
+
+    public function createProduct(array $data)
     {
         return $this->productRepository->create($data);
-    }
-
-    /**
-     * Обновляем товар
-     */
-    public function updateProduct(int $id, ProductDTO $data): Product
-    {
-        $updated = $this->productRepository->update($id, $data);
-
-        if (!$updated) {
-            throw new \RuntimeException("Failed to update product with ID {$id}.");
-        }
-
-        return $this->getProductById($id);
-    }
-
-    /**
-     * Удалить товар.
-     */
-    public function deleteProduct(int $id): bool
-    {
-        $product = $this->productRepository->findById($id);
-
-        if (!$product) {
-            throw new ModelNotFoundException("Product with ID {$id} not found.");
-        }
-
-        return $this->productRepository->delete($id);
     }
 }
