@@ -1,83 +1,69 @@
 import React, { useState } from 'react';
-import '../bootstrap';
 import axios from 'axios';
-import { PackagePlus, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ArrowLeft, PlusCircle } from 'lucide-react';
 
 export default function AdminPage() {
     const [formData, setFormData] = useState({
-        name: '',
-        description: '',
-        price: '',
-        category_id: 1
+        name: '', description: '', price: '', quantity: '1', category_id: '1' // По умолчанию категория 1
     });
+    const [msg, setMsg] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('/api/products', formData);
-            alert('Товар успешно добавлен!');
-            setFormData({ name: '', description: '', price: '', category_id: 1 });
+            const token = localStorage.getItem('auth_token');
+            await axios.post('/api/products', formData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setMsg('Товар успешно добавлен!');
+            setFormData({ name: '', description: '', price: '', quantity: '1', category_id: '1' });
         } catch (error) {
-            alert('Ошибка при сохранении');
+            setMsg('Ошибка при добавлении. Проверь консоль.');
+            console.error(error);
         }
     };
 
     return (
         <div className="min-h-screen bg-gray-100 p-8">
-            <Link to="/" className="flex items-center text-indigo-600 mb-6 hover:underline">
-                <ArrowLeft className="w-4 h-4 mr-2" /> На главную
-            </Link>
-
-            <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-xl p-8">
-                <div className="flex items-center gap-3 mb-8">
-                    <PackagePlus className="w-8 h-8 text-indigo-600" />
-                    <h1 className="text-2xl font-black">Добавить новый товар</h1>
+            <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-md p-8">
+                <div className="flex items-center gap-4 mb-8 border-b pb-4">
+                    <Link to="/"><ArrowLeft className="w-6 h-6 hover:text-indigo-600" /></Link>
+                    <h1 className="text-3xl font-black text-gray-900">Добавить товар</h1>
                 </div>
+
+                {msg && <div className="mb-6 p-4 rounded-xl bg-indigo-50 text-indigo-700 font-bold">{msg}</div>}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-bold mb-2">Название товара</label>
-                        <input
-                            type="text"
-                            className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                            value={formData.name}
-                            onChange={(e) => setFormData({...formData, name: e.target.value})}
-                            placeholder="Например: Кроссовки Nike Air"
-                            required
-                        />
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Название товара</label>
+                        <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none" />
                     </div>
+
+                    <div className="grid grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Цена (₽)</label>
+                            <input type="number" step="0.01" required value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full p-3 border rounded-xl bg-gray-50 outline-none" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Количество на складе</label>
+                            <input type="number" required value={formData.quantity} onChange={e => setFormData({...formData, quantity: e.target.value})} className="w-full p-3 border rounded-xl bg-gray-50 outline-none" />
+                        </div>
+                    </div>
+
                     <div>
-                        <label className="block text-sm font-bold mb-2">Описание</label>
-                        <textarea
-                            className="w-full p-3 border rounded-xl h-32 focus:ring-2 focus:ring-indigo-500 outline-none"
-                            value={formData.description}
-                            onChange={(e) => setFormData({...formData, description: e.target.value})}
-                        />
+                        <label className="block text-sm font-bold text-gray-700 mb-2">ID Категории (1-Мужская, 2-Обувь и т.д.)</label>
+                        <input type="number" required value={formData.category_id} onChange={e => setFormData({...formData, category_id: e.target.value})} className="w-full p-3 border rounded-xl bg-gray-50 outline-none" />
+                        <p className="text-xs text-gray-500 mt-1">*Перед добавлением убедись, что категории существуют в БД</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-bold mb-2">Цена (₽)</label>
-                            <input
-                                type="number"
-                                className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                                value={formData.price}
-                                onChange={(e) => setFormData({...formData, price: e.target.value})}
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-bold mb-2">Категория ID</label>
-                            <input
-                                type="number"
-                                className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                                value={formData.category_id}
-                                onChange={(e) => setFormData({...formData, category_id: e.target.value})}
-                            />
-                        </div>
+
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Описание</label>
+                        <textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full p-3 border rounded-xl bg-gray-50 outline-none h-32"></textarea>
                     </div>
-                    <button type="submit" className="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl hover:bg-indigo-700 transition-transform active:scale-95">
-                        Опубликовать в каталоге
+
+                    <button type="submit" className="flex items-center justify-center gap-2 w-full bg-black text-white font-bold py-4 rounded-xl hover:bg-indigo-600 transition-colors">
+                        <PlusCircle className="w-5 h-5" /> Добавить в каталог
                     </button>
                 </form>
             </div>
