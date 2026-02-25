@@ -9,7 +9,7 @@ use App\Http\Controllers\Api\ProductController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// Базовый каталог (пока оставляем на старых контроллерах)
+// Базовый каталог
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/categories', [CategoryController::class, 'index']);
 
@@ -19,4 +19,9 @@ Route::get('/products/{id}', \App\Http\Controllers\Api\Product\GetProductByIdAct
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users', [AuthController::class, 'index']);
     Route::post('/products', \App\Http\Controllers\Api\Product\StoreProductAction::class);
+
+    // CRUD товаров
+    Route::post('/products', [ProductController::class, 'store']);
+    Route::post('/products/{id}', [ProductController::class, 'update']); // Используем POST для возможности загрузки файлов
+    Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 });
