@@ -4,11 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProductRequest;
-use App\Http\Resources\ProductResource;
 use App\Services\ProductService;
 use App\DTO\ProductDTO;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ProductController extends Controller
 {
@@ -16,59 +15,33 @@ class ProductController extends Controller
         private readonly ProductService $productService
     ) {}
 
-    /**
-     * Получить список всех товаров.
-     */
-    public function index(): AnonymousResourceCollection
+    public function index(): JsonResponse
     {
-        $products = $this->productService->getAllProducts();
-
-        return ProductResource::collection($products);
+        return response()->json($this->productService->getAllProducts());
     }
 
-    /**
-     * Создать новый товар.
-     */
-    public function store(StoreProductRequest $request): JsonResponse
+    public function update(StoreProductRequest $request, int $id): JsonResponse
     {
-        $dto = ProductDTO::fromRequest($request);
-        $product = $this->productService->createProduct($dto);
+        // Проверка прав, пока тут оставлю йопта
 
-        return (new ProductResource($product))
-            ->response()
-            ->setStatusCode(201);
-    }
+        if ($request->user() && $request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
 
-    /**
-     * Получить информацию о конкретном товаре.
-     */
-    public function show(int $id): ProductResource
-    {
-        $product = $this->productService->getProductById($id);
-
-        return new ProductResource($product);
-    }
-
-    /**
-     * Обновить товар.
-     */
-    public function update(StoreProductRequest $request, int $id): ProductResource
-    {
         $dto = ProductDTO::fromRequest($request);
         $product = $this->productService->updateProduct($id, $dto);
 
-        return new ProductResource($product);
+        return response()->json($product);
     }
 
-    /**
-     * Удалить товар.
-     */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
+        if ($request->user() && $request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         $this->productService->deleteProduct($id);
 
-        return response()->json([
-            'message' => 'Product deleted successfully'
-        ], 200);
+        return response()->json(['message' => 'Товар успешно удален']);
     }
 }

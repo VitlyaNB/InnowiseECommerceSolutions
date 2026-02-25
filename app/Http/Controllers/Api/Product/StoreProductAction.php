@@ -1,36 +1,27 @@
 <?php
 
-
 namespace App\Http\Controllers\Api\Product;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreProductRequest;
 use App\Services\ProductService;
-use Illuminate\Http\Request;
+use App\DTO\ProductDTO;
 
 class StoreProductAction extends Controller
 {
-    private ProductService $productService;
+    public function __construct(
+        private readonly ProductService $productService
+    ) {}
 
-    public function __construct(ProductService $productService)
-    {
-        $this->productService = $productService;
-    }
-
-    public function __invoke(Request $request)
+    public function __invoke(StoreProductRequest $request)
     {
         if ($request->user() && $request->user()->role !== 'admin') {
             return response()->json(['message' => 'Доступ запрещен'], 403);
         }
 
-        $data = $request->validate([
-            'name' => 'required|string',
-            'description' => 'required|string',
-            'price' => 'required|numeric',
-            'quantity' => 'required|integer',
-            'category_id' => 'required|integer',
-        ]);
+        $dto = ProductDTO::fromRequest($request);
+        $product = $this->productService->createProduct($dto);
 
-        $product = $this->productService->createProduct($data);
         return response()->json($product, 201);
     }
 }
