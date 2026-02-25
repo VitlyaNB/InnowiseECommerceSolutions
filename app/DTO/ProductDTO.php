@@ -2,7 +2,7 @@
 
 namespace App\DTO;
 
-use Illuminate\Http\Request;
+use Illuminate\Foundation\Http\FormRequest;
 
 class ProductDTO extends BaseDTO
 {
@@ -16,17 +16,11 @@ class ProductDTO extends BaseDTO
         public readonly ?array $images = null,
     ) {}
 
-    /**
-     * Статический метод для создания DTO.
-     * В PHP 8.3 возвращаемый тип self и вызов new self — стандарт.
-     */
-    public static function fromRequest(Request $request): self
+    public static function fromRequest(FormRequest $request): static
     {
-        // ВАЖНО: Мы используем $request->validated(),
-        // так как данные приходят после StoreProductRequest
         $validated = $request->validated();
 
-        return new self(
+        return new static(
             name: (string) $validated['name'],
             price: (float) $validated['price'],
             category_id: (int) $validated['category_id'],

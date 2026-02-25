@@ -47,7 +47,10 @@ export default function AdminPage() {
             form.append('quantity', formData.quantity);
             form.append('category_id', formData.category_id);
 
-            // Прикрепляем все выбранные файлы
+            Array.from(images).forEach((file) => {
+                form.append('images[]', file);
+
+            });
             Array.from(images).forEach((file, index) => {
                 form.append(`images[${index}]`, file);
             });
