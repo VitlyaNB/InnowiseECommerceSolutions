@@ -55,7 +55,6 @@ function Catalog() {
         e.preventDefault();
         try {
             const form = new FormData();
-            // В Laravel при отправке файлов для метода PUT используется POST с полем _method
             form.append('_method', 'PUT');
             form.append('name', editFormData.name);
             form.append('description', editFormData.description);
@@ -123,15 +122,10 @@ function Catalog() {
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         {products.map((product) => {
-                            // Если есть загруженная картинка, берем её, иначе заглушку
-                            const imageUrl = product.images && product.images.length > 0
-                                ? product.images[0].url
-                                : `https://picsum.photos/seed/${product.id}/600/800`;
-
+                            const imageUrl = product.images
                             return (
                                 <Link key={product.id} to={`/product/${product.id}`} className="relative group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all flex flex-col">
 
-                                    {/* Кнопки админа ПОВЕРХ карточки (появляются при наведении) */}
                                     {user?.role === 'admin' && (
                                         <div className="absolute top-3 right-3 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button onClick={(e) => deleteProduct(e, product.id)} className="bg-white/90 p-2 rounded-full shadow hover:bg-red-50 hover:text-red-500 transition-colors" title="Удалить">

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Repositories;
 
 use App\DTO\RegisterDTO;
@@ -15,6 +14,7 @@ class UserRepository implements UserRepositoryInterface
     {
         return User::orderBy('id', 'desc')->get();
     }
+
     public function create(RegisterDTO $data): User
     {
         return User::create([
@@ -27,5 +27,17 @@ class UserRepository implements UserRepositoryInterface
     public function findByEmail(string $email): ?User
     {
         return User::where('email', $email)->first();
+    }
+
+    public function update(int $id, array $data): bool
+    {
+        $user = User::findOrFail($id);
+        return $user->update($data);
+    }
+
+    public function delete(int $id): bool
+    {
+        $user = User::findOrFail($id);
+        return $user->delete();
     }
 }

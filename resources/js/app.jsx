@@ -8,6 +8,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
 import Catalog from './pages/Catalog';
 import CategoriesPage from './pages/CategoriesPage';
+import CategoryProductsPage from './pages/CategoryProductsPage'; // Добавлен импорт
 import AboutPage from './pages/AboutPage';
 import LoginPage from './pages/LoginPage';
 import AdminPage from './pages/AdminPage';
@@ -25,8 +26,10 @@ function App() {
                     <Routes>
                         <Route path="/" element={<Catalog />} />
                         <Route path="/catalog" element={<CategoriesPage />} />
-                        {/* Динамические роуты (пока заглушки, мы сделаем их на следующем этапе) */}
-                        <Route path="/catalog/:categoryId" element={<div className="p-20 text-center text-2xl font-bold">Товары категории</div>} />
+
+                        {/* Вывод товаров конкретной категории */}
+                        <Route path="/catalog/:categoryId" element={<CategoryProductsPage />} />
+
                         <Route path="/product/:productId" element={<div className="p-20 text-center text-2xl font-bold">Страница товара</div>} />
 
                         <Route path="/about" element={<AboutPage />} />

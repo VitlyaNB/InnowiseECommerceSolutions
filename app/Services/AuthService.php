@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\DTO\RegisterDTO;
 use App\DTO\LoginDTO;
+use App\DTO\UpdateUserDTO;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -40,5 +41,22 @@ class AuthService
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return ['user' => $user, 'token' => $token];
+    }
+
+    public function updateUser(int $id, UpdateUserDTO $dto): bool
+    {
+        return $this->userRepository->update($id, $dto->toArray());
+    }
+
+    public function deleteUser(int $userIdToDelete, int $currentUserId): bool
+    {
+        // Бизнес-правило
+        if ($userIdToDelete === $currentUserId) {
+            throw ValidationException::withMessages([
+                'user' => ['Нельзя удалить самого себя']
+            ]);
+        }
+
+        return $this->userRepository->delete($userIdToDelete);
     }
 }
