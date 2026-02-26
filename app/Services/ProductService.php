@@ -3,14 +3,15 @@
 namespace App\Services;
 
 use App\DTO\ProductDTO;
+use App\DTO\UploadImageDTO;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 
 class ProductService
 {
     public function __construct(
-        protected ProductRepositoryInterface $productRepository
+        protected ProductRepositoryInterface $productRepository,
+        protected FileService $fileService
     ) {}
 
     public function getAllProducts()
@@ -67,7 +68,7 @@ class ProductService
                 $this->handleImages($product, $dto->images);
             }
 
-            return $product->load('images');
+            return $product->fresh('images');
         });
     }
 
@@ -80,24 +81,27 @@ class ProductService
         $this->productRepository->delete($product);
     }
 
-
     private function handleImages($product, ?array $images): void
     {
         if (empty($images)) {
             return;
         }
 
+        $disk = config('filesystems.media_disk', 'public');
+
         foreach ($images as $file) {
-            $path = $file->store('products', 'public');
-            $product->images()->create(['image_path' => $path]);
+            $dto = new UploadImageDTO($file, 'products', $disk);
+            $pathOrUrl = $this->fileService->upload($dto);
+            $product->images()->create(['image_path' => $pathOrUrl]);
         }
     }
 
-
     private function deleteProductImages($product): void
     {
+        $disk = config('filesystems.media_disk', 'public');
+
         foreach ($product->images as $img) {
-            Storage::disk('public')->delete($img->image_path);
+            $this->fileService->delete($img->image_path, $disk);
             $img->delete();
         }
     }

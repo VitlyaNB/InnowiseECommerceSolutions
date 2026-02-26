@@ -78,7 +78,7 @@ function Catalog() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans text-gray-900 relative">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans text-gray-900 dark:text-white relative">
             {/* Модалка редактирования (поверх всего) */}
             {editingProduct && (
                 <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -115,35 +115,35 @@ function Catalog() {
 
             {/* Товары */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-                <h2 className="text-3xl font-extrabold text-gray-900 mb-10 tracking-tight">Новинки</h2>
+                <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-10 tracking-tight">Новинки</h2>
 
                 {isLoading ? (
                     <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-indigo-600"></div></div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         {products.map((product) => {
-                            const imageUrl = product.images
+                            const imageUrl = product.images?.[0]?.url;
                             return (
-                                <Link key={product.id} to={`/product/${product.id}`} className="relative group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all flex flex-col">
+                                <Link key={product.id} to={`/product/${product.id}`} className="relative group bg-white dark:bg-gray-800 rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-xl transition-all flex flex-col">
 
                                     {user?.role === 'admin' && (
                                         <div className="absolute top-3 right-3 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button onClick={(e) => deleteProduct(e, product.id)} className="bg-white/90 p-2 rounded-full shadow hover:bg-red-50 hover:text-red-500 transition-colors" title="Удалить">
+                                            <button onClick={(e) => deleteProduct(e, product.id)} className="bg-white/90 dark:bg-gray-800/90 p-2 rounded-full shadow hover:bg-red-50 hover:text-red-500 transition-colors" title="Удалить">
                                                 <X className="w-5 h-5 text-red-600" />
                                             </button>
-                                            <button onClick={(e) => openEditModal(e, product)} className="bg-white/90 p-2 rounded-full shadow hover:bg-blue-50 hover:text-blue-500 transition-colors" title="Редактировать">
+                                            <button onClick={(e) => openEditModal(e, product)} className="bg-white/90 dark:bg-gray-800/90 p-2 rounded-full shadow hover:bg-blue-50 hover:text-blue-500 transition-colors" title="Редактировать">
                                                 <Edit className="w-5 h-5 text-blue-600" />
                                             </button>
                                         </div>
                                     )}
 
-                                    <div className="aspect-[4/5] bg-gray-200 relative overflow-hidden">
-                                        <img src={imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={product.name}/>
+                                    <div className="aspect-[4/5] bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
+                                        <img src={imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={product.name} onError={(e) => { e.target.src = 'https://placehold.co/400x500/e2e8f0/94a3b8?text=No+Image'; }} />
                                     </div>
                                     <div className="p-6 flex flex-col flex-1">
-                                        <h3 className="text-lg font-bold text-gray-900 mb-2">{product.name}</h3>
-                                        <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
-                                            <span className="text-xl font-black text-gray-900">{product.price} ₽</span>
+                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{product.name}</h3>
+                                        <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
+                                            <span className="text-xl font-black text-gray-900 dark:text-white">{product.price} ₽</span>
                                             <button className="bg-gray-900 text-white p-3 rounded-2xl hover:bg-indigo-600 transition-colors shadow-md" onClick={(e) => e.preventDefault()}>
                                                 <ShoppingCart className="h-5 w-5" />
                                             </button>

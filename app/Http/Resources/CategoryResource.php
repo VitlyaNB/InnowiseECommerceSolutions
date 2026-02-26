@@ -9,7 +9,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * @property int $id
  * @property string $name
- * @property string $slug
  */
 class CategoryResource extends JsonResource
 {
@@ -18,7 +17,6 @@ class CategoryResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'slug' => $this->slug,
         ];
     }
 }

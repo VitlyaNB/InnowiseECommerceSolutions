@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'external_project' => [
+        'api_url' => env('EXTERNAL_PROJECT_API_URL'),
+        'api_key' => env('EXTERNAL_PROJECT_API_KEY'),
+    ],
+
 ];

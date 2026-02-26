@@ -1,34 +1,48 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import api from '../api';
+import ImageWithFallback from '../components/ImageWithFallback';
 import {
     ShoppingCart,
     ArrowLeft,
     ShieldCheck,
     Truck,
     Zap,
-    Star,
     CheckCircle2,
     Info
 } from 'lucide-react';
 
 export default function SingleProductPage() {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeImage, setActiveImage] = useState(0);
+    const [addingToCart, setAddingToCart] = useState(false);
 
     useEffect(() => {
         setLoading(true);
-        axios.get(`/api/products/${id}`)
+        api.get(`/products/${id}`)
             .then(res => {
-                // В зависимости от того, возвращает API объект напрямую или в обертке 'data'
                 const data = res.data.data || res.data;
                 setProduct(data);
             })
             .catch(err => console.error("Ошибка при загрузке товара:", err))
             .finally(() => setLoading(false));
     }, [id]);
+
+    const addToCart = async () => {
+        if (!product || product.quantity === 0) return;
+        setAddingToCart(true);
+        try {
+            await api.post('/cart', { product_id: product.id, quantity: 1 });
+            navigate('/cart');
+        } catch (err) {
+            console.error('Ошибка добавления в корзину:', err);
+        } finally {
+            setAddingToCart(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -49,15 +63,11 @@ export default function SingleProductPage() {
         );
     }
 
-    // Логика выбора изображения:
-    // Либо массив загруженных фото, либо заглушка
     const hasImages = product.images && product.images.length > 0;
-    const mainImageUrl = hasImages
-        ? product.images[activeImage].url
-        : `https://picsum.photos/seed/${product.id}/800/1000`;
+    const mainImageUrl = hasImages ? product.images[activeImage].url : null;
 
     return (
-        <div className="min-h-screen bg-white pb-20">
+        <div className="min-h-screen bg-white dark:bg-gray-900 pb-20">
             {/* Навигация */}
             <nav className="max-w-7xl mx-auto px-4 py-6">
                 <Link to="/" className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-indigo-600 transition-colors gap-2">
@@ -70,8 +80,8 @@ export default function SingleProductPage() {
 
                     {/* Левая колонка: Галерея */}
                     <div className="space-y-4">
-                        <div className="aspect-[4/5] bg-gray-50 rounded-3xl overflow-hidden border border-gray-100 shadow-sm relative">
-                            <img
+                        <div className="aspect-[4/5] bg-gray-50 dark:bg-gray-800 rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm relative">
+                            <ImageWithFallback
                                 src={mainImageUrl}
                                 alt={product.name}
                                 className="w-full h-full object-cover transition-opacity duration-300"
@@ -94,7 +104,7 @@ export default function SingleProductPage() {
                                             activeImage === index ? 'border-indigo-600 scale-95' : 'border-transparent opacity-70 hover:opacity-100'
                                         }`}
                                     >
-                                        <img src={img.url} className="w-full h-full object-cover" alt="" />
+                                        <ImageWithFallback src={img.url} alt="" className="w-full h-full object-cover" />
                                     </button>
                                 ))}
                             </div>
@@ -143,7 +153,8 @@ export default function SingleProductPage() {
                         {/* Кнопка покупки */}
                         <div className="space-y-4">
                             <button
-                                disabled={product.quantity === 0}
+                                onClick={addToCart}
+                                disabled={product.quantity === 0 || addingToCart}
                                 className={`w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg ${
                                     product.quantity > 0
                                         ? 'bg-gray-900 text-white hover:bg-indigo-600 active:scale-95'
@@ -151,7 +162,7 @@ export default function SingleProductPage() {
                                 }`}
                             >
                                 <ShoppingCart className="w-6 h-6" />
-                                {product.quantity > 0 ? 'Добавить в корзину' : 'Нет в наличии'}
+                                {addingToCart ? 'Добавление...' : (product.quantity > 0 ? 'Добавить в корзину' : 'Нет в наличии')}
                             </button>
 
                             <p className="text-center text-xs text-gray-400 flex items-center justify-center gap-2">

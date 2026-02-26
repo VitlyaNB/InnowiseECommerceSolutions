@@ -4,7 +4,7 @@ namespace App\DTO;
 
 use Illuminate\Http\Request;
 
-class CategoryDTO extends BaseDTO
+class CategoryDTO
 {
     public function __construct(
         public readonly string $name,
@@ -15,5 +15,10 @@ class CategoryDTO extends BaseDTO
         return new self(
             name: $request->validated('name'),
         );
+    }
+
+    public function toArray(): array
+    {
+        return ['name' => $this->name];
     }
 }

@@ -10,7 +10,9 @@ import {
     Image as ImageIcon,
     Trash2,
     Edit,
-    AlertCircle
+    AlertCircle,
+    FolderTree,
+    RefreshCw
 } from 'lucide-react';
 
 export default function AdminPage() {
@@ -28,29 +30,42 @@ export default function AdminPage() {
     const [images, setImages] = useState([]);
     const [msg, setMsg] = useState({ text: '', isError: false });
 
-    // Стейты для редактирования юзеров
     const [editingUserId, setEditingUserId] = useState(null);
     const [editUserData, setEditUserData] = useState({});
 
+    const [categoryName, setCategoryName] = useState('');
+    const [editingCategoryId, setEditingCategoryId] = useState(null);
+    const [editCategoryName, setEditCategoryName] = useState('');
+    const [syncing, setSyncing] = useState(false);
+
+    const fetchCategories = () => {
+        axios.get('/api/categories')
+            .then(res => {
+                const fetched = res.data.data || res.data;
+                setCategories(fetched);
+                if (fetched.length > 0 && !formData.category_id) {
+                    setFormData(prev => ({ ...prev, category_id: fetched[0].id }));
+                }
+            })
+            .catch(err => console.error('Ошибка загрузки категорий:', err));
+    };
+
     useEffect(() => {
-        // Загрузка категорий для выпадающего списка
-        axios.get('/api/categories').then(res => {
-            const fetchedCats = res.data.data || res.data;
-            setCategories(fetchedCats);
-            if (fetchedCats.length > 0 && !formData.category_id) {
-                setFormData(prev => ({ ...prev, category_id: fetchedCats[0].id }));
-            }
-        });
+        fetchCategories();
     }, []);
 
     const fetchUsers = () => {
         axios.get('/api/users')
             .then(res => setUsers(res.data.data || res.data))
             .catch(err => console.error("Ошибка загрузки пользователей:", err));
-    }
+    };
 
     useEffect(() => {
         if (activeTab === 'users') fetchUsers();
+    }, [activeTab]);
+
+    useEffect(() => {
+        if (activeTab === 'categories') fetchCategories();
     }, [activeTab]);
 
     const handleProductSubmit = async (e) => {
@@ -134,6 +149,12 @@ export default function AdminPage() {
                         className={`flex items-center gap-3 p-4 rounded-xl font-bold transition-all ${activeTab === 'addProduct' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
                     >
                         <PlusCircle className="w-5 h-5" /> Добавить товар
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('categories')}
+                        className={`flex items-center gap-3 p-4 rounded-xl font-bold transition-all ${activeTab === 'categories' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
+                    >
+                        <FolderTree className="w-5 h-5" /> Категории
                     </button>
                     <button
                         onClick={() => setActiveTab('users')}
@@ -243,6 +264,135 @@ export default function AdminPage() {
                                 Создать товар
                             </button>
                         </form>
+                    </div>
+                )}
+
+                {activeTab === 'categories' && (
+                    <div className="max-w-3xl bg-white rounded-3xl shadow-sm border border-gray-100 p-10">
+                        <div className="flex items-center justify-between mb-8">
+                            <h2 className="text-3xl font-black text-gray-900">Категории</h2>
+                            <button
+                                onClick={async () => {
+                                    setSyncing(true);
+                                    try {
+                                        const res = await axios.post('/api/categories/sync', {}, {
+                                            headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+                                        });
+                                        setMsg({ text: res.data?.message || 'Синхронизация завершена', isError: false });
+                                        fetchCategories();
+                                    } catch (err) {
+                                        setMsg({ text: err.response?.data?.message || 'Ошибка синхронизации', isError: true });
+                                    } finally {
+                                        setSyncing(false);
+                                    }
+                                    setTimeout(() => setMsg({ text: '', isError: false }), 5000);
+                                }}
+                                disabled={syncing}
+                                className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl font-bold text-gray-700 disabled:opacity-50"
+                            >
+                                <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+                                Синхр. с другим проектом
+                            </button>
+                        </div>
+
+                        <form
+                            onSubmit={async (e) => {
+                                e.preventDefault();
+                                if (!categoryName.trim()) return;
+                                try {
+                                    await axios.post('/api/categories', { name: categoryName.trim() }, {
+                                        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+                                    });
+                                    setCategoryName('');
+                                    setMsg({ text: 'Категория добавлена', isError: false });
+                                    fetchCategories();
+                                } catch (err) {
+                                    setMsg({ text: err.response?.data?.message || 'Ошибка добавления', isError: true });
+                                }
+                                setTimeout(() => setMsg({ text: '', isError: false }), 4000);
+                            }}
+                            className="flex gap-4 mb-8"
+                        >
+                            <input
+                                type="text"
+                                value={categoryName}
+                                onChange={e => setCategoryName(e.target.value)}
+                                placeholder="Название категории"
+                                className="flex-1 p-4 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-indigo-500 outline-none"
+                            />
+                            <button type="submit" className="px-6 py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700">
+                                Добавить
+                            </button>
+                        </form>
+
+                        <div className="space-y-2">
+                            {categories.map(cat => (
+                                <div key={cat.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                    {editingCategoryId === cat.id ? (
+                                        <>
+                                            <input
+                                                value={editCategoryName}
+                                                onChange={e => setEditCategoryName(e.target.value)}
+                                                className="flex-1 p-2 border rounded-lg mr-4"
+                                            />
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        await axios.put(`/api/categories/${cat.id}`, { name: editCategoryName }, {
+                                                            headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+                                                        });
+                                                        setEditingCategoryId(null);
+                                                        fetchCategories();
+                                                    } catch (err) {
+                                                        setMsg({ text: err.response?.data?.message || 'Ошибка', isError: true });
+                                                    }
+                                                }}
+                                                className="px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg"
+                                            >
+                                                Сохранить
+                                            </button>
+                                            <button onClick={() => setEditingCategoryId(null)} className="px-4 py-2 text-gray-600 font-bold">
+                                                Отмена
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="font-bold text-gray-900">{cat.name}</span>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        setEditingCategoryId(cat.id);
+                                                        setEditCategoryName(cat.name);
+                                                    }}
+                                                    className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"
+                                                >
+                                                    <Edit className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={async () => {
+                                                        if (!window.confirm(`Удалить категорию "${cat.name}"?`)) return;
+                                                        try {
+                                                            await axios.delete(`/api/categories/${cat.id}`, {
+                                                                headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+                                                            });
+                                                            fetchCategories();
+                                                        } catch (err) {
+                                                            setMsg({ text: err.response?.data?.message || 'Ошибка удаления', isError: true });
+                                                        }
+                                                    }}
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            ))}
+                            {categories.length === 0 && (
+                                <p className="text-gray-500 text-center py-8">Нет категорий. Добавьте первую или синхронизируйте с другим проектом.</p>
+                            )}
+                        </div>
                     </div>
                 )}
 

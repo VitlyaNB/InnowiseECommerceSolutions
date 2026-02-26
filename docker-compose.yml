@@ -7,12 +7,19 @@ services:
       dockerfile: Dockerfile
     container_name: shop_app
     ports:
-      - "8000:8000" # Порт для Laravel (API)
-      - "5173:5173" # Порт для Vite (React HMR)
+      - "8000:8000"
+      - "5173:5173"
     volumes:
       - .:/var/www/html
     depends_on:
       - db
+      - minio
+    environment:
+      - AWS_ENDPOINT=http://minio:9000
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - AWS_BUCKET=shop
+      - AWS_USE_PATH_STYLE_ENDPOINT=true
 
   db:
     image: mysql:8.0
@@ -25,5 +32,19 @@ services:
     volumes:
       - db_data:/var/lib/mysql
 
+  minio:
+    image: minio/minio:latest
+    container_name: shop_minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+
 volumes:
   db_data:
+  minio_data:

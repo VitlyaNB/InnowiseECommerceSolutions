@@ -4,42 +4,32 @@ namespace App\Repositories;
 
 use App\Models\Product;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
+use Illuminate\Support\Collection;
 
 class ProductRepository implements ProductRepositoryInterface
 {
-    public function getAll(int $perPage = 15)
+    public function getAll(int $perPage = 15): Collection
     {
-        return Product::query()
-            ->with(['category', 'images'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        return Product::with(['category', 'images'])->orderByDesc('created_at')->get();
     }
 
-    public function getByCategory(int $categoryId)
-    {
-        return Product::with(['category', 'images'])
-            ->where('category_id', $categoryId)
-            ->orderBy('created_at', 'desc')
-            ->get();
-    }
-
-    public function getById(int $id)
+    public function getById(int $id): Product
     {
         return Product::with(['category', 'images'])->findOrFail($id);
     }
 
-    public function create(array $data)
+    public function create(array $data): Product
     {
         return Product::create($data);
     }
 
-    public function update(Product $product, array $data)
+    public function update(Product $product, array $data): Product
     {
         $product->update($data);
         return $product;
     }
 
-    public function delete(Product $product)
+    public function delete(Product $product): bool
     {
         return $product->delete();
     }
