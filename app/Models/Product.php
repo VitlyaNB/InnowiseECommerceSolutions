@@ -19,7 +19,7 @@ class Product extends Model
         'is_active',
     ];
 
-    public function category()
+    public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Category::class);
     }

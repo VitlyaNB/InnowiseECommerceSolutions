@@ -33,4 +33,12 @@ class ProductRepository implements ProductRepositoryInterface
     {
         return $product->delete();
     }
+
+    public function getByCategory(int $categoryId): Collection
+    {
+        return Product::with(['category', 'images'])
+            ->where('category_id', $categoryId)
+            ->orderByDesc('created_at')
+            ->get();
+    }
 }
