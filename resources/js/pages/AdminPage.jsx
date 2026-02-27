@@ -390,7 +390,7 @@ export default function AdminPage() {
                                 </div>
                             ))}
                             {categories.length === 0 && (
-                                <p className="text-gray-500 text-center py-8">Нет категорий. Добавьте первую или синхронизируйте с другим проектом.</p>
+                                <p className="text-gray-500 text-center py-8">писька</p>
                             )}
                         </div>
                     </div>
