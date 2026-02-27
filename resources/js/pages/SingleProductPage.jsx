@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 
 export default function SingleProductPage() {
-    const { id } = useParams();
+    const { productId: id } = useParams();
     const navigate = useNavigate();
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -93,7 +93,6 @@ export default function SingleProductPage() {
                             )}
                         </div>
 
-                        {/* Дополнительные фото (миниатюры), если их больше одного */}
                         {hasImages && product.images.length > 1 && (
                             <div className="grid grid-cols-5 gap-4">
                                 {product.images.map((img, index) => (
@@ -111,7 +110,6 @@ export default function SingleProductPage() {
                         )}
                     </div>
 
-                    {/* Правая колонка: Инфо */}
                     <div className="flex flex-col justify-start">
                         <div className="mb-6">
                             <span className="text-indigo-600 text-sm font-bold tracking-widest uppercase">

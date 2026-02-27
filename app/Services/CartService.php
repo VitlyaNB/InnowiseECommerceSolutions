@@ -25,17 +25,14 @@ class CartService
 
         if (!$sessionId) {
             $sessionId = Str::uuid()->toString();
-            $minutes = $this->cookieConsentAccepted($request)
-                ? self::CART_COOKIE_DAYS * 24 * 60
-                : 0;
 
             Cookie::queue(
                 self::CART_SESSION_COOKIE,
                 $sessionId,
-                $minutes,
+                60 * 24 * 30,
                 '/',
                 null,
-                true,
+                false,
                 true,
                 false,
                 'Lax'
