@@ -120,7 +120,7 @@ export default function SingleProductPage() {
                             </h1>
                             <div className="flex items-center gap-4">
                                 <span className="text-3xl font-black text-gray-900">
-                                    {product.price.toLocaleString()} ₽
+                                    {product.price.toLocaleString()} BYN
                                 </span>
                                 {product.old_price && (
                                     <span className="text-xl text-gray-400 line-through">

@@ -43,7 +43,7 @@ export default function CategoryProductsPage() {
                                 <div className="p-6 flex flex-col flex-1">
                                     <h3 className="text-lg font-bold text-gray-900 mb-2">{product.name}</h3>
                                     <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
-                                        <span className="text-xl font-black text-gray-900">{product.price} ₽</span>
+                                        <span className="text-xl font-black text-gray-900">{product.price} BYN</span>
                                         <button className="bg-gray-900 text-white p-3 rounded-2xl hover:bg-indigo-600 transition-colors" onClick={(e) => e.preventDefault()}>
                                             <ShoppingCart className="h-5 w-5" />
                                         </button>

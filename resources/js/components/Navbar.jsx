@@ -1,9 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Search, Zap } from 'lucide-react';
+import { ShoppingCart, Search, Zap, Sun, Moon } from 'lucide-react'; // Добавили иконки солнца и луны
 import UserDropdown from '../contexts/UserDropdown';
+import { useTheme } from '../contexts/ThemeContext'; // Импортируем хук темы
 
 export default function Navbar() {
+    const { theme, toggleTheme } = useTheme(); // Получаем текущую тему и функцию переключения
+
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 h-20 flex items-center">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex justify-between items-center">
@@ -26,7 +29,15 @@ export default function Navbar() {
 
                 <div className="flex items-center gap-6">
                     <Link to="/catalog" className="hidden md:block font-bold text-gray-700 dark:text-gray-300 hover:text-indigo-600 transition-colors">Каталог</Link>
-                    <Link to="/about" className="hidden md:block font-bold text-gray-700 dark:text-gray-300 hover:text-indigo-600 transition-colors">О нас</Link>
+
+                    {/* Кнопка переключения темы */}
+                    <button
+                        onClick={toggleTheme}
+                        className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-indigo-600 transition-all"
+                        title={theme === 'light' ? 'Включить темную тему' : 'Включить светлую тему'}
+                    >
+                        {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                    </button>
 
                     <Link
                         to="/cart"

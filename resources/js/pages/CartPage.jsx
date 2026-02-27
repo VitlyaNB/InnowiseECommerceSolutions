@@ -88,7 +88,7 @@ export default function CartPage() {
                                     >
                                         {product.name}
                                     </Link>
-                                    <p className="text-indigo-600 font-black mt-1">{product.price} ₽</p>
+                                    <p className="text-indigo-600 font-black mt-1">{product.price} BYN</p>
                                 </div>
                                 <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-700 p-2 rounded-xl">
                                     <button
@@ -123,16 +123,16 @@ export default function CartPage() {
                     <div className="space-y-3 text-sm text-gray-600 dark:text-gray-300 mb-6">
                         <div className="flex justify-between">
                             <span>Товары</span>
-                            <span>{cart.totals?.subtotal ?? 0} ₽</span>
+                            <span>{cart.totals?.subtotal ?? 0} BYN</span>
                         </div>
                         <div className="flex justify-between">
                             <span>НДС (20%)</span>
-                            <span>{cart.totals?.tax ?? 0} ₽</span>
+                            <span>{cart.totals?.tax ?? 0} BYN</span>
                         </div>
                     </div>
                     <div className="flex justify-between text-2xl font-black text-gray-900 dark:text-white mb-8 border-t pt-6 border-gray-200 dark:border-gray-600">
                         <span>Итого</span>
-                        <span>{cart.totals?.total ?? 0} ₽</span>
+                        <span>{cart.totals?.total ?? 0} BYN</span>
                     </div>
                     <button
                         disabled={!cart.items?.length}
