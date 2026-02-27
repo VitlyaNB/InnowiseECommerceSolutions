@@ -2,7 +2,6 @@
 
 namespace App\Repositories;
 
-use App\DTO\CategoryDTO;
 use App\Models\Category;
 use App\Repositories\Interfaces\CategoryRepositoryInterface;
 use Illuminate\Support\Collection;
@@ -19,23 +18,26 @@ class CategoryRepository implements CategoryRepositoryInterface
         return Category::find($id);
     }
 
-    public function create(CategoryDTO $data): Category
+    /**
+     * Создание из массива данных
+     */
+    public function create(array $data): Category
     {
-        return Category::create($data->toArray());
+        return Category::create($data);
     }
 
-    public function update(int $id, CategoryDTO $data): bool
+    /**
+     * Обновление из массива данных
+     */
+    public function update(int $id, array $data): bool
     {
-        $category = Category::query()->findOrFail($id);
-        return $category->update(array_filter($data->toArray(), fn($value) => $value !== null));
+        $category = $this->findById($id);
+        return $category ? $category->update($data) : false;
     }
 
     public function delete(int $id): bool
     {
-        $category = Category::query()->find($id);
-        if (!$category) {
-            return false;
-        }
-        return (bool) $category->delete();
+        $category = $this->findById($id);
+        return $category ? $category->delete() : false;
     }
 }

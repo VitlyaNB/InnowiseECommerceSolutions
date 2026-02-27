@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\DTO\CategoryDTO;
+use App\DTO\UploadImageDTO;
 use App\Models\Category;
 use App\Repositories\Interfaces\CategoryRepositoryInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -11,7 +12,8 @@ use Illuminate\Support\Collection;
 class CategoryService
 {
     public function __construct(
-        private readonly CategoryRepositoryInterface $categoryRepository
+        private readonly CategoryRepositoryInterface $categoryRepository,
+        private readonly FileService $fileService
     ) {}
 
     public function getAllCategories(): Collection
@@ -32,26 +34,46 @@ class CategoryService
 
     public function createCategory(CategoryDTO $data): Category
     {
-        return $this->categoryRepository->create($data);
+        $categoryData = ['name' => $data->name];
+        if ($data->image) {
+            $categoryData['image_path'] = $this->fileService->upload(new UploadImageDTO(
+                file: $data->image,
+                folder: 'categories',
+                disk: config('filesystems.media_disk', 's3')
+            ));
+        }
+
+        return $this->categoryRepository->create($categoryData);
     }
 
     public function updateCategory(int $id, CategoryDTO $data): Category
     {
-        $updated = $this->categoryRepository->update($id, $data);
+        $category = $this->getCategoryById($id);
+        $updateData = ['name' => $data->name];
 
-        if (!$updated) {
-            throw new \RuntimeException("Failed to update category with ID {$id}.");
+        if ($data->image) {
+            // Удаляем старое фото перед загрузкой нового
+            if ($category->image_path) {
+                $this->fileService->delete($category->image_path);
+            }
+
+            $updateData['image_path'] = $this->fileService->upload(new UploadImageDTO(
+                file: $data->image,
+                folder: 'categories'
+            ));
         }
+
+        $this->categoryRepository->update($id, $updateData);
 
         return $this->getCategoryById($id);
     }
 
     public function deleteCategory(int $id): bool
     {
-        $category = $this->categoryRepository->findById($id);
+        $category = $this->getCategoryById($id);
 
-        if (!$category) {
-            throw new ModelNotFoundException("Category with ID {$id} not found.");
+        if ($category->image_path) {
+            $this->fileService->delete($category->image_path);
         }
 
         return $this->categoryRepository->delete($id);

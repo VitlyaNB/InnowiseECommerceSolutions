@@ -2,7 +2,6 @@
 
 namespace App\Repositories\Interfaces;
 
-use App\DTO\CategoryDTO;
 use App\Models\Category;
 use Illuminate\Support\Collection;
 
@@ -12,9 +11,15 @@ interface CategoryRepositoryInterface
 
     public function findById(int $id): ?Category;
 
-    public function create(CategoryDTO $data): Category;
+    /**
+     * Теперь принимает массив вместо CategoryDTO для гибкости
+     */
+    public function create(array $data): Category;
 
-    public function update(int $id, CategoryDTO $data): bool;
+    /**
+     * Теперь принимает массив вместо CategoryDTO
+     */
+    public function update(int $id, array $data): bool;
 
     public function delete(int $id): bool;
 }

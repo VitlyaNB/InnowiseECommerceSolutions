@@ -18,29 +18,30 @@ class ProductResource extends JsonResource
             'old_price' => $this->old_price ? (float) $this->old_price : null,
             'quantity' => (int) $this->quantity,
             'is_available' => $this->quantity > 0,
+            'category_id' => $this->category_id,
             'category' => new CategoryResource($this->whenLoaded('category')),
-            'images' => $this->whenLoaded('images', function () {
-                return $this->images->map(function ($image) {
-                    return [
-                        'id' => $image->id,
-                        'url' => $this->resolveImageUrl($image->image_path),
-                    ];
-                });
-            }),
+
+            'images' => $this->relationLoaded('images')
+                ? $this->images->map(fn($img) => [
+                    'id' => $img->id,
+                    'url' => $this->resolveImageUrl($img->image_path),
+                ])
+                : [],
+
             'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
         ];
     }
 
-    private function resolveImageUrl(string $pathOrUrl): string
+    private function resolveImageUrl(?string $pathOrUrl): ?string
     {
-        if (str_starts_with($pathOrUrl, 'http://') || str_starts_with($pathOrUrl, 'https://')) {
+        if (!$pathOrUrl) return null;
+
+        if (str_starts_with($pathOrUrl, 'http')) {
             return $pathOrUrl;
         }
 
-        $disk = config('filesystems.media_disk', 'public');
+        $diskName = config('filesystems.media_disk', 's3');
 
-        return $disk === 's3'
-            ? Storage::disk('s3')->url($pathOrUrl)
-            : asset('storage/' . $pathOrUrl);
+        return Storage::disk($diskName)->url($pathOrUrl);
     }
 }
