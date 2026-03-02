@@ -4,21 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name'];
+    // ВАЖНО: Добавьте image_path сюда
+    protected $fillable = [
+        'name',
+        'image_path'
+    ];
 
-    protected static function booted(): void
-    {
-        static::deleting(function (Category $category) {
-            $category->products()->each(fn (Product $p) => $p->delete());
-        });
-    }
-
-    public function products()
+    public function products(): HasMany
     {
         return $this->hasMany(Product::class);
     }

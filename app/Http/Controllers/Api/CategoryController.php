@@ -19,6 +19,7 @@ class CategoryController extends Controller
     {
         $categories = $this->categoryService->getAllCategories();
 
+        // Убрали .resolve(), чтобы вернуть стандартную коллекцию ресурсов с ключом "data"
         return response()->json(CategoryResource::collection($categories));
     }
 

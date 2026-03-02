@@ -9,17 +9,17 @@ class FileService
 {
     public function upload(UploadImageDTO $dto): string
     {
+        // Сохраняем файл и получаем относительный путь (categories/hash.jpg)
         $path = Storage::disk($dto->disk)->putFile($dto->folder, $dto->file, 'public');
 
-        return $this->isS3Disk($dto->disk)
-            ? Storage::disk($dto->disk)->url($path)
-            : $path;
+        // ВСЕГДА возвращаем только путь. Не надо генерировать URL здесь.
+        // URL будет сформирован в CategoryResource.
+        return $path;
     }
 
     public function delete(string $pathOrUrl, string $disk = null): bool
     {
         $disk = $disk ?? config('filesystems.media_disk', 's3');
-
         $path = $this->extractPathFromUrl($pathOrUrl, $disk);
 
         if (Storage::disk($disk)->exists($path)) {
@@ -29,14 +29,12 @@ class FileService
         return false;
     }
 
+    // Остальные методы можно оставить, но они могут не понадобиться,
+    // если мы храним только относительные пути.
     public function getAbsoluteUrl(string $pathOrUrl, string $disk = null): string
     {
         $disk = $disk ?? config('filesystems.media_disk', 's3');
-
-        if ($this->isAbsoluteUrl($pathOrUrl)) {
-            return $pathOrUrl;
-        }
-
+        if ($this->isAbsoluteUrl($pathOrUrl)) return $pathOrUrl;
         return Storage::disk($disk)->url($pathOrUrl);
     }
 
@@ -52,16 +50,14 @@ class FileService
 
     private function extractPathFromUrl(string $pathOrUrl, string $disk): string
     {
-        if (!$this->isAbsoluteUrl($pathOrUrl)) {
-            return $pathOrUrl;
-        }
+        if (!$this->isAbsoluteUrl($pathOrUrl)) return $pathOrUrl;
 
         $baseUrl = rtrim(config("filesystems.disks.{$disk}.url") ?? '', '/');
-
         if ($baseUrl && str_starts_with($pathOrUrl, $baseUrl)) {
             return ltrim(parse_url($pathOrUrl, PHP_URL_PATH), '/');
         }
 
+        // Fallback для MinIO bucket path
         $bucket = config("filesystems.disks.{$disk}.bucket");
         if ($bucket && str_contains($pathOrUrl, "/{$bucket}/")) {
             $parts = explode("/{$bucket}/", $pathOrUrl, 2);
