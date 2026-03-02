@@ -15,11 +15,15 @@ use App\Repositories\Interfaces\OrderRepositoryInterface;
 use App\Repositories\OrderRepository;
 use App\Repositories\Interfaces\ReviewRepositoryInterface;
 use App\Repositories\ReviewRepository;
+
 // Импорты для Elasticsearch
 use Elastic\Elasticsearch\Client;
 use Elastic\Elasticsearch\ClientBuilder;
 use Psr\Http\Client\ClientInterface;
 use GuzzleHttp\Client as GuzzleClient;
+use Laravel\Scout\EngineManager;
+// ВНИМАНИЕ: Здесь была ошибка. Правильное название класса с большой буквой 'S'
+use Matchish\ScoutElasticSearch\Engines\ElasticSearchEngine;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,17 +32,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // 1. Привязываем PSR-интерфейс клиента к Guzzle
+        // 1. Привязываем PSR-интерфейс клиента к Guzzle (нужно для работы библиотеки)
         $this->app->bind(ClientInterface::class, function () {
             return new GuzzleClient();
         });
 
-        // 2. Правильная регистрация клиента Elasticsearch для Matchish/Scout
+        // 2. Регистрируем клиент Elasticsearch
         $this->app->singleton(Client::class, function () {
-            $host = config('elasticsearch.hosts', ['http://elasticsearch:9200']);
+            // Берем хосты из конфига или ставим дефолт
+            $hosts = config('scout.elasticsearch.hosts', ['http://elasticsearch:9200']);
 
             return ClientBuilder::create()
-                ->setHosts($host)
+                ->setHosts($hosts)
                 ->build();
         });
 
@@ -57,5 +62,13 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \App\Models\ProductImage::observe(\App\Observers\ProductImageObserver::class);
+
+        // 3. Ручная регистрация драйвера (исправленная версия)
+        resolve(EngineManager::class)->extend('elasticsearch', function ($app) {
+            // Конструктор ElasticSearchEngine принимает только клиента
+            return new ElasticSearchEngine(
+                $app->make(Client::class)
+            );
+        });
     }
 }

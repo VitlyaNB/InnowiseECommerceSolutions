@@ -11,13 +11,18 @@ class SearchProductAction extends Controller
 {
     public function __invoke(Request $request)
     {
-        $query = $request->input('q');
+        $query = $request->input('query') ?? $request->input('q');
+
+        if (!$query) {
+            return ProductResource::collection([]);
+        }
 
         $products = Product::search($query)
-            ->where('is_active', true)
+            ->query(function ($builder) {
+                $builder->with(['category', 'images'])
+                    ->where('is_active', true);
+            })
             ->paginate(12);
-
-        $products->load(['category', 'images']);
 
         return ProductResource::collection($products);
     }
