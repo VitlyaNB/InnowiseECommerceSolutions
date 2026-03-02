@@ -20,28 +20,21 @@ class ProductResource extends JsonResource
             'is_available' => $this->quantity > 0,
             'category_id' => $this->category_id,
             'category' => new CategoryResource($this->whenLoaded('category')),
-
+            // Исправляем логику получения изображений
             'images' => $this->relationLoaded('images')
-                ? $this->images->map(fn($img) => [
-                    'id' => $img->id,
-                    'url' => $this->resolveImageUrl($img->image_path),
+                ? $this->images->map(fn($image) => [
+                    'id' => $image->id,
+                    'url' => $this->resolveImageUrl($image->image_path),
                 ])
                 : [],
-
             'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
         ];
     }
 
-    private function resolveImageUrl(?string $pathOrUrl): ?string
+    private function resolveImageUrl(?string $path): ?string
     {
-        if (!$pathOrUrl) return null;
-
-        if (str_starts_with($pathOrUrl, 'http')) {
-            return $pathOrUrl;
-        }
-
-        $diskName = config('filesystems.media_disk', 's3');
-
-        return Storage::disk($diskName)->url($pathOrUrl);
+        if (!$path) return null;
+        if (str_starts_with($path, 'http')) return $path;
+        return Storage::disk(config('filesystems.media_disk', 's3'))->url($path);
     }
 }

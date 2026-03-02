@@ -16,7 +16,7 @@ class CategoryResource extends JsonResource
             'image_path' => $this->image_path
                 ? Storage::disk(config('filesystems.media_disk', 's3'))->url($this->image_path)
                 : null,
-            'created_at' => $this->created_at,
+            'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
         ];
     }
 }

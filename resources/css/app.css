@@ -23,8 +23,20 @@
     }
 }
 
-/* Применяем переменные к body */
-body {
-    background-color: var(--background);
-    color: var(--foreground);
+@layer base {
+    /* Принудительные цвета для темной темы, если Tailwind классы не справляются */
+    .dark body {
+        background-color: #0f172a !important;
+        color: #f1f5f9 !important;
+    }
+    .dark h1, .dark h2, .dark h3, .dark p, .dark label, .dark span:not(.text-indigo-600) {
+        color: #ffffff !important;
+    }
+    .dark .bg-white {
+        background-color: #1e293b !important;
+    }
+    .dark .border-gray-100, .dark .border-gray-200 {
+        border-color: #334155 !important;
+    }
 }
+

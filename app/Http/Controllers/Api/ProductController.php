@@ -18,7 +18,7 @@ class ProductController extends Controller
 
     public function index()
     {
-        return ProductResource::collection($this->productService->getAllProducts());
+        return ProductResource::collection($this->productService->getAllProducts()->load(['images', 'category']));
     }
 
     public function store(StoreProductRequest $request): JsonResponse
