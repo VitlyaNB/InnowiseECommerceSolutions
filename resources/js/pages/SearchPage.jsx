@@ -6,23 +6,29 @@ export default function SearchPage() {
     const [searchParams] = useSearchParams();
     const query = searchParams.get('q');
     const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         if (query) {
             setLoading(true);
-            // Отправляем запрос на ваш API. Обратите внимание на ключ 'query'
+            setError(null);
+
+            // Запрос к API
             axios.get(`/api/products/search?query=${encodeURIComponent(query)}`)
                 .then(res => {
-                    // Laravel Resource возвращает данные в ключе 'data'
-                    // При пагинации это res.data.data
+                    // Laravel Resource + Pagination возвращает данные в res.data.data
+                    // Если пагинации нет, то просто res.data.data
                     setProducts(res.data.data || []);
                 })
                 .catch(err => {
-                    console.error("Ошибка поиска:", err);
+                    console.error("Ошибка при поиске:", err);
+                    setError("Не удалось загрузить результаты поиска.");
                     setProducts([]);
                 })
                 .finally(() => setLoading(false));
+        } else {
+            setProducts([]);
         }
     }, [query]);
 
@@ -33,7 +39,13 @@ export default function SearchPage() {
             </h1>
 
             {loading ? (
-                <div className="text-center py-10 dark:text-gray-400">Загрузка результатов...</div>
+                <div className="flex justify-center py-20">
+                    <div className="text-gray-500 dark:text-gray-400 text-lg">Загрузка...</div>
+                </div>
+            ) : error ? (
+                <div className="text-center py-10 text-red-500">
+                    {error}
+                </div>
             ) : products.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                     {products.map((product) => (
