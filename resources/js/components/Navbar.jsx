@@ -1,11 +1,21 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { ShoppingCart, Search, Zap, Sun, Moon } from 'lucide-react'; // Добавили иконки солнца и луны
+import React, { useState } from 'react'; // Добавили useState
+import { Link, useNavigate } from 'react-router-dom'; // Добавили useNavigate
+import { ShoppingCart, Search, Zap, Sun, Moon } from 'lucide-react';
 import UserDropdown from '../contexts/UserDropdown';
-import { useTheme } from '../contexts/ThemeContext'; // Импортируем хук темы
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function Navbar() {
-    const { theme, toggleTheme } = useTheme(); // Получаем текущую тему и функцию переключения
+    const { theme, toggleTheme } = useTheme();
+    const [searchQuery, setSearchQuery] = useState(''); // 1. Состояние для поиска
+    const navigate = useNavigate(); // 2. Хук для навигации
+
+    // 3. Функция обработки поиска
+    const handleSearch = (e) => {
+        if (e.key === 'Enter' && searchQuery.trim()) {
+            navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+            setSearchQuery(''); // Очистить поле после поиска (по желанию)
+        }
+    };
 
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 h-20 flex items-center">
@@ -24,13 +34,16 @@ export default function Navbar() {
                         type="text"
                         className="w-full pl-10 pr-4 py-2 border rounded-full bg-gray-50 dark:bg-gray-800 dark:border-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-gray-900 dark:text-white"
                         placeholder="Искать товары..."
+                        value={searchQuery} // 4. Привязка значения
+                        onChange={(e) => setSearchQuery(e.target.value)} // 5. Отслеживание ввода
+                        onKeyDown={handleSearch} // 6. Обработка нажатия Enter
                     />
                 </div>
 
                 <div className="flex items-center gap-6">
+                    {/* ... (остальной код без изменений) ... */}
                     <Link to="/catalog" className="hidden md:block font-bold text-gray-700 dark:text-gray-300 hover:text-indigo-600 transition-colors">Каталог</Link>
 
-                    {/* Кнопка переключения темы */}
                     <button
                         onClick={toggleTheme}
                         className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-indigo-600 transition-all"

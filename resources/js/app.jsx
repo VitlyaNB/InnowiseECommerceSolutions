@@ -17,6 +17,7 @@ import LoginPage from './pages/LoginPage';
 import AdminPage from './pages/AdminPage';
 import AdminRoute from './components/AdminRoute';
 import CookieConsent from './components/CookieConsent';
+import SearchPage from './pages/SearchPage'; // <--- 1. Добавил импорт
 
 function App() {
     return (
@@ -33,6 +34,10 @@ function App() {
                             <Route path="/cart" element={<CartPage />} />
                             <Route path="/about" element={<AboutPage />} />
                             <Route path="/login" element={<LoginPage />} />
+
+                            {/* 2. Добавил маршрут для поиска */}
+                            <Route path="/search" element={<SearchPage />} />
+
                             <Route path="/admin" element={
                                 <AdminRoute>
                                     <AdminPage />
