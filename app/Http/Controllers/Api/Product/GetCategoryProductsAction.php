@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Product;
 
 use App\Http\Controllers\Controller;
 use App\Services\ProductService;
+use App\Http\Resources\ProductResource;
 
 class GetCategoryProductsAction extends Controller
 {
@@ -17,6 +18,8 @@ class GetCategoryProductsAction extends Controller
 
     public function __invoke($categoryId)
     {
-        return response()->json($this->productService->getProductsByCategory($categoryId));
+        $products = $this->productService->getProductsByCategory($categoryId);
+
+        return ProductResource::collection($products);
     }
 }

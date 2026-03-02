@@ -21,7 +21,7 @@ class StoreProductRequest extends FormRequest
             'quantity' => ['nullable', 'integer', 'min:0'],
             'category_id' => ['required', 'exists:categories,id'],
             'images' => ['nullable', 'array'],
-            'images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:5120'], // До 5МБ на файл
+            'images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
         ];
     }
 }

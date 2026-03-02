@@ -11,39 +11,28 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * Атрибуты, которые можно массово назначать.
-     */
+
     protected $fillable = [
         'name',
         'email',
         'password',
-        'role', // Поле role используется в репозитории
+        'role',
     ];
 
-    /**
-     * Атрибуты, которые должны быть скрыты при преобразовании в массив или JSON.
-     */
+
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Преобразование типов данных (casts).
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed', // Автоматическое хэширование пароля
+            'password' => 'hashed',
         ];
     }
 
-    /**
-     * Хелпер для проверки, является ли пользователь администратором.
-     * Полезно для чистого кода в других частях системы.
-     */
     public function isAdmin(): bool
     {
         return $this->role === 'admin';

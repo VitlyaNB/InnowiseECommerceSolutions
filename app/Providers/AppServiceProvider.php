@@ -55,9 +55,7 @@ class AppServiceProvider extends ServiceProvider
         );
     }
 
-    /**
-     * Bootstrap any application services.
-     */
+
     public function boot(): void
     {
         \App\Models\ProductImage::observe(\App\Observers\ProductImageObserver::class);

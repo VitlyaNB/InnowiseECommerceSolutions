@@ -26,9 +26,7 @@ class CategoryRepository implements CategoryRepositoryInterface
         return Category::create($data);
     }
 
-    /**
-     * Обновление из массива данных
-     */
+
     public function update(int $id, array $data): bool
     {
         $category = $this->findById($id);

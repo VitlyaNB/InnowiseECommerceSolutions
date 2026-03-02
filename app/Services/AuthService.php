@@ -50,7 +50,6 @@ class AuthService
 
     public function deleteUser(int $userIdToDelete, int $currentUserId): bool
     {
-        // Бизнес-правило
         if ($userIdToDelete === $currentUserId) {
             throw ValidationException::withMessages([
                 'user' => ['Нельзя удалить самого себя']

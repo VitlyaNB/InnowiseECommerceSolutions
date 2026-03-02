@@ -20,7 +20,6 @@ class ProductResource extends JsonResource
             'is_available' => $this->quantity > 0,
             'category_id' => $this->category_id,
             'category' => new CategoryResource($this->whenLoaded('category')),
-            // Исправляем логику получения изображений
             'images' => $this->relationLoaded('images')
                 ? $this->images->map(fn($image) => [
                     'id' => $image->id,
