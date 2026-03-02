@@ -5,15 +5,19 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\Product\SearchProductAction;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/products', [ProductController::class, 'index']);
-Route::get('/categories', [CategoryController::class, 'index']);
 
-Route::get('/categories/{categoryId}/products', \App\Http\Controllers\Api\Product\GetCategoryProductsAction::class);
+Route::get('/products/search', SearchProductAction::class);
 Route::get('/products/{id}', \App\Http\Controllers\Api\Product\GetProductByIdAction::class);
+
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/categories/{categoryId}/products', \App\Http\Controllers\Api\Product\GetCategoryProductsAction::class);
+
 
 Route::get('/cookie-consent', fn () => response()->json([
     'accepted' => request()->cookie('cookie_consent') === 'accepted',
