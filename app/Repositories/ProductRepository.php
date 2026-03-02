@@ -37,7 +37,7 @@ class ProductRepository implements ProductRepositoryInterface
     public function getByCategory(int $categoryId): Collection
     {
         return Product::with(['category', 'images'])
-        ->where('category_id', $categoryId)
+            ->where('category_id', $categoryId)
             ->orderByDesc('created_at')
             ->get();
     }

@@ -33,7 +33,11 @@ class ProductResource extends JsonResource
     private function resolveImageUrl(?string $path): ?string
     {
         if (!$path) return null;
-        if (str_starts_with($path, 'http')) return $path;
+
+        if (str_starts_with($path, 'http')) {
+            return $path;
+        }
+
         return Storage::disk(config('filesystems.media_disk', 's3'))->url($path);
     }
 }

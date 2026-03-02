@@ -35,7 +35,12 @@ export default function CategoryProductsPage() {
                         {products.map((product) => (
                             <Link key={product.id} to={`/product/${product.id}`} className="group bg-white dark:bg-gray-800 rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-2xl transition-all flex flex-col">
                                 <div className="aspect-[4/5] bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
-                                    <ImageWithFallback src={product.images?.[0]?.url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                    <img
+                                        src={product.images?.[0]?.url || 'https://placehold.co/400x500?text=No+Image'}
+                                        alt={product.name}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        onError={(e) => { e.target.src = 'https://placehold.co/400x500?text=Error+Load'; }}
+                                    />
                                 </div>
                                 <div className="p-6 flex flex-col flex-1">
                                     <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{product.name}</h3>

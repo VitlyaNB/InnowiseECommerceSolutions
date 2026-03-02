@@ -13,10 +13,20 @@ class CategoryResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'image_path' => $this->image_path
-                ? Storage::disk(config('filesystems.media_disk', 's3'))->url($this->image_path)
-                : null,
+            // Вызываем метод для формирования правильной ссылки
+            'image_path' => $this->resolveImageUrl($this->image_path),
             'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
         ];
+    }
+
+    private function resolveImageUrl(?string $path): ?string
+    {
+        if (!$path) return null;
+
+        if (str_starts_with($path, 'http')) {
+            return $path;
+        }
+
+        return Storage::disk(config('filesystems.media_disk', 's3'))->url($path);
     }
 }

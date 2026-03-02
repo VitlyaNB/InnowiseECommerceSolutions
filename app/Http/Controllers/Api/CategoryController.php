@@ -19,7 +19,7 @@ class CategoryController extends Controller
     {
         $categories = $this->categoryService->getAllCategories();
 
-        return response()->json(CategoryResource::collection($categories)->resolve());
+        return response()->json(CategoryResource::collection($categories));
     }
 
     public function store(StoreCategoryRequest $request): JsonResponse
