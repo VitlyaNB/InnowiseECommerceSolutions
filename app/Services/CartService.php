@@ -12,7 +12,6 @@ use Illuminate\Support\Str;
 class CartService
 {
     private const CART_SESSION_COOKIE = 'cart_session';
-    private const COOKIE_CONSENT_COOKIE = 'cookie_consent';
 
     public function __construct(
         private readonly CartItemRepositoryInterface $cartRepository
@@ -24,17 +23,14 @@ class CartService
 
         if (!$sessionId) {
             $sessionId = Str::uuid()->toString();
-            // Cookie на 30 дней
             Cookie::queue(self::CART_SESSION_COOKIE, $sessionId, 60 * 24 * 30, '/', null, false, true, false, 'Lax');
         }
 
         return $sessionId;
     }
 
-    // Вспомогательный метод для определения владельца корзины
     private function getIdentifier(): array
     {
-        // Явно проверяем guard sanctum, так как middleware может не быть
         if (auth('sanctum')->check()) {
             return ['user_id' => auth('sanctum')->id()];
         }
@@ -51,10 +47,13 @@ class CartService
             return $existing->fresh('product.images');
         }
 
-        return $this->cartRepository->create(array_merge($identifier, [
+        // --- ИСПРАВЛЕНИЕ: Загружаем связи для нового элемента ---
+        $newItem = $this->cartRepository->create(array_merge($identifier, [
             'product_id' => $dto->product_id,
             'quantity' => $dto->quantity,
         ]));
+
+        return $newItem->load('product.images');
     }
 
     public function getCart(): array
@@ -70,7 +69,6 @@ class CartService
     {
         $item = $this->cartRepository->findById($id);
 
-        // Проверяем, принадлежит ли товар текущему пользователю/сессии
         if (!$item || !$this->itemBelongsToIdentifier($item, $this->getIdentifier())) {
             return null;
         }
