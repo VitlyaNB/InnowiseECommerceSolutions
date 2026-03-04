@@ -11,30 +11,34 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-
+    /**
+     * Атрибуты, которые можно массово присваивать.
+     */
     protected $fillable = [
         'name',
         'email',
         'password',
         'role',
+        'balance', // <--- Добавили баланс
     ];
 
-
+    /**
+     * Атрибуты, которые должны быть скрыты при сериализации.
+     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
+    /**
+     * Атрибуты, которые нужно приводить к определенным типам.
+     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'balance' => 'decimal:2', // <--- Гарантирует, что это всегда число с 2 знаками (float)
         ];
-    }
-
-    public function isAdmin(): bool
-    {
-        return $this->role === 'admin';
     }
 }

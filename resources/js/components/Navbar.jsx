@@ -1,19 +1,20 @@
-import React, { useState } from 'react'; // Добавили useState
-import { Link, useNavigate } from 'react-router-dom'; // Добавили useNavigate
-import { ShoppingCart, Search, Zap, Sun, Moon } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingCart, Search, Zap, Sun, Moon, Wallet, Plus } from 'lucide-react'; // Добавил иконки
 import UserDropdown from '../contexts/UserDropdown';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext'; // Импортируем AuthContext
 
 export default function Navbar() {
     const { theme, toggleTheme } = useTheme();
-    const [searchQuery, setSearchQuery] = useState(''); // 1. Состояние для поиска
-    const navigate = useNavigate(); // 2. Хук для навигации
+    const { user } = useAuth(); // Достаем пользователя
+    const [searchQuery, setSearchQuery] = useState('');
+    const navigate = useNavigate();
 
-    // 3. Функция обработки поиска
     const handleSearch = (e) => {
         if (e.key === 'Enter' && searchQuery.trim()) {
-            navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
-            setSearchQuery(''); // Очистить поле после поиска (по желанию)
+            navigate(`/catalog?search=${encodeURIComponent(searchQuery)}`); // Исправил путь на каталог
+            setSearchQuery('');
         }
     };
 
@@ -34,15 +35,32 @@ export default function Navbar() {
                         type="text"
                         className="w-full pl-10 pr-4 py-2 border rounded-full bg-gray-50 dark:bg-gray-800 dark:border-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-gray-900 dark:text-white"
                         placeholder="Искать товары..."
-                        value={searchQuery} // 4. Привязка значения
-                        onChange={(e) => setSearchQuery(e.target.value)} // 5. Отслеживание ввода
-                        onKeyDown={handleSearch} // 6. Обработка нажатия Enter
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={handleSearch}
                     />
                 </div>
 
-                <div className="flex items-center gap-6">
-                    {/* ... (остальной код без изменений) ... */}
+                <div className="flex items-center gap-4 md:gap-6">
                     <Link to="/catalog" className="hidden md:block font-bold text-gray-700 dark:text-gray-300 hover:text-indigo-600 transition-colors">Каталог</Link>
+
+                    {/* === БЛОК БАЛАНСА (Виден только если пользователь вошел) === */}
+                    {user && (
+                        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 rounded-full border border-indigo-100 dark:border-indigo-800/50">
+                            <Wallet className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                            <span className="font-bold text-sm text-gray-900 dark:text-white tabular-nums">
+                                {user.balance ? parseFloat(user.balance).toFixed(2) : '0.00'} BYN
+                            </span>
+                            <Link
+                                to="/top-up"
+                                className="ml-1 w-5 h-5 flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white rounded-full transition-colors"
+                                title="Пополнить баланс"
+                            >
+                                <Plus className="w-3 h-3" />
+                            </Link>
+                        </div>
+                    )}
+                    {/* ========================================================== */}
 
                     <button
                         onClick={toggleTheme}
@@ -60,7 +78,12 @@ export default function Navbar() {
                         <ShoppingCart className="h-6 w-6" />
                     </Link>
 
-                    <UserDropdown />
+                    {/* Если юзер есть - дропдаун, если нет - кнопка Войти */}
+                    {user ? (
+                        <UserDropdown />
+                    ) : (
+                        <Link to="/login" className="font-bold text-gray-700 dark:text-gray-300 hover:text-indigo-600">Войти</Link>
+                    )}
                 </div>
             </div>
         </nav>

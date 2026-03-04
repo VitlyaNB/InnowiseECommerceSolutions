@@ -73,4 +73,19 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Пользователь успешно удален']);
     }
+    public function topUp(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0.1|max:10000',
+        ]);
+
+        $user = $request->user();
+        $user->balance += $request->amount;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Баланс успешно пополнен!',
+            'user' => $user
+        ]);
+    }
 }

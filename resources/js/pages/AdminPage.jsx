@@ -14,7 +14,8 @@ import {
     FolderTree,
     RefreshCw,
     X,
-    Check
+    Check,
+    Wallet // Импортируем иконку кошелька
 } from 'lucide-react';
 
 export default function AdminPage() {
@@ -43,9 +44,9 @@ export default function AdminPage() {
 
     // Состояния для пользователей
     const [editingUserId, setEditingUserId] = useState(null);
-    const [editUserData, setEditUserData] = useState({ name: '', email: '', role: 'user' });
+    // Добавили balance в состояние редактирования
+    const [editUserData, setEditUserData] = useState({ name: '', email: '', role: 'user', balance: 0 });
 
-    // Загрузка данных
     const fetchCategories = () => {
         api.get('/categories')
             .then(res => {
@@ -73,7 +74,6 @@ export default function AdminPage() {
         if (activeTab === 'categories') fetchCategories();
     }, [activeTab]);
 
-    // Обработка товаров
     const handleProductSubmit = async (e) => {
         e.preventDefault();
         setMsg({ text: 'Загрузка...', isError: false });
@@ -111,7 +111,6 @@ export default function AdminPage() {
         setTimeout(() => setMsg({ text: '', isError: false }), 4000);
     };
 
-    // Обработка категорий
     const handleCategorySubmit = async (e) => {
         e.preventDefault();
         if (!categoryName.trim()) return;
@@ -136,17 +135,17 @@ export default function AdminPage() {
         setTimeout(() => setMsg({ text: '', isError: false }), 4000);
     };
 
-    // Обработка пользователей
     const handleEditUser = (user) => {
         setEditingUserId(user.id);
-        setEditUserData({ name: user.name, email: user.email, role: user.role });
+        // Загружаем текущий баланс при начале редактирования
+        setEditUserData({ name: user.name, email: user.email, role: user.role, balance: user.balance || 0 });
     };
 
     const handleSaveUser = async (id) => {
         try {
             await api.put(`/users/${id}`, editUserData);
             setEditingUserId(null);
-            setMsg({ text: 'Пользователь обновлен', isError: false });
+            setMsg({ text: 'Данные пользователя (вкл. баланс) обновлены', isError: false });
             fetchUsers();
         } catch (err) {
             setMsg({ text: err.response?.data?.message || 'Ошибка сохранения', isError: true });
@@ -155,7 +154,7 @@ export default function AdminPage() {
     };
 
     const handleDeleteUser = async (id) => {
-        if (!window.confirm("Вы уверены, что хотите навсегда удалить пользователя из базы данных?")) return;
+        if (!window.confirm("Вы уверены, что хотите навсегда удалить пользователя?")) return;
         try {
             await api.delete(`/users/${id}`);
             setMsg({ text: 'Пользователь удален', isError: false });
@@ -168,7 +167,6 @@ export default function AdminPage() {
 
     return (
         <div className="min-h-[calc(100vh-80px)] bg-gray-50 flex dark:bg-gray-900">
-            {/* Сайдбар */}
             <div className="w-72 bg-white shadow-sm border-r border-gray-200 flex flex-col dark:bg-gray-800 dark:border-gray-700">
                 <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
                     <LayoutDashboard className="w-8 h-8 text-indigo-600" />
@@ -192,7 +190,6 @@ export default function AdminPage() {
                 </div>
             </div>
 
-            {/* Основной контент */}
             <div className="flex-1 p-10 overflow-y-auto">
                 {msg.text && (
                     <div className={`fixed top-24 right-10 z-50 p-4 rounded-xl flex items-center gap-3 font-bold border shadow-lg animate-in fade-in slide-in-from-top-4 ${msg.isError ? 'bg-red-50 text-red-700 border-red-100' : 'bg-green-50 text-green-700 border-green-100'}`}>
@@ -202,7 +199,6 @@ export default function AdminPage() {
                     </div>
                 )}
 
-                {/* Вкладка: Товар */}
                 {activeTab === 'addProduct' && (
                     <div className="max-w-3xl bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-10">
                         <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-8">Создание товара</h2>
@@ -245,7 +241,6 @@ export default function AdminPage() {
                     </div>
                 )}
 
-                {/* Вкладка: Категории */}
                 {activeTab === 'categories' && (
                     <div className="max-w-3xl bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-10">
                         <div className="flex items-center justify-between mb-8">
@@ -291,20 +286,20 @@ export default function AdminPage() {
                     </div>
                 )}
 
-                {/* Вкладка: Пользователи */}
                 {activeTab === 'users' && (
                     <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                         <div className="p-8 border-b border-gray-100 dark:border-gray-700">
-                            <h2 className="text-3xl font-black text-gray-900 dark:text-white">Управление доступом</h2>
+                            <h2 className="text-3xl font-black text-gray-900 dark:text-white">База пользователей</h2>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead>
                                 <tr className="bg-gray-50 dark:bg-gray-700/30 text-left text-gray-400 text-xs font-black uppercase tracking-wider">
                                     <th className="px-8 py-5">ID</th>
-                                    <th className="px-8 py-5">Пользователь</th>
+                                    <th className="px-8 py-5">Имя</th>
                                     <th className="px-8 py-5">Email</th>
                                     <th className="px-8 py-5">Роль</th>
+                                    <th className="px-8 py-5">Баланс (BYN)</th> {/* Новая колонка */}
                                     <th className="px-8 py-5 text-right">Действия</th>
                                 </tr>
                                 </thead>
@@ -314,17 +309,17 @@ export default function AdminPage() {
                                         <td className="px-8 py-5 font-mono text-gray-400 text-sm">#{user.id}</td>
                                         <td className="px-8 py-5">
                                             {editingUserId === user.id ? (
-                                                <input className="p-2 border rounded-lg dark:bg-gray-700 dark:text-white" value={editUserData.name} onChange={e => setEditUserData({...editUserData, name: e.target.value})} />
+                                                <input className="p-2 border rounded-lg dark:bg-gray-700 dark:text-white w-full" value={editUserData.name} onChange={e => setEditUserData({...editUserData, name: e.target.value})} />
                                             ) : <span className="font-bold text-gray-900 dark:text-white">{user.name}</span>}
                                         </td>
                                         <td className="px-8 py-5">
                                             {editingUserId === user.id ? (
-                                                <input className="p-2 border rounded-lg dark:bg-gray-700 dark:text-white" value={editUserData.email} onChange={e => setEditUserData({...editUserData, email: e.target.value})} />
+                                                <input className="p-2 border rounded-lg dark:bg-gray-700 dark:text-white w-full" value={editUserData.email} onChange={e => setEditUserData({...editUserData, email: e.target.value})} />
                                             ) : <span className="text-gray-500 dark:text-gray-400">{user.email}</span>}
                                         </td>
                                         <td className="px-8 py-5">
                                             {editingUserId === user.id ? (
-                                                <select className="p-2 border rounded-lg dark:bg-gray-700 dark:text-white" value={editUserData.role} onChange={e => setEditUserData({...editUserData, role: e.target.value})}>
+                                                <select className="p-2 border rounded-lg dark:bg-gray-700 dark:text-white w-full" value={editUserData.role} onChange={e => setEditUserData({...editUserData, role: e.target.value})}>
                                                     <option value="user">User</option>
                                                     <option value="admin">Admin</option>
                                                 </select>
@@ -332,6 +327,26 @@ export default function AdminPage() {
                                                 <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${user.role === 'admin' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
                                                         {user.role}
                                                     </span>
+                                            )}
+                                        </td>
+                                        {/* Редактирование баланса */}
+                                        <td className="px-8 py-5">
+                                            {editingUserId === user.id ? (
+                                                <div className="flex items-center gap-1">
+                                                    <input
+                                                        type="number"
+                                                        step="0.01"
+                                                        className="p-2 border rounded-lg dark:bg-gray-700 dark:text-white w-24 font-mono font-bold"
+                                                        value={editUserData.balance}
+                                                        onChange={e => setEditUserData({...editUserData, balance: e.target.value})}
+                                                    />
+                                                    <span className="text-xs font-bold text-gray-400">BYN</span>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-2 font-black text-gray-700 dark:text-gray-200">
+                                                    <Wallet className="w-4 h-4 text-indigo-500" />
+                                                    {parseFloat(user.balance).toFixed(2)} BYN
+                                                </div>
                                             )}
                                         </td>
                                         <td className="px-8 py-5 text-right">
