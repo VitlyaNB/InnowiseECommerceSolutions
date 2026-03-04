@@ -18,48 +18,46 @@ class OrderService
         $this->cartItemRepository = $cartItemRepository;
     }
 
-    public function createOrder(User $user): Order
+    // Принимаем массив ID товаров, которые выбрал пользователь
+    public function createOrder(User $user, array $selectedItemIds): Order
     {
-        // Начинаем транзакцию: всё или ничего
-        return DB::transaction(function () use ($user) {
+        return DB::transaction(function () use ($user, $selectedItemIds) {
 
-            // 1. Блокируем строку пользователя для обновления (защита от двойных списаний)
+            // 1. Блокируем пользователя (защита баланса)
             $user = User::lockForUpdate()->find($user->id);
 
-            // 2. Получаем товары из корзины
-            $cartItems = $this->cartItemRepository->getUserCart($user->id);
+            // 2. Получаем ТОЛЬКО выбранные товары
+            $cartItems = $this->cartItemRepository->getSelectedItems($user->id, $selectedItemIds);
 
             if ($cartItems->isEmpty()) {
-                throw new Exception('Корзина пуста');
+                throw new Exception('Выбранные товары не найдены в корзине.');
             }
 
-            // 3. Считаем общую сумму
+            // 3. Считаем сумму
             $totalAmount = 0;
             foreach ($cartItems as $item) {
-                // Предполагаем, что у товара есть цена и учитываем скидку, если есть
-                $price = $item->product->price;
-                $totalAmount += $price * $item->quantity;
+                $totalAmount += $item->product->price * $item->quantity;
 
-                // Проверка склада (опционально, если нужно)
                 if ($item->product->quantity < $item->quantity) {
-                    throw new Exception("Товара {$item->product->name} недостаточно на складе");
+                    throw new Exception("Товара {$item->product->name} недостаточно на складе.");
                 }
             }
 
             // 4. Проверяем баланс
             if ($user->balance < $totalAmount) {
-                throw new Exception('Недостаточно средств на кошельке');
+                throw new Exception('Недостаточно средств на кошельке.');
             }
 
             // 5. Списываем деньги
             $user->balance -= $totalAmount;
             $user->save();
 
-            // 6. Списываем товары со склада и создаем заказ
+            // 6. Создаем заказ (ИСПРАВЛЕНА ОШИБКА ЗДЕСЬ)
             $order = Order::create([
                 'user_id' => $user->id,
-                'total_price' => $totalAmount,
-                'status' => 'paid', // Сразу ставим оплачено
+                'total_amount' => $totalAmount, // Было total_price, стало total_amount
+                'status' => 'paid',
+                'shipping_address' => 'Адрес не указан', // Обязательное поле в БД
             ]);
 
             foreach ($cartItems as $item) {
@@ -70,12 +68,11 @@ class OrderService
                     'price' => $item->product->price,
                 ]);
 
-                // Уменьшаем кол-во товара на складе
                 $item->product->decrement('quantity', $item->quantity);
             }
 
-            // 7. Очищаем корзину
-            $this->cartItemRepository->clearUserCart($user->id);
+            // 7. Удаляем из корзины только купленное
+            $this->cartItemRepository->deleteSelectedItems($user->id, $selectedItemIds);
 
             return $order;
         });

@@ -2,60 +2,82 @@
 
 namespace App\Services;
 
-use App\DTO\ReviewDTO;
 use App\Models\Review;
-use App\Repositories\Interfaces\ReviewRepositoryInterface;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Collection;
+use App\Models\ReviewLike;
+use App\Models\OrderItem;
+use Illuminate\Support\Facades\DB;
+use Exception;
 
 class ReviewService
 {
-    public function __construct(
-        private readonly ReviewRepositoryInterface $reviewRepository
-    ) {}
-
-    public function getProductReviews(int $productId): Collection
+    // Проверка: покупал ли юзер этот товар и был ли заказ оплачен
+    public function canReview(int $userId, int $productId): bool
     {
-        return $this->reviewRepository->getProductReviews($productId);
+        return OrderItem::where('product_id', $productId)
+            ->whereHas('order', function ($query) use ($userId) {
+                $query->where('user_id', $userId)
+                    ->whereIn('status', ['paid', 'shipped']); // Только оплаченные заказы
+            })
+            ->exists();
     }
 
-    public function getReviewById(int $id): Review
+    public function createReview(int $userId, array $data): Review
     {
-        $review = $this->reviewRepository->findById($id);
+        // Если это не ответ на комментарий, проверяем право на отзыв
+        if (empty($data['parent_id'])) {
+            if (!$this->canReview($userId, $data['product_id'])) {
+                throw new Exception('Вы можете оставлять отзывы только на купленные товары.');
+            }
 
-        if (!$review) {
-            throw new ModelNotFoundException("Review with ID {$id} not found.");
+            // Опционально: проверка, не оставлял ли уже отзыв
+            $exists = Review::where('user_id', $userId)
+                ->where('product_id', $data['product_id'])
+                ->whereNull('parent_id')
+                ->exists();
+
+            if ($exists) {
+                throw new Exception('Вы уже оставили отзыв на этот товар.');
+            }
         }
 
-        return $review;
+        return Review::create([
+            'user_id' => $userId,
+            'product_id' => $data['product_id'],
+            'parent_id' => $data['parent_id'] ?? null,
+            'rating' => $data['rating'] ?? null, // У ответов рейтинга нет
+            'comment' => $data['comment'],
+        ]);
     }
 
-    public function createReview(int $userId, ReviewDTO $data): Review
+    public function toggleLike(int $userId, int $reviewId): bool
     {
-        return $this->reviewRepository->create($userId, $data);
-    }
+        $like = ReviewLike::where('user_id', $userId)->where('review_id', $reviewId)->first();
 
-    public function updateReview(int $userId, int $id, ReviewDTO $data): Review
-    {
-        $review = $this->getReviewById($id);
-        
-        if ($review->user_id !== $userId) {
-            throw new \RuntimeException("Unauthorized to update this review.");
+        if ($like) {
+            $like->delete();
+            return false; // Лайк убран
+        } else {
+            ReviewLike::create(['user_id' => $userId, 'review_id' => $reviewId]);
+            return true; // Лайк поставлен
         }
-
-        $this->reviewRepository->update($id, $data);
-
-        return $this->getReviewById($id);
     }
 
-    public function deleteReview(int $userId, int $id): bool
+    public function getProductReviews(int $productId)
     {
-        $review = $this->getReviewById($id);
-        
-        if ($review->user_id !== $userId) {
-            throw new \RuntimeException("Unauthorized to delete this review.");
-        }
-
-        return $this->reviewRepository->delete($id);
+        return Review::where('product_id', $productId)
+            ->whereNull('parent_id') // Берем только корневые отзывы
+            ->with(['replies.user', 'replies.likes']) // Подгружаем ответы
+            ->withCount('likes') // Считаем лайки
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($review) {
+                // Добавляем флаг is_liked для фронта
+                $review->is_liked = $review->isLiked;
+                $review->replies->each(function($reply) {
+                    $reply->likes_count = $reply->likes()->count();
+                    $reply->is_liked = $reply->isLiked;
+                });
+                return $review;
+            });
     }
 }

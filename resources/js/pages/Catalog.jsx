@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../api';
 import { Link } from 'react-router-dom';
 import { ShoppingCart } from 'lucide-react';
-import Hero from '../components/Hero'; // <--- Импортируем наш новый баннер
+import Hero from '../components/Hero';
 
 export default function Catalog() {
     const [products, setProducts] = useState([]);
@@ -21,7 +21,9 @@ export default function Catalog() {
             await api.post('/cart', { product_id: productId, quantity: 1 });
             alert('Добавлено в корзину');
         } catch (error) {
-            alert('Нужно авторизоваться');
+            console.error(error);
+            // Показываем реальную ошибку или заглушку, но не требуем вход
+            alert(error.response?.data?.message || 'Ошибка при добавлении товара');
         }
     };
 
@@ -30,10 +32,8 @@ export default function Catalog() {
     return (
         <div className="max-w-7xl mx-auto px-4 py-6">
 
-            {/* ВСТАВЛЯЕМ КРАСИВУЮ ШАПКУ ЗДЕСЬ */}
             <Hero />
 
-            {/* Якорь для скролла */}
             <div id="products-grid" className="mb-8 flex items-end justify-between">
                 <div>
                     <h2 className="text-3xl font-black text-gray-900 dark:text-white">Популярные товары</h2>

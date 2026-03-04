@@ -14,7 +14,17 @@ class StoreOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'shipping_address' => ['required', 'string', 'max:1000'],
+            // Ожидаем массив items с ID товаров
+            'items' => ['required', 'array', 'min:1'],
+            'items.*' => ['integer', 'exists:cart_items,id'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'items.required' => 'Выберите товары для оплаты.',
+            'items.min' => 'Выберите хотя бы один товар.',
         ];
     }
 }

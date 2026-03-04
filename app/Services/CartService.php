@@ -13,7 +13,6 @@ class CartService
 {
     private const CART_SESSION_COOKIE = 'cart_session';
     private const COOKIE_CONSENT_COOKIE = 'cookie_consent';
-    private const CART_COOKIE_DAYS = 30;
 
     public function __construct(
         private readonly CartItemRepositoryInterface $cartRepository
@@ -25,43 +24,30 @@ class CartService
 
         if (!$sessionId) {
             $sessionId = Str::uuid()->toString();
-
-            Cookie::queue(
-                self::CART_SESSION_COOKIE,
-                $sessionId,
-                60 * 24 * 30,
-                '/',
-                null,
-                false,
-                true,
-                false,
-                'Lax'
-            );
+            // Cookie на 30 дней
+            Cookie::queue(self::CART_SESSION_COOKIE, $sessionId, 60 * 24 * 30, '/', null, false, true, false, 'Lax');
         }
 
         return $sessionId;
     }
 
-    public function cookieConsentAccepted(Request $request): bool
+    // Вспомогательный метод для определения владельца корзины
+    private function getIdentifier(): array
     {
-        return $request->cookie(self::COOKIE_CONSENT_COOKIE) === 'accepted';
+        // Явно проверяем guard sanctum, так как middleware может не быть
+        if (auth('sanctum')->check()) {
+            return ['user_id' => auth('sanctum')->id()];
+        }
+        return ['session_id' => $this->resolveSessionId(request())];
     }
 
     public function addToCart(CartItemDTO $dto): CartItem
     {
-        $request = request();
-        $identifier = auth()->check()
-            ? ['user_id' => auth()->id()]
-            : ['session_id' => $this->resolveSessionId($request)];
-
+        $identifier = $this->getIdentifier();
         $existing = $this->cartRepository->findItem($identifier, $dto->product_id);
 
         if ($existing) {
-            $this->cartRepository->updateQuantity(
-                $existing->id,
-                $existing->quantity + $dto->quantity
-            );
-
+            $this->cartRepository->updateQuantity($existing->id, $existing->quantity + $dto->quantity);
             return $existing->fresh('product.images');
         }
 
@@ -73,30 +59,19 @@ class CartService
 
     public function getCart(): array
     {
-        $request = request();
-        $identifier = auth()->check()
-            ? ['user_id' => auth()->id()]
-            : ['session_id' => $this->resolveSessionId($request)];
-
-        $items = $this->cartRepository->getCartItems($identifier);
-        $totals = $this->calculateTotals($items);
-
+        $items = $this->cartRepository->getCartItems($this->getIdentifier());
         return [
             'items' => $items,
-            'totals' => $totals,
+            'totals' => $this->calculateTotals($items),
         ];
     }
 
     public function updateQuantity(int $id, int $quantity): ?CartItem
     {
-        $request = request();
-        $identifier = auth()->check()
-            ? ['user_id' => auth()->id()]
-            : ['session_id' => $this->resolveSessionId($request)];
-
         $item = $this->cartRepository->findById($id);
 
-        if (!$item || !$this->itemBelongsToIdentifier($item, $identifier)) {
+        // Проверяем, принадлежит ли товар текущему пользователю/сессии
+        if (!$item || !$this->itemBelongsToIdentifier($item, $this->getIdentifier())) {
             return null;
         }
 
@@ -106,40 +81,27 @@ class CartService
         }
 
         $this->cartRepository->updateQuantity($id, $quantity);
-
         return $item->fresh('product.images');
     }
 
     public function removeItem(int $id): bool
     {
-        $request = request();
-        $identifier = auth()->check()
-            ? ['user_id' => auth()->id()]
-            : ['session_id' => $this->resolveSessionId($request)];
-
         $item = $this->cartRepository->findById($id);
-
-        if (!$item || !$this->itemBelongsToIdentifier($item, $identifier)) {
+        if (!$item || !$this->itemBelongsToIdentifier($item, $this->getIdentifier())) {
             return false;
         }
-
         return $this->cartRepository->delete($id);
     }
 
     public function clearCart(): bool
     {
-        $request = request();
-
-        if (auth()->check()) {
-            return $this->cartRepository->clearUserCart(auth()->id());
+        if (auth('sanctum')->check()) {
+            return $this->cartRepository->clearUserCart(auth('sanctum')->id());
         }
-
-        $sessionId = $request->cookie(self::CART_SESSION_COOKIE);
-
+        $sessionId = request()->cookie(self::CART_SESSION_COOKIE);
         if ($sessionId) {
             return $this->cartRepository->clearSessionCart($sessionId);
         }
-
         return true;
     }
 
@@ -154,17 +116,14 @@ class CartService
         return false;
     }
 
-    private function calculateTotals($items, float $taxRate = 0.20, float $discountPercent = 0): array
+    private function calculateTotals($items, float $taxRate = 0.20): array
     {
         $subtotal = $items->sum(fn ($i) => $i->product->price * $i->quantity);
-        $discount = $subtotal * ($discountPercent / 100);
-        $taxable = $subtotal - $discount;
-        $tax = $taxable * $taxRate;
-        $total = $taxable + $tax;
+        $tax = $subtotal * $taxRate;
+        $total = $subtotal + $tax;
 
         return [
             'subtotal' => round($subtotal, 2),
-            'discount' => round($discount, 2),
             'tax' => round($tax, 2),
             'total' => round($total, 2),
         ];

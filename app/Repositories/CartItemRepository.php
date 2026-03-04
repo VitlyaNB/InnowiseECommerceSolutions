@@ -24,6 +24,27 @@ class CartItemRepository implements CartItemRepositoryInterface
             ->get();
     }
 
+    // --- РЕАЛИЗАЦИЯ НОВЫХ МЕТОДОВ ---
+
+    public function getSelectedItems(int $userId, array $ids): Collection
+    {
+        return CartItem::query()
+            ->with(['product.images'])
+            ->where('user_id', $userId)
+            ->whereIn('id', $ids) // Берем только те, что в списке ids
+            ->get();
+    }
+
+    public function deleteSelectedItems(int $userId, array $ids): bool
+    {
+        return (bool) CartItem::query()
+            ->where('user_id', $userId)
+            ->whereIn('id', $ids)
+            ->delete();
+    }
+
+    // --------------------------------
+
     public function getCartItems(array $identifier): Collection
     {
         $query = CartItem::query()->with(['product.images']);

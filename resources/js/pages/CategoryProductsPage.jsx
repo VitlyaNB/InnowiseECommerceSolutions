@@ -11,18 +11,14 @@ export default function CategoryProductsPage() {
 
     useEffect(() => {
         setLoading(true);
-        // Загружаем товары категории
         api.get(`/categories/${id}/products`)
             .then(res => {
                 const data = res.data.data || res.data;
                 setProducts(data);
-                // Если API возвращает имя категории где-то в ответе, можно его достать
-                // Или сделать отдельный запрос за категорией
             })
             .catch(err => console.error(err))
             .finally(() => setLoading(false));
 
-        // Отдельно получим имя категории для заголовка (опционально)
         api.get('/categories').then(res => {
             const cats = res.data.data || res.data;
             const current = cats.find(c => c.id == id);
@@ -31,11 +27,15 @@ export default function CategoryProductsPage() {
 
     }, [id]);
 
-    const addToCart = async (productId) => {
+    const addToCart = async (e, productId) => {
+        e.preventDefault(); // Предотвращаем переход по ссылке
         try {
             await api.post('/cart', { product_id: productId, quantity: 1 });
             alert('Добавлено в корзину');
-        } catch (e) { alert('Ошибка или вход не выполнен'); }
+        } catch (err) {
+            console.error(err);
+            alert(err.response?.data?.message || 'Ошибка добавления');
+        }
     };
 
     return (
@@ -57,8 +57,12 @@ export default function CategoryProductsPage() {
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {products.map(product => (
-                        <div key={product.id} className="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl transition-all border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col">
-                            <Link to={`/products/${product.id}`} className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-900">
+                        <Link
+                            key={product.id}
+                            to={`/product/${product.id}`}
+                            className="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl transition-all border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col"
+                        >
+                            <div className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-900">
                                 {product.images && product.images.length > 0 ? (
                                     <img src={product.images[0].url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                 ) : (
@@ -67,20 +71,21 @@ export default function CategoryProductsPage() {
                                 <div className="absolute bottom-3 left-3 bg-white/90 dark:bg-gray-800/90 backdrop-blur px-3 py-1 rounded-lg font-black text-gray-900 dark:text-white text-sm shadow-sm">
                                     {parseFloat(product.price).toFixed(2)} BYN
                                 </div>
-                            </Link>
+                            </div>
 
                             <div className="p-5 flex flex-col flex-1">
-                                <Link to={`/products/${product.id}`} className="block mb-2">
-                                    <h3 className="font-bold text-lg text-gray-900 dark:text-white leading-tight group-hover:text-indigo-600 transition-colors line-clamp-2">
-                                        {product.name}
-                                    </h3>
-                                </Link>
+                                <h3 className="font-bold text-lg text-gray-900 dark:text-white leading-tight group-hover:text-indigo-600 transition-colors line-clamp-2 mb-2">
+                                    {product.name}
+                                </h3>
 
-                                <button onClick={() => addToCart(product.id)} className="mt-auto w-full bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white py-3 rounded-xl font-bold text-sm hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center gap-2">
+                                <button
+                                    onClick={(e) => addToCart(e, product.id)}
+                                    className="mt-auto w-full bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white py-3 rounded-xl font-bold text-sm hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center gap-2"
+                                >
                                     <ShoppingCart className="w-4 h-4" /> В корзину
                                 </button>
                             </div>
-                        </div>
+                        </Link>
                     ))}
                 </div>
             )}

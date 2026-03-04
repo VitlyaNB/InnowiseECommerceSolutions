@@ -15,12 +15,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Вместо create используй updateOrCreate
         \App\Models\User::updateOrCreate(
-            ['email' => 'test@example.com'],
+            ['email' => 'admin@example.com'],
             [
-                'name' => 'Test User',
+                'name' => 'Admin',
                 'password' => \Illuminate\Support\Facades\Hash::make('password'),
+                'role' => 'admin',
+                'balance' => 1000.00
             ]
         );
 

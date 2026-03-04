@@ -1,22 +1,19 @@
 <?php
 
-
 namespace App\DTO;
 
-use App\Http\Requests\LoginRequest;
+use Illuminate\Http\Request;
 
-readonly class LoginDTO
+class LoginDTO extends BaseDTO
 {
     public function __construct(
-        public string $email,
-        public string $password,
-    )
-    {
-    }
+        public readonly string $email,
+        public readonly string $password,
+    ) {}
 
-    public static function fromRequest(LoginRequest $request): self
+    public static function fromRequest(\Illuminate\Http\Request $request): static
     {
-        return new self(
+        return new static(
             email: $request->validated('email'),
             password: $request->validated('password'),
         );

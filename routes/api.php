@@ -10,42 +10,50 @@ use App\Http\Controllers\Api\Product\SearchProductAction;
 use App\Http\Controllers\Api\Product\GetProductByIdAction;
 use App\Http\Controllers\Api\Product\GetCategoryProductsAction;
 
-// --- AUTH ---
+// Auth
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// --- PUBLIC: PRODUCTS ---
-// ВАЖНО: Search должен быть ПЕРЕД {id}, иначе {id} перехватит слово "search"
+// --- ТОВАРЫ ---
 Route::get('/products/search', SearchProductAction::class);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', GetProductByIdAction::class);
 
-// --- PUBLIC: CATEGORIES ---
+// --- КАТЕГОРИИ ---
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{categoryId}/products', GetCategoryProductsAction::class);
 
-// --- PUBLIC: COOKIE ---
+// --- КОРЗИНА (Теперь доступна всем) ---
+// Мы вынесли её из middleware auth:sanctum, чтобы работала для гостей
+Route::get('/cart', [CartController::class, 'index']);
+Route::post('/cart', [CartController::class, 'store']);
+Route::put('/cart/{id}', [CartController::class, 'update']);
+Route::delete('/cart/{id}', [CartController::class, 'destroy']);
+Route::delete('/cart', [CartController::class, 'clear']);
+
+// Cookie Consent
 Route::get('/cookie-consent', fn () => response()->json(['accepted' => request()->cookie('cookie_consent') === 'accepted']));
 Route::post('/cookie-consent', function () {
     $cookie = cookie('cookie_consent', request()->boolean('accepted') ? 'accepted' : 'declined', 365 * 24 * 60);
     return response()->json(['accepted' => request()->boolean('accepted')])->cookie($cookie);
 });
 
-// --- PRIVATE: USER & ADMIN ---
+// --- ТОЛЬКО АВТОРИЗОВАННЫЕ ---
 Route::middleware(['auth:sanctum'])->group(function () {
-    // Корзина
-    Route::get('/cart', [CartController::class, 'index']);
-    Route::post('/cart', [CartController::class, 'store']);
-    Route::put('/cart/{id}', [CartController::class, 'update']);
-    Route::delete('/cart/{id}', [CartController::class, 'destroy']);
-    Route::delete('/cart', [CartController::class, 'clear']);
-
-    // Кошелек и Заказы
+    // Кошелек и Заказы (покупать могут только авторизованные)
     Route::post('/wallet/top-up', [AuthController::class, 'topUp']);
     Route::post('/orders', [OrderController::class, 'store']);
 
-    // Админ-панель (Middleware CheckAdmin)
+    // Админка
     Route::middleware([\App\Http\Middleware\CheckAdmin::class])->group(function () {
+        // История заказов
+        Route::get('/orders', [\App\Http\Controllers\Api\OrderController::class, 'index']);
+
+        // Отзывы
+        Route::post('/reviews', [\App\Http\Controllers\Api\ReviewController::class, 'store']);
+        Route::post('/reviews/{id}/like', [\App\Http\Controllers\Api\ReviewController::class, 'like']);
+        Route::get('/products/{id}/can-review', [\App\Http\Controllers\Api\ReviewController::class, 'checkPermission']);
+
         Route::get('/users', [AuthController::class, 'index']);
         Route::put('/users/{id}', [AuthController::class, 'update']);
         Route::delete('/users/{id}', [AuthController::class, 'destroy']);
