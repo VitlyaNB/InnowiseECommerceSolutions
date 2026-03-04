@@ -5,27 +5,27 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
-// Контексты
+// Contexts
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 
-// Компоненты
+// Layout
 import Navbar from './components/Navbar';
 import CookieConsent from './components/CookieConsent';
 import AdminRoute from './components/AdminRoute';
 
-// Страницы
-import Catalog from './pages/Catalog'; // Это будет "Главная" с товарами
-import CategoriesPage from './pages/CategoriesPage'; // Это будет "Каталог" с категориями
-import CategoryProductsPage from './pages/CategoryProductsPage'; // Товары внутри категории
+// Pages
+import Catalog from './pages/Catalog';             // Главная (Витрина товаров)
+import CategoriesPage from './pages/CategoriesPage'; // Каталог (Список категорий)
+import CategoryProductsPage from './pages/CategoryProductsPage'; // Товары категории
+import SingleProductPage from './pages/SingleProductPage'; // Один товар
 
 import LoginPage from './pages/LoginPage';
 import CartPage from './pages/CartPage';
-import AdminPage from './pages/AdminPage';
-import SingleProductPage from './pages/SingleProductPage';
 import SearchPage from './pages/SearchPage';
 import AboutPage from './pages/AboutPage';
 import TopUpPage from './pages/TopUpPage';
+import AdminPage from './pages/AdminPage';
 
 function App() {
     return (
@@ -37,22 +37,25 @@ function App() {
 
                         <div className="pt-20">
                             <Routes>
-                                {/* 1. ГЛАВНАЯ: Показываем товары (компонент Catalog) */}
+                                {/* 1. Главная страница = Товары */}
                                 <Route path="/" element={<Catalog />} />
 
-                                {/* 2. КАТАЛОГ: Показываем категории */}
+                                {/* 2. Страница Каталога = Категории */}
                                 <Route path="/catalog" element={<CategoriesPage />} />
 
-                                {/* 3. ВНУТРЬ КАТЕГОРИИ: Показываем товары конкретной категории */}
+                                {/* 3. Страница товаров конкретной категории */}
                                 <Route path="/catalog/:id" element={<CategoryProductsPage />} />
 
-                                {/* Остальные маршруты */}
-                                <Route path="/products/:id" element={<SingleProductPage />} />
-                                <Route path="/login" element={<LoginPage />} />
+                                {/* 4. Страница конкретного товара */}
+                                <Route path="/product/:id" element={<SingleProductPage />} />
+
+                                {/* Служебные страницы */}
                                 <Route path="/cart" element={<CartPage />} />
-                                <Route path="/about" element={<AboutPage />} />
                                 <Route path="/search" element={<SearchPage />} />
+                                <Route path="/login" element={<LoginPage />} />
                                 <Route path="/top-up" element={<TopUpPage />} />
+                                <Route path="/about" element={<AboutPage />} />
+                                {/* <Route path="/register" element={<RegisterPage />} /> */}
 
                                 {/* Админка */}
                                 <Route path="/admin" element={
@@ -62,14 +65,13 @@ function App() {
                                 } />
 
                                 <Route path="*" element={
-                                    <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-                                        <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-4">404</h1>
-                                        <p className="text-gray-600 dark:text-gray-400">Страница не найдена</p>
+                                    <div className="flex flex-col items-center justify-center h-[60vh]">
+                                        <h1 className="text-4xl font-bold text-gray-400">404</h1>
+                                        <p className="text-gray-500">Страница не найдена</p>
                                     </div>
                                 } />
                             </Routes>
                         </div>
-
                         <CookieConsent />
                     </div>
                 </BrowserRouter>

@@ -10,42 +10,41 @@ use App\Http\Controllers\Api\Product\SearchProductAction;
 use App\Http\Controllers\Api\Product\GetProductByIdAction;
 use App\Http\Controllers\Api\Product\GetCategoryProductsAction;
 
-// Авторизация
+// --- AUTH ---
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// --- ТОВАРЫ ---
-// 1. Сначала поиск (ЭТО ВАЖНО, чтобы не было 404)
+// --- PUBLIC: PRODUCTS ---
+// ВАЖНО: Search должен быть ПЕРЕД {id}, иначе {id} перехватит слово "search"
 Route::get('/products/search', SearchProductAction::class);
-
-// 2. Потом список и конкретный товар
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', GetProductByIdAction::class);
 
-// --- КАТЕГОРИИ ---
+// --- PUBLIC: CATEGORIES ---
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{categoryId}/products', GetCategoryProductsAction::class);
 
-// Куки
+// --- PUBLIC: COOKIE ---
 Route::get('/cookie-consent', fn () => response()->json(['accepted' => request()->cookie('cookie_consent') === 'accepted']));
 Route::post('/cookie-consent', function () {
     $cookie = cookie('cookie_consent', request()->boolean('accepted') ? 'accepted' : 'declined', 365 * 24 * 60);
     return response()->json(['accepted' => request()->boolean('accepted')])->cookie($cookie);
 });
 
-// --- ЗАЩИЩЕННЫЕ МАРШРУТЫ ---
+// --- PRIVATE: USER & ADMIN ---
 Route::middleware(['auth:sanctum'])->group(function () {
+    // Корзина
     Route::get('/cart', [CartController::class, 'index']);
     Route::post('/cart', [CartController::class, 'store']);
     Route::put('/cart/{id}', [CartController::class, 'update']);
     Route::delete('/cart/{id}', [CartController::class, 'destroy']);
     Route::delete('/cart', [CartController::class, 'clear']);
 
-    // Пополнение и Заказы
+    // Кошелек и Заказы
     Route::post('/wallet/top-up', [AuthController::class, 'topUp']);
     Route::post('/orders', [OrderController::class, 'store']);
 
-    // Админка
+    // Админ-панель (Middleware CheckAdmin)
     Route::middleware([\App\Http\Middleware\CheckAdmin::class])->group(function () {
         Route::get('/users', [AuthController::class, 'index']);
         Route::put('/users/{id}', [AuthController::class, 'update']);
