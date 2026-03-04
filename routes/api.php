@@ -50,4 +50,5 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\CheckAdmin::class])->gro
     Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
     Route::post('/wallet/top-up', [AuthController::class, 'topUp']);
     Route::post('/categories/sync', [\App\Http\Controllers\Api\ExternalCategorySyncController::class, 'sync']);
+    Route::post('/orders', [\App\Http\Controllers\Api\OrderController::class, 'store']);
 });
