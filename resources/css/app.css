@@ -8,29 +8,36 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
     'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Устанавливаем светло-голубой цвет как основной фон темы */
+    --color-background: #f0f7ff;
 }
 
 @layer base {
     :root {
-        --background: #ffffff;
+        --background: #f0f7ff;
         --foreground: #111827;
     }
 
     .dark {
-        --background: #111827;
+        --background: #0f172a;
         --foreground: #ffffff;
         color-scheme: dark;
+    }
+
+    body {
+        /* Принудительно задаем фон через переменную с высоким приоритетом */
+        background-color: var(--background) !important;
+        color: var(--foreground);
+        @apply transition-colors duration-300 antialiased;
+        min-height: 100vh;
     }
 }
 
 @layer base {
-    /* Принудительные цвета для темной темы, если Tailwind классы не справляются */
+    /* Фиксы для темной темы */
     .dark body {
         background-color: #0f172a !important;
-        color: #f1f5f9 !important;
-    }
-    .dark h1, .dark h2, .dark h3, .dark p, .dark label, .dark span:not(.text-indigo-600) {
-        color: #ffffff !important;
     }
     .dark .bg-white {
         background-color: #1e293b !important;
@@ -40,3 +47,21 @@
     }
 }
 
+/* Красивый скроллбар в цвет фона */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background-color: #e5effa;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #c7d2fe;
+    border-radius: 20px;
+    border: 2px solid #e5effa;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #a5b4fc;
+}

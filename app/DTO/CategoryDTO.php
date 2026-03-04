@@ -3,21 +3,19 @@
 namespace App\DTO;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
 
-class CategoryDTO
+class CategoryDTO extends BaseDTO
 {
     public function __construct(
         public readonly string $name,
-        public readonly ?UploadedFile $image
+        public readonly ?\Illuminate\Http\UploadedFile $image = null,
     ) {}
 
-    public static function fromRequest(Request $request): self
+    public static function fromRequest(Request $request): static
     {
-        // Используем $request->input() или $request->all(), так как это не FormRequest
-        return new self(
-            name: $request->input('name', ''),
-            image: $request->file('image')
+        return new static(
+            name: $request->validated('name'),
+            image: $request->file('image'),
         );
     }
 }
