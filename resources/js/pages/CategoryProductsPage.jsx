@@ -1,61 +1,89 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
-import { ShoppingCart, ArrowLeft, LayoutGrid } from 'lucide-react';
-import ImageWithFallback from '../components/ImageWithFallback';
+import api from '../api';
+import { ShoppingCart, ArrowLeft } from 'lucide-react';
 
 export default function CategoryProductsPage() {
-    const { categoryId } = useParams();
+    const { id } = useParams();
     const [products, setProducts] = useState([]);
+    const [categoryName, setCategoryName] = useState('');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         setLoading(true);
-        axios.get(`/api/categories/${categoryId}/products`)
-            .then(res => setProducts(res.data.data || res.data))
+        // Загружаем товары категории
+        api.get(`/categories/${id}/products`)
+            .then(res => {
+                const data = res.data.data || res.data;
+                setProducts(data);
+                // Если API возвращает имя категории где-то в ответе, можно его достать
+                // Или сделать отдельный запрос за категорией
+            })
             .catch(err => console.error(err))
             .finally(() => setLoading(false));
-    }, [categoryId]);
+
+        // Отдельно получим имя категории для заголовка (опционально)
+        api.get('/categories').then(res => {
+            const cats = res.data.data || res.data;
+            const current = cats.find(c => c.id == id);
+            if(current) setCategoryName(current.name);
+        });
+
+    }, [id]);
+
+    const addToCart = async (productId) => {
+        try {
+            await api.post('/cart', { product_id: productId, quantity: 1 });
+            alert('Добавлено в корзину');
+        } catch (e) { alert('Ошибка или вход не выполнен'); }
+    };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-16 transition-colors duration-300">
-            <div className="bg-white dark:bg-gray-800 px-8 py-6 mb-8 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-                <div className="max-w-7xl mx-auto flex items-center gap-4">
-                    <Link to="/catalog" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"><ArrowLeft className="w-6 h-6 text-gray-900 dark:text-white" /></Link>
-                    <LayoutGrid className="w-6 h-6 text-indigo-600" />
-                    <h1 className="text-2xl font-black text-gray-900 dark:text-white">Товары категории</h1>
-                </div>
-            </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <Link to="/catalog" className="inline-flex items-center gap-2 text-gray-500 hover:text-indigo-600 mb-6 font-bold transition-colors">
+                <ArrowLeft className="w-4 h-4" /> Все категории
+            </Link>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {loading ? (
-                    <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-indigo-600"></div></div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {products.map((product) => (
-                            <Link key={product.id} to={`/product/${product.id}`} className="group bg-white dark:bg-gray-800 rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-2xl transition-all flex flex-col">
-                                <div className="aspect-[4/5] bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
-                                    <img
-                                        src={product.images?.[0]?.url || 'https://placehold.co/400x500?text=No+Image'}
-                                        alt={product.name}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                        onError={(e) => { e.target.src = 'https://placehold.co/400x500?text=Error+Load'; }}
-                                    />
-                                </div>
-                                <div className="p-6 flex flex-col flex-1">
-                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{product.name}</h3>
-                                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
-                                        <span className="text-xl font-black text-gray-900 dark:text-white">{product.price} BYN</span>
-                                        <button className="bg-gray-900 dark:bg-indigo-600 text-white p-3 rounded-2xl hover:bg-indigo-600 transition-colors" onClick={(e) => e.preventDefault()}>
-                                            <ShoppingCart className="h-5 w-5" />
-                                        </button>
-                                    </div>
+            <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-8">
+                {categoryName || 'Товары категории'}
+            </h1>
+
+            {loading ? (
+                <div className="flex justify-center p-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div></div>
+            ) : products.length === 0 ? (
+                <div className="text-center py-20 bg-gray-50 dark:bg-gray-800 rounded-3xl">
+                    <p className="text-gray-500 font-bold">В этой категории пока нет товаров.</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {products.map(product => (
+                        <div key={product.id} className="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl transition-all border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col">
+                            <Link to={`/products/${product.id}`} className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-900">
+                                {product.images && product.images.length > 0 ? (
+                                    <img src={product.images[0].url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold">NO IMAGE</div>
+                                )}
+                                <div className="absolute bottom-3 left-3 bg-white/90 dark:bg-gray-800/90 backdrop-blur px-3 py-1 rounded-lg font-black text-gray-900 dark:text-white text-sm shadow-sm">
+                                    {parseFloat(product.price).toFixed(2)} BYN
                                 </div>
                             </Link>
-                        ))}
-                    </div>
-                )}
-            </div>
+
+                            <div className="p-5 flex flex-col flex-1">
+                                <Link to={`/products/${product.id}`} className="block mb-2">
+                                    <h3 className="font-bold text-lg text-gray-900 dark:text-white leading-tight group-hover:text-indigo-600 transition-colors line-clamp-2">
+                                        {product.name}
+                                    </h3>
+                                </Link>
+
+                                <button onClick={() => addToCart(product.id)} className="mt-auto w-full bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white py-3 rounded-xl font-bold text-sm hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center gap-2">
+                                    <ShoppingCart className="w-4 h-4" /> В корзину
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
