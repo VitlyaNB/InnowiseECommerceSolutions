@@ -9,14 +9,14 @@ class CategoryDTO
 {
     public function __construct(
         public readonly string $name,
-        public readonly ?UploadedFile $image // Важно: тип UploadedFile или null
+        public readonly ?UploadedFile $image
     ) {}
 
     public static function fromRequest(Request $request): self
     {
+        // Используем $request->input() или $request->all(), так как это не FormRequest
         return new self(
-            name: $request->validated('name'),
-            // Проверяем, есть ли файл в поле 'image'
+            name: $request->input('name', ''),
             image: $request->file('image')
         );
     }

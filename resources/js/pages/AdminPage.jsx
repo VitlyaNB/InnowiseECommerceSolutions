@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { Link } from 'react-router-dom';
 import {
     ArrowLeft,
@@ -13,7 +13,8 @@ import {
     AlertCircle,
     FolderTree,
     RefreshCw,
-    X
+    X,
+    Check
 } from 'lucide-react';
 
 export default function AdminPage() {
@@ -42,14 +43,11 @@ export default function AdminPage() {
 
     // Состояния для пользователей
     const [editingUserId, setEditingUserId] = useState(null);
-    const [editUserData, setEditUserData] = useState({});
+    const [editUserData, setEditUserData] = useState({ name: '', email: '', role: 'user' });
 
-    const authHeader = {
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
-    };
-
+    // Загрузка данных
     const fetchCategories = () => {
-        axios.get('/api/categories')
+        api.get('/categories')
             .then(res => {
                 const fetched = res.data.data || res.data;
                 setCategories(fetched);
@@ -61,7 +59,7 @@ export default function AdminPage() {
     };
 
     const fetchUsers = () => {
-        axios.get('/api/users', authHeader)
+        api.get('/users')
             .then(res => setUsers(res.data.data || res.data))
             .catch(err => console.error("Ошибка загрузки пользователей:", err));
     };
@@ -75,6 +73,7 @@ export default function AdminPage() {
         if (activeTab === 'categories') fetchCategories();
     }, [activeTab]);
 
+    // Обработка товаров
     const handleProductSubmit = async (e) => {
         e.preventDefault();
         setMsg({ text: 'Загрузка...', isError: false });
@@ -93,11 +92,8 @@ export default function AdminPage() {
                 });
             }
 
-            await axios.post('/api/products', form, {
-                headers: {
-                    ...authHeader.headers,
-                    'Content-Type': 'multipart/form-data'
-                }
+            await api.post('/products', form, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
 
             setMsg({ text: 'Товар успешно добавлен!', isError: false });
@@ -109,12 +105,13 @@ export default function AdminPage() {
                 category_id: categories[0]?.id || ''
             });
             setImages([]);
-            setTimeout(() => setMsg({ text: '', isError: false }), 4000);
         } catch (error) {
             setMsg({ text: error.response?.data?.message || 'Ошибка при добавлении товара', isError: true });
         }
+        setTimeout(() => setMsg({ text: '', isError: false }), 4000);
     };
 
+    // Обработка категорий
     const handleCategorySubmit = async (e) => {
         e.preventDefault();
         if (!categoryName.trim()) return;
@@ -126,11 +123,8 @@ export default function AdminPage() {
         }
 
         try {
-            await axios.post('/api/categories', form, {
-                headers: {
-                    ...authHeader.headers,
-                    'Content-Type': 'multipart/form-data'
-                }
+            await api.post('/categories', form, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
             setCategoryName('');
             setCategoryImage(null);
@@ -142,6 +136,7 @@ export default function AdminPage() {
         setTimeout(() => setMsg({ text: '', isError: false }), 4000);
     };
 
+    // Обработка пользователей
     const handleEditUser = (user) => {
         setEditingUserId(user.id);
         setEditUserData({ name: user.name, email: user.email, role: user.role });
@@ -149,35 +144,35 @@ export default function AdminPage() {
 
     const handleSaveUser = async (id) => {
         try {
-            await axios.put(`/api/users/${id}`, editUserData, authHeader);
+            await api.put(`/users/${id}`, editUserData);
             setEditingUserId(null);
             setMsg({ text: 'Пользователь обновлен', isError: false });
             fetchUsers();
         } catch (err) {
-            setMsg({ text: 'Ошибка сохранения', isError: true });
+            setMsg({ text: err.response?.data?.message || 'Ошибка сохранения', isError: true });
         }
         setTimeout(() => setMsg({ text: '', isError: false }), 3000);
     };
 
     const handleDeleteUser = async (id) => {
-        if (!window.confirm("Вы уверены?")) return;
+        if (!window.confirm("Вы уверены, что хотите навсегда удалить пользователя из базы данных?")) return;
         try {
-            await axios.delete(`/api/users/${id}`, authHeader);
+            await api.delete(`/users/${id}`);
             setMsg({ text: 'Пользователь удален', isError: false });
             fetchUsers();
         } catch (err) {
-            setMsg({ text: 'Ошибка удаления', isError: true });
+            setMsg({ text: err.response?.data?.message || 'Ошибка удаления', isError: true });
         }
         setTimeout(() => setMsg({ text: '', isError: false }), 3000);
     };
 
     return (
         <div className="min-h-[calc(100vh-80px)] bg-gray-50 flex dark:bg-gray-900">
-            {/* Боковое меню */}
+            {/* Сайдбар */}
             <div className="w-72 bg-white shadow-sm border-r border-gray-200 flex flex-col dark:bg-gray-800 dark:border-gray-700">
                 <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
                     <LayoutDashboard className="w-8 h-8 text-indigo-600" />
-                    <h1 className="text-xl font-black text-gray-900 tracking-tight dark:text-white">АДМИНКА</h1>
+                    <h1 className="text-xl font-black text-gray-900 tracking-tight dark:text-white uppercase">Панель</h1>
                 </div>
                 <div className="p-4 flex flex-col gap-2 flex-1">
                     <button onClick={() => setActiveTab('addProduct')} className={`flex items-center gap-3 p-4 rounded-xl font-bold transition-all ${activeTab === 'addProduct' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
@@ -192,37 +187,38 @@ export default function AdminPage() {
                 </div>
                 <div className="p-4 border-t border-gray-100 dark:border-gray-700">
                     <Link to="/" className="flex items-center gap-3 p-4 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <ArrowLeft className="w-5 h-5" /> В магазин
+                        <ArrowLeft className="w-5 h-5" /> На главную
                     </Link>
                 </div>
             </div>
 
-            {/* Контент */}
+            {/* Основной контент */}
             <div className="flex-1 p-10 overflow-y-auto">
                 {msg.text && (
                     <div className={`fixed top-24 right-10 z-50 p-4 rounded-xl flex items-center gap-3 font-bold border shadow-lg animate-in fade-in slide-in-from-top-4 ${msg.isError ? 'bg-red-50 text-red-700 border-red-100' : 'bg-green-50 text-green-700 border-green-100'}`}>
-                        {msg.isError ? <AlertCircle className="w-5 h-5" /> : <PlusCircle className="w-5 h-5" />}
+                        {msg.isError ? <AlertCircle className="w-5 h-5" /> : <Check className="w-5 h-5" />}
                         {msg.text}
                         <button onClick={() => setMsg({text: '', isError: false})}><X className="w-4 h-4" /></button>
                     </div>
                 )}
 
+                {/* Вкладка: Товар */}
                 {activeTab === 'addProduct' && (
                     <div className="max-w-3xl bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-10">
-                        <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-8">Новый товар</h2>
+                        <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-8">Создание товара</h2>
                         <form onSubmit={handleProductSubmit} className="space-y-6">
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Название товара</label>
-                                <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Название</label>
+                                <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500" />
                             </div>
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Цена (BYN)</label>
-                                    <input type="number" step="0.01" required value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                    <input type="number" step="0.01" required value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 dark:text-white outline-none" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Количество</label>
-                                    <input type="number" required value={formData.quantity} onChange={e => setFormData({...formData, quantity: e.target.value})} className="w-full p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Склад</label>
+                                    <input type="number" required value={formData.quantity} onChange={e => setFormData({...formData, quantity: e.target.value})} className="w-full p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 dark:text-white outline-none" />
                                 </div>
                             </div>
                             <div>
@@ -232,23 +228,24 @@ export default function AdminPage() {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Фотографии товара</label>
-                                <div className="relative w-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 flex flex-col items-center justify-center text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Изображения</label>
+                                <div className="relative w-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 flex flex-col items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer">
                                     <ImageIcon className="w-10 h-10 mb-2 text-indigo-400" />
-                                    <span className="text-sm font-bold">Выберите изображения</span>
+                                    <span className="text-sm font-bold">Загрузить фото</span>
                                     <input type="file" multiple accept="image/*" onChange={e => setImages(e.target.files)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                                 </div>
-                                {images.length > 0 && <p className="mt-2 text-indigo-600 font-bold text-sm">Выбрано: {images.length}</p>}
+                                {images.length > 0 && <p className="mt-2 text-indigo-600 font-bold text-sm">Файлов: {images.length}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Описание</label>
                                 <textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 dark:text-white h-32 outline-none"></textarea>
                             </div>
-                            <button type="submit" className="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl hover:bg-indigo-700 transition-all shadow-lg active:scale-[0.98]">Создать товар</button>
+                            <button type="submit" className="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl hover:bg-indigo-700 transition-all shadow-lg active:scale-95">Опубликовать</button>
                         </form>
                     </div>
                 )}
 
+                {/* Вкладка: Категории */}
                 {activeTab === 'categories' && (
                     <div className="max-w-3xl bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-10">
                         <div className="flex items-center justify-between mb-8">
@@ -256,79 +253,100 @@ export default function AdminPage() {
                             <button onClick={async () => {
                                 setSyncing(true);
                                 try {
-                                    const res = await axios.post('/api/categories/sync', {}, authHeader);
-                                    setMsg({ text: res.data?.message || 'Синхронизация завершена', isError: false });
+                                    await api.post('/categories/sync', {});
                                     fetchCategories();
+                                    setMsg({ text: 'Синхронизация завершена', isError: false });
                                 } catch (err) { setMsg({ text: 'Ошибка синхронизации', isError: true }); }
-                                finally { setSyncing(false); setTimeout(() => setMsg({ text: '', isError: false }), 5000); }
-                            }} disabled={syncing} className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl font-bold text-gray-700 dark:text-gray-300 disabled:opacity-50">
+                                finally { setSyncing(false); }
+                            }} disabled={syncing} className="p-2 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 transition-colors">
+                                <RefreshCw className={`w-5 h-5 ${syncing ? 'animate-spin' : ''}`} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleCategorySubmit} className="flex flex-col gap-4 mb-8 bg-gray-50 dark:bg-gray-700/50 p-6 rounded-2xl border border-gray-100 dark:border-gray-600">
-                            <div className="flex gap-4">
-                                <input type="text" value={categoryName} onChange={e => setCategoryName(e.target.value)} placeholder="Название категории" className="flex-1 p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
-                                <button type="submit" className="px-6 py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all">Добавить</button>
+                        <form onSubmit={handleCategorySubmit} className="space-y-4 mb-10 p-6 bg-gray-50 dark:bg-gray-700/50 rounded-2xl border border-gray-100 dark:border-gray-600">
+                            <input type="text" value={categoryName} onChange={e => setCategoryName(e.target.value)} placeholder="Название новой категории" className="w-full p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 dark:text-white outline-none" />
+                            <div className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 flex flex-col items-center justify-center text-gray-400">
+                                <ImageIcon className="w-6 h-6 mb-1" />
+                                <span className="text-xs font-bold">{categoryImage ? categoryImage.name : "Иконка категории"}</span>
+                                <input type="file" onChange={e => setCategoryImage(e.target.files[0])} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                             </div>
-                            <div className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 flex flex-col items-center justify-center text-gray-500 hover:bg-white dark:hover:bg-gray-700 transition-colors cursor-pointer">
-                                <ImageIcon className="w-6 h-6 mb-1 text-indigo-400" />
-                                <span className="text-xs font-bold">{categoryImage ? `Выбран: ${categoryImage.name}` : "Фото категории"}</span>
-                                <input type="file" accept="image/*" onChange={e => setCategoryImage(e.target.files[0])} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                            </div>
+                            <button type="submit" className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700">Создать категорию</button>
                         </form>
 
-                        <div className="space-y-2">
+                        <div className="grid gap-3">
                             {categories.map(cat => (
-                                <div key={cat.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-transparent hover:border-indigo-100 transition-all">
+                                <div key={cat.id} className="flex items-center justify-between p-4 bg-white dark:bg-gray-700 rounded-2xl border border-gray-100 dark:border-gray-600 hover:shadow-md transition-shadow">
                                     <div className="flex items-center gap-4">
-                                        {cat.image_path && <img src={cat.image_path} alt="" className="w-10 h-10 rounded-lg object-cover" />}
+                                        <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg flex items-center justify-center">
+                                            <Tag className="w-5 h-5 text-indigo-600" />
+                                        </div>
                                         <span className="font-bold text-gray-900 dark:text-white">{cat.name}</span>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <button onClick={() => { setEditingCategoryId(cat.id); setEditCategoryName(cat.name); }} className="p-2 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg"><Edit className="w-4 h-4" /></button>
-                                        <button onClick={async () => { if (window.confirm("Удалить?")) try { await axios.delete(`/api/categories/${cat.id}`, authHeader); fetchCategories(); } catch(e){} }} className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"><Trash2 className="w-4 h-4" /></button>
-                                    </div>
+                                    <button onClick={async () => { if(window.confirm("Удалить категорию?")) { await api.delete(`/categories/${cat.id}`); fetchCategories(); } }} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg">
+                                        <Trash2 className="w-5 h-5" />
+                                    </button>
                                 </div>
                             ))}
                         </div>
                     </div>
                 )}
 
+                {/* Вкладка: Пользователи */}
                 {activeTab === 'users' && (
-                    <div className="max-w-5xl bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                        <div className="p-8 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-                            <h2 className="text-3xl font-black text-gray-900 dark:text-white">Пользователи</h2>
+                    <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                        <div className="p-8 border-b border-gray-100 dark:border-gray-700">
+                            <h2 className="text-3xl font-black text-gray-900 dark:text-white">Управление доступом</h2>
                         </div>
-                        <div className="overflow-x-auto p-8">
-                            <table className="w-full text-left">
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
                                 <thead>
-                                <tr className="text-gray-400 border-b border-gray-100 dark:border-gray-700">
-                                    <th className="pb-4 font-bold pl-4 uppercase text-xs">ID</th>
-                                    <th className="pb-4 font-bold uppercase text-xs">Имя</th>
-                                    <th className="pb-4 font-bold uppercase text-xs">Email</th>
-                                    <th className="pb-4 font-bold uppercase text-xs">Роль</th>
-                                    <th className="pb-4 font-bold text-right pr-4 uppercase text-xs">Действия</th>
+                                <tr className="bg-gray-50 dark:bg-gray-700/30 text-left text-gray-400 text-xs font-black uppercase tracking-wider">
+                                    <th className="px-8 py-5">ID</th>
+                                    <th className="px-8 py-5">Пользователь</th>
+                                    <th className="px-8 py-5">Email</th>
+                                    <th className="px-8 py-5">Роль</th>
+                                    <th className="px-8 py-5 text-right">Действия</th>
                                 </tr>
                                 </thead>
-                                <tbody>
+                                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                                 {users.map(user => (
-                                    <tr key={user.id} className="border-b border-gray-50 dark:border-gray-700/50 hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
-                                        <td className="py-5 pl-4 text-gray-500 font-mono">#{user.id}</td>
-                                        <td className="py-5">
-                                            {editingUserId === user.id ?
-                                                <input className="border rounded-lg px-2 py-1 dark:bg-gray-700 dark:text-white" value={editUserData.name} onChange={e => setEditUserData({...editUserData, name: e.target.value})} />
-                                                : <span className="font-bold text-gray-900 dark:text-white">{user.name}</span>}
+                                    <tr key={user.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-700/20 transition-colors">
+                                        <td className="px-8 py-5 font-mono text-gray-400 text-sm">#{user.id}</td>
+                                        <td className="px-8 py-5">
+                                            {editingUserId === user.id ? (
+                                                <input className="p-2 border rounded-lg dark:bg-gray-700 dark:text-white" value={editUserData.name} onChange={e => setEditUserData({...editUserData, name: e.target.value})} />
+                                            ) : <span className="font-bold text-gray-900 dark:text-white">{user.name}</span>}
                                         </td>
-                                        <td className="py-5 dark:text-gray-300">{user.email}</td>
-                                        <td className="py-5">
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${user.role === 'admin' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>{user.role}</span>
+                                        <td className="px-8 py-5">
+                                            {editingUserId === user.id ? (
+                                                <input className="p-2 border rounded-lg dark:bg-gray-700 dark:text-white" value={editUserData.email} onChange={e => setEditUserData({...editUserData, email: e.target.value})} />
+                                            ) : <span className="text-gray-500 dark:text-gray-400">{user.email}</span>}
                                         </td>
-                                        <td className="py-5 text-right pr-4">
-                                            <div className="flex justify-end gap-2">
-                                                {editingUserId === user.id ?
-                                                    <button onClick={() => handleSaveUser(user.id)} className="bg-indigo-600 text-white px-3 py-1 rounded-lg text-xs">ОК</button>
-                                                    : <button onClick={() => handleEditUser(user)} className="p-2 text-indigo-400 hover:bg-indigo-50 rounded-full"><Edit className="w-4 h-4" /></button>}
-                                                <button onClick={() => handleDeleteUser(user.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-full"><Trash2 className="w-4 h-4" /></button>
+                                        <td className="px-8 py-5">
+                                            {editingUserId === user.id ? (
+                                                <select className="p-2 border rounded-lg dark:bg-gray-700 dark:text-white" value={editUserData.role} onChange={e => setEditUserData({...editUserData, role: e.target.value})}>
+                                                    <option value="user">User</option>
+                                                    <option value="admin">Admin</option>
+                                                </select>
+                                            ) : (
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${user.role === 'admin' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                                                        {user.role}
+                                                    </span>
+                                            )}
+                                        </td>
+                                        <td className="px-8 py-5 text-right">
+                                            <div className="flex justify-end gap-3">
+                                                {editingUserId === user.id ? (
+                                                    <>
+                                                        <button onClick={() => handleSaveUser(user.id)} className="p-2 text-green-600 bg-green-50 rounded-lg hover:bg-green-100"><Check className="w-5 h-5" /></button>
+                                                        <button onClick={() => setEditingUserId(null)} className="p-2 text-gray-400 bg-gray-50 rounded-lg"><X className="w-5 h-5" /></button>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <button onClick={() => handleEditUser(user)} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"><Edit className="w-5 h-5" /></button>
+                                                        <button onClick={() => handleDeleteUser(user.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 className="w-5 h-5" /></button>
+                                                    </>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

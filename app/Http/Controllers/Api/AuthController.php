@@ -3,60 +3,74 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Models\User;
 use App\Services\AuthService;
-use App\DTO\RegisterDTO;
-use App\DTO\LoginDTO;
-use App\DTO\UpdateUserDTO;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
-    public function __construct(
-        private readonly AuthService $authService
-    ) {}
+    protected AuthService $authService;
+
+    public function __construct(AuthService $authService)
+    {
+        $this->authService = $authService;
+    }
 
     public function register(RegisterRequest $request): JsonResponse
     {
-        $result = $this->authService->register(RegisterDTO::fromRequest($request));
-
-        return response()->json([
-            'access_token' => $result['token'],
-            'token_type'   => 'Bearer',
-            'user'         => $result['user'],
-        ], 201);
+        $result = $this->authService->register($request->validated());
+        return response()->json($result, 201);
     }
 
     public function login(LoginRequest $request): JsonResponse
     {
-        $result = $this->authService->login(LoginDTO::fromRequest($request));
+        $result = $this->authService->login($request->validated());
+        return response()->json($result);
+    }
+
+    /**
+     * Получить всех пользователей (для админки)
+     */
+    public function index(): JsonResponse
+    {
+        $users = User::all();
+        return response()->json(['data' => $users]);
+    }
+
+    /**
+     * Обновить данные пользователя (имя, email, роль)
+     */
+    public function update(UpdateUserRequest $request, $id): JsonResponse
+    {
+        $user = User::findOrFail($id);
+
+        // Обновляем поля, если они переданы в запросе
+        $user->update($request->validated());
 
         return response()->json([
-            'access_token' => $result['token'],
-            'token_type'   => 'Bearer',
-            'user'         => $result['user'],
+            'message' => 'Данные пользователя успешно обновлены',
+            'user' => $user
         ]);
     }
 
-    public function index(): JsonResponse
+    /**
+     * Полное удаление пользователя из БД
+     */
+    public function destroy($id): JsonResponse
     {
-        return response()->json($this->authService->getAllUsers());
-    }
+        $user = User::findOrFail($id);
 
-    public function update(UpdateUserRequest $request, int $id): JsonResponse
-    {
-        $this->authService->updateUser($id, UpdateUserDTO::fromRequest($request));
+        // Защита: нельзя удалить самого себя (опционально)
+        if (auth()->id() == $id) {
+            return response()->json(['message' => 'Вы не можете удалить свою собственную учетную запись'], 400);
+        }
 
-        return response()->json(['message' => 'Пользователь обновлен']);
-    }
+        $user->delete();
 
-    public function destroy(Request $request, int $id): JsonResponse
-    {
-        $this->authService->deleteUser($id, $request->user()->id);
-
-        return response()->json(['message' => 'Пользователь удален']);
+        return response()->json(['message' => 'Пользователь успешно удален']);
     }
 }

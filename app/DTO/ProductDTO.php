@@ -2,7 +2,6 @@
 
 namespace App\DTO;
 
-// ВАЖНО: Импортируем именно FormRequest
 use Illuminate\Foundation\Http\FormRequest;
 
 class ProductDTO extends BaseDTO
