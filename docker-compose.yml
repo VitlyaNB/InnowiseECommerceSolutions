@@ -14,14 +14,14 @@ services:
     depends_on:
       - db
       - minio
-      - elasticsearch # Добавили зависимость
+      - elasticsearch
     environment:
       - AWS_ENDPOINT=http://minio:9000
       - AWS_ACCESS_KEY_ID=minioadmin
       - AWS_SECRET_ACCESS_KEY=minioadmin
       - AWS_BUCKET=shop
       - AWS_USE_PATH_STYLE_ENDPOINT=true
-      - ELASTICSEARCH_HOST=elasticsearch:9200 # Добавили хост для App
+      - ELASTICSEARCH_HOST=elasticsearch:9200
 
   db:
     image: mysql:8.0
