@@ -14,7 +14,7 @@ class CategoryDTO extends BaseDTO
     public static function fromRequest(Request $request): static
     {
         return new static(
-            name: $request->validated('name'),
+            name: $request->input('name'),
             image: $request->file('image'),
         );
     }

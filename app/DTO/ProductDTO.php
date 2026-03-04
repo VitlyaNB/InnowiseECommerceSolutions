@@ -2,7 +2,7 @@
 
 namespace App\DTO;
 
-use Illuminate\Http\Request; // ВАЖНО: используем обычный Request
+use Illuminate\Http\Request;
 
 class ProductDTO extends BaseDTO
 {
@@ -17,12 +17,13 @@ class ProductDTO extends BaseDTO
 
     public static function fromRequest(Request $request): static
     {
+        // Заменяем все validated(...) на input(...)
         return new static(
-            name: $request->validated('name'),
-            description: $request->validated('description'),
-            price: (float) $request->validated('price'),
-            quantity: (int) $request->validated('quantity'),
-            category_id: (int) $request->validated('category_id'),
+            name: $request->input('name'),
+            description: $request->input('description'),
+            price: (float) $request->input('price'),
+            quantity: (int) $request->input('quantity'),
+            category_id: (int) $request->input('category_id'),
             images: $request->file('images') ?? [],
         );
     }
