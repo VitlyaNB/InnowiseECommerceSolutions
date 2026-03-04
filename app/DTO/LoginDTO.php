@@ -11,11 +11,11 @@ class LoginDTO extends BaseDTO
         public readonly string $password,
     ) {}
 
-    public static function fromRequest(\Illuminate\Http\Request $request): static
+    public static function fromRequest(Request $request): static
     {
         return new static(
-            email: $request->validated('email'),
-            password: $request->validated('password'),
+            email: $request->input('email'),
+            password: $request->input('password'),
         );
     }
 }

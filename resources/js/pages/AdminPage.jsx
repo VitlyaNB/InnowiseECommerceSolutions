@@ -87,6 +87,11 @@ export default function AdminPage() {
 
     const handleCategorySubmit = async (e) => {
         e.preventDefault();
+        if (!categoryName.trim()) {
+            setMsg({ text: 'Название категории обязательно', isError: true });
+            return;
+        }
+
         const form = new FormData();
         form.append('name', categoryName);
         if (categoryImage) form.append('image', categoryImage);
@@ -99,17 +104,19 @@ export default function AdminPage() {
             setCategoryPreview(null);
             fetchAll();
         } catch (err) {
-            setMsg({ text: 'Ошибка при добавлении категории', isError: true });
+            // Здесь мы ловим 422 и выводим ошибки валидации
+            const errors = err.response?.data?.errors;
+            const firstError = errors ? Object.values(errors)[0][0] : 'Ошибка при добавлении';
+            setMsg({ text: firstError, isError: true });
         }
     };
 
-    // ... (остальные функции: удаление товара, редактирование пользователя остаются без изменений)
     const handleDeleteProduct = async (id) => {
         if (!window.confirm("Удалить товар?")) return;
         try {
             await api.delete(`/products/${id}`);
             setMsg({ text: 'Товар удален', isError: false });
-            api.get('/products').then(res => setProducts(res.data.data || res.data));
+            fetchAll();
         } catch (err) { setMsg({ text: 'Ошибка удаления', isError: true }); }
     };
 
@@ -122,6 +129,7 @@ export default function AdminPage() {
         } catch (err) { setMsg({ text: 'Ошибка удаления', isError: true }); }
     };
 
+    // --- Юзеры ---
     const handleEditUser = (u) => {
         setEditingUserId(u.id);
         setEditUserData({ name: u.name, email: u.email, role: u.role, balance: u.balance || 0 });
@@ -132,7 +140,7 @@ export default function AdminPage() {
             await api.put(`/users/${id}`, editUserData);
             setEditingUserId(null);
             setMsg({ text: 'Обновлено', isError: false });
-            api.get('/users').then(res => setUsers(res.data.data || res.data));
+            fetchAll();
         } catch (err) { setMsg({ text: 'Ошибка', isError: true }); }
     };
 
@@ -140,7 +148,7 @@ export default function AdminPage() {
         if (!window.confirm("Удалить пользователя?")) return;
         try {
             await api.delete(`/users/${id}`);
-            api.get('/users').then(res => setUsers(res.data.data || res.data));
+            fetchAll();
         } catch (err) { setMsg({ text: 'Ошибка', isError: true }); }
     };
 
@@ -152,15 +160,15 @@ export default function AdminPage() {
                     <LayoutDashboard size={24} className="text-indigo-600" /> Админка
                 </h2>
                 <div className="space-y-2">
-                    <button onClick={() => setActiveTab('addProduct')} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold transition-colors ${activeTab === 'addProduct' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}><PlusCircle size={20}/> Создать товар</button>
-                    <button onClick={() => setActiveTab('manageProducts')} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold transition-colors ${activeTab === 'manageProducts' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}><Package size={20}/> Все товары</button>
-                    <button onClick={() => setActiveTab('categories')} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold transition-colors ${activeTab === 'categories' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}><FolderTree size={20}/> Категории</button>
-                    <button onClick={() => setActiveTab('users')} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold transition-colors ${activeTab === 'users' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}><Users size={20}/> Пользователи</button>
+                    <button onClick={() => setActiveTab('addProduct')} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold transition-colors ${activeTab === 'addProduct' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}><PlusCircle size={20}/> Создать товар</button>
+                    <button onClick={() => setActiveTab('manageProducts')} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold transition-colors ${activeTab === 'manageProducts' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}><Package size={20}/> Все товары</button>
+                    <button onClick={() => setActiveTab('categories')} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold transition-colors ${activeTab === 'categories' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}><FolderTree size={20}/> Категории</button>
+                    <button onClick={() => setActiveTab('users')} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold transition-colors ${activeTab === 'users' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}><Users size={20}/> Пользователи</button>
                 </div>
                 <Link to="/" className="mt-10 block p-3 text-gray-400 font-bold hover:text-indigo-600 transition-colors flex items-center gap-2"><ArrowLeft size={18}/> В магазин</Link>
             </div>
 
-            {/* Content */}
+            {/* Content Area */}
             <div className="flex-1 p-10 overflow-y-auto">
                 {msg.text && (
                     <div className={`mb-6 p-4 rounded-xl font-bold border flex items-center justify-between ${msg.isError ? 'bg-red-50 text-red-700 border-red-100' : 'bg-green-50 text-green-700 border-green-100'}`}>
@@ -181,25 +189,26 @@ export default function AdminPage() {
                                     <input type="number" placeholder="На складе" required value={formData.quantity} onChange={e => setFormData({...formData, quantity: e.target.value})} className="w-full p-4 border rounded-2xl dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none"/>
                                 </div>
                                 <select value={formData.category_id} onChange={e => setFormData({...formData, category_id: e.target.value})} className="w-full p-4 border rounded-2xl dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none">
+                                    <option value="">Выберите категорию</option>
                                     {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                 </select>
                                 <textarea placeholder="Описание товара..." required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full p-4 border rounded-2xl dark:bg-gray-700 dark:text-white dark:border-gray-600 h-40 outline-none"/>
                             </div>
 
                             <div className="space-y-4">
-                                <label className="block text-sm font-black text-gray-500 uppercase tracking-widest">Фотографии товара</label>
-                                <div className="relative group border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-3xl p-8 transition-colors hover:border-indigo-500 flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900/50">
-                                    <Upload size={40} className="text-gray-400 group-hover:text-indigo-600 mb-2 transition-colors" />
-                                    <p className="text-sm text-gray-500 font-bold">Нажмите или перетащите фото</p>
+                                <label className="block text-sm font-black text-gray-500 uppercase tracking-widest text-center">Фотографии</label>
+                                <div className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-3xl p-8 hover:border-indigo-500 transition-colors flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900/50">
+                                    <Upload size={32} className="text-gray-400 mb-2" />
+                                    <p className="text-xs text-gray-500 font-bold">Кликните для выбора фото</p>
                                     <input type="file" multiple onChange={handleProductFiles} className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*"/>
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-3">
                                     {productPreviews.map((url, idx) => (
                                         <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border dark:border-gray-700 group">
-                                            <img src={url} className="w-full h-full object-cover" />
+                                            <img src={url} className="w-full h-full object-cover" alt="preview" />
                                             <button type="button" onClick={() => removeProductFile(idx)} className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <X size={14}/>
+                                                <X size={12}/>
                                             </button>
                                         </div>
                                     ))}
@@ -210,41 +219,43 @@ export default function AdminPage() {
                     </div>
                 )}
 
-                {/* ТАБ: КАТЕГОРИИ (С ФОРМОЙ) */}
+                {/* ТАБ: КАТЕГОРИИ */}
                 {activeTab === 'categories' && (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Форма добавления */}
                         <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
-                            <h3 className="text-xl font-black mb-6 dark:text-white uppercase tracking-tighter">Добавить категорию</h3>
+                            <h3 className="text-xl font-black mb-6 dark:text-white uppercase tracking-tighter">Новая категория</h3>
                             <form onSubmit={handleCategorySubmit} className="space-y-6">
-                                <input type="text" placeholder="Название категории" required value={categoryName} onChange={e => setCategoryName(e.target.value)} className="w-full p-4 border rounded-2xl dark:bg-gray-700 dark:text-white outline-none"/>
+                                <input type="text" placeholder="Название (например: Электроника)" required value={categoryName} onChange={e => setCategoryName(e.target.value)} className="w-full p-4 border rounded-2xl dark:bg-gray-700 dark:text-white outline-none"/>
 
                                 <div className="flex items-center gap-6">
-                                    <div className="w-24 h-24 rounded-2xl bg-gray-100 dark:bg-gray-900 flex items-center justify-center border dark:border-gray-700 overflow-hidden">
-                                        {categoryPreview ? <img src={categoryPreview} className="w-full h-full object-cover" /> : <ImageIcon className="text-gray-400" />}
+                                    <div className="w-20 h-20 rounded-2xl bg-gray-100 dark:bg-gray-900 flex items-center justify-center border dark:border-gray-700 overflow-hidden shrink-0">
+                                        {categoryPreview ? <img src={categoryPreview} className="w-full h-full object-cover" alt="icon" /> : <ImageIcon className="text-gray-400" />}
                                     </div>
                                     <div className="flex-1 relative">
-                                        <button type="button" className="w-full py-3 bg-gray-100 dark:bg-gray-700 dark:text-white font-bold rounded-xl flex items-center justify-center gap-2">
+                                        <button type="button" className="w-full py-3 bg-gray-100 dark:bg-gray-700 dark:text-white font-bold rounded-xl flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-600">
                                             <Upload size={18}/> Выбрать иконку
                                         </button>
                                         <input type="file" onChange={handleCategoryFile} className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*"/>
                                     </div>
                                 </div>
-                                <button className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg">СОЗДАТЬ КАТЕГОРИЮ</button>
+                                <button className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-indigo-700 transition-colors">СОЗДАТЬ КАТЕГОРИЮ</button>
                             </form>
                         </div>
 
-                        <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                        {/* Список существующих */}
+                        <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
                             <h3 className="text-xl font-black mb-6 dark:text-white uppercase tracking-tighter">Существующие</h3>
-                            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
                                 {categories.map(c => (
                                     <div key={c.id} className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border dark:border-gray-700">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center border dark:border-gray-700 overflow-hidden shrink-0">
-                                                {c.image_path ? <img src={c.image_path} className="w-full h-full object-cover" /> : <FolderTree size={16} className="text-indigo-400"/>}
+                                                {c.image_path ? <img src={c.image_path} className="w-full h-full object-cover" alt="cat" /> : <FolderTree size={16} className="text-indigo-400"/>}
                                             </div>
                                             <span className="font-bold dark:text-white">{c.name}</span>
                                         </div>
-                                        <button onClick={() => handleDeleteCategory(c.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors"><Trash2 size={18}/></button>
+                                        <button onClick={() => handleDeleteCategory(c.id)} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"><Trash2 size={18}/></button>
                                     </div>
                                 ))}
                             </div>
@@ -265,7 +276,7 @@ export default function AdminPage() {
                                     <td className="px-8 py-5">
                                         <div className="flex items-center gap-3">
                                             <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-900 overflow-hidden border dark:border-gray-700 shrink-0">
-                                                {p.images?.[0] ? <img src={p.images[0].url} className="w-full h-full object-cover" /> : <ImageIcon size={18} className="text-gray-300 mx-auto mt-3" />}
+                                                {p.images?.[0] ? <img src={p.images[0].url} className="w-full h-full object-cover" alt="p" /> : <ImageIcon size={18} className="text-gray-300 mx-auto mt-3" />}
                                             </div>
                                             <span className="font-black dark:text-white">{p.name}</span>
                                         </div>
@@ -302,8 +313,8 @@ export default function AdminPage() {
                                         {editingUserId === u.id ? <input type="number" className="p-2 border rounded-xl w-32 dark:bg-gray-700" value={editUserData.balance} onChange={e => setEditUserData({...editUserData, balance: e.target.value})}/> : `${u.balance} BYN`}
                                     </td>
                                     <td className="p-8 text-right flex justify-end gap-2">
-                                        {editingUserId === u.id ? <button onClick={() => handleSaveUser(u.id)} className="p-2 bg-green-500 text-white rounded-xl"><Check size={20}/></button> : <button onClick={() => handleEditUser(u)} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-xl"><Edit size={20}/></button>}
-                                        <button onClick={() => handleDeleteUser(u.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-xl"><Trash2 size={20}/></button>
+                                        {editingUserId === u.id ? <button onClick={() => handleSaveUser(u.id)} className="p-2 bg-green-500 text-white rounded-xl"><Check size={20}/></button> : <button onClick={() => handleEditUser(u)} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"><Edit size={20}/></button>}
+                                        <button onClick={() => handleDeleteUser(u.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors"><Trash2 size={20}/></button>
                                     </td>
                                 </tr>
                             ))}

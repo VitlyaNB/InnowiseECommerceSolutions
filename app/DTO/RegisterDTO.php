@@ -2,22 +2,22 @@
 
 namespace App\DTO;
 
-readonly class RegisterDTO
+use Illuminate\Http\Request;
+
+class RegisterDTO extends BaseDTO
 {
     public function __construct(
-        public string $name,
-        public string $email,
-        public string $password,
-    )
-    {
-    }
+        public readonly string $name,
+        public readonly string $email,
+        public readonly string $password,
+    ) {}
 
-    public static function fromRequest(\App\Http\Requests\RegisterRequest $request): self
+    public static function fromRequest(Request $request): static
     {
-        return new self(
-            name: $request->validated('name'),
-            email: $request->validated('email'),
-            password: $request->validated('password'),
+        return new static(
+            name: $request->input('name'),
+            email: $request->input('email'),
+            password: $request->input('password'),
         );
     }
 }

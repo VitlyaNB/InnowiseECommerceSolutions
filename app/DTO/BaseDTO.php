@@ -2,13 +2,14 @@
 
 namespace App\DTO;
 
-use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Request;
 
 abstract class BaseDTO
 {
+    abstract public static function fromRequest(Request $request): static;
 
-    public static function fromRequest(FormRequest $request): static
+    public function toArray(): array
     {
-        return new static(...$request->validated());
+        return get_object_vars($this);
     }
 }
