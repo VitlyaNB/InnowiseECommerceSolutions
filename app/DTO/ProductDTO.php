@@ -17,13 +17,14 @@ class ProductDTO extends BaseDTO
 
     public static function fromRequest(Request $request): static
     {
-        // Заменяем все validated(...) на input(...)
+        $validated = $request->validated();
+
         return new static(
-            name: $request->input('name'),
-            description: $request->input('description'),
-            price: (float) $request->input('price'),
-            quantity: (int) $request->input('quantity'),
-            category_id: (int) $request->input('category_id'),
+            name: $validated['name'],
+            description: $validated['description'] ?? '',
+            price: (float) $validated['price'],
+            quantity: (int) ($validated['quantity'] ?? 0),
+            category_id: (int) $validated['category_id'],
             images: $request->file('images') ?? [],
         );
     }

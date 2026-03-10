@@ -14,9 +14,9 @@ class ProductService
         protected FileService $fileService
     ) {}
 
-    public function getAllProducts()
+    public function getAllProducts(int $perPage = 15)
     {
-        return $this->productRepository->getAll();
+        return $this->productRepository->getAll($perPage);
     }
 
     public function getProductsByCategory(int $categoryId)

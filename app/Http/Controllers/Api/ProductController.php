@@ -16,9 +16,13 @@ class ProductController extends Controller
         private readonly ProductService $productService
     ) {}
 
-    public function index()
+    public function index(Request $request): JsonResponse
     {
-        return ProductResource::collection($this->productService->getAllProducts()->load(['images', 'category']));
+        $perPage = (int) $request->input('per_page', 15);
+        $products = $this->productService->getAllProducts($perPage);
+
+        return ProductResource::collection($products)
+            ->response();
     }
 
     public function store(StoreProductRequest $request): JsonResponse
@@ -39,12 +43,8 @@ class ProductController extends Controller
         return new ProductResource($product);
     }
 
-    public function destroy(Request $request, int $id): JsonResponse
+    public function destroy(int $id): JsonResponse
     {
-        if ($request->user()?->role !== 'admin') {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
-
         $this->productService->deleteProduct($id);
         return response()->json(['message' => 'Product deleted successfully']);
     }

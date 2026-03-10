@@ -8,9 +8,11 @@ use Illuminate\Support\Collection;
 
 class ProductRepository implements ProductRepositoryInterface
 {
-    public function getAll(int $perPage = 15): Collection
+    public function getAll(int $perPage = 15): LengthAwarePaginator
     {
-        return Product::with(['category', 'images'])->orderByDesc('created_at')->get();
+        return Product::with(['category', 'images'])
+            ->orderByDesc('created_at')
+            ->paginate($perPage);
     }
 
     public function getById(int $id): Product
