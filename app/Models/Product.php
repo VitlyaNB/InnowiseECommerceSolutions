@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Laravel\Scout\Searchable; // Импорт Scout
+use Laravel\Scout\Searchable;
 
 class Product extends Model
 {
-    use HasFactory, Searchable; // Подключение трейта
+    use HasFactory, Searchable;
 
     protected $fillable = [
         'category_id',
@@ -20,9 +20,7 @@ class Product extends Model
         'is_active',
     ];
 
-    /**
-     * Настройка индексируемых данных для Elasticsearch.
-     */
+// настройка эластика
     public function toSearchableArray(): array
     {
         return [

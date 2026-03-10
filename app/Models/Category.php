@@ -9,8 +9,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Category extends Model
 {
     use HasFactory;
-
-    // ВАЖНО: Добавьте image_path сюда
     protected $fillable = [
         'name',
         'image_path'

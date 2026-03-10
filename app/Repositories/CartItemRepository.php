@@ -24,14 +24,12 @@ class CartItemRepository implements CartItemRepositoryInterface
             ->get();
     }
 
-    // --- РЕАЛИЗАЦИЯ НОВЫХ МЕТОДОВ ---
-
     public function getSelectedItems(int $userId, array $ids): Collection
     {
         return CartItem::query()
             ->with(['product.images'])
             ->where('user_id', $userId)
-            ->whereIn('id', $ids) // Берем только те, что в списке ids
+            ->whereIn('id', $ids)
             ->get();
     }
 
@@ -42,8 +40,6 @@ class CartItemRepository implements CartItemRepositoryInterface
             ->whereIn('id', $ids)
             ->delete();
     }
-
-    // --------------------------------
 
     public function getCartItems(array $identifier): Collection
     {

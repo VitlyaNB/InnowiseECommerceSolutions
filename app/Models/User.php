@@ -11,20 +11,15 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * Атрибуты, которые можно массово присваивать.
-     */
+
     protected $fillable = [
         'name',
         'email',
         'password',
         'role',
-        'balance', // <--- Добавили баланс
+        'balance',
     ];
 
-    /**
-     * Атрибуты, которые должны быть скрыты при сериализации.
-     */
     protected $hidden = [
         'password',
         'remember_token',
@@ -35,15 +30,12 @@ class User extends Authenticatable
         return $this->hasMany(Order::class);
     }
 
-    /**
-     * Атрибуты, которые нужно приводить к определенным типам.
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'balance' => 'decimal:2', // <--- Гарантирует, что это всегда число с 2 знаками (float)
+            'balance' => 'decimal:2',
         ];
     }
 }

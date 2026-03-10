@@ -16,7 +16,7 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $orders = $request->user()->orders()
-            ->with(['items.product.images']) // Подгружаем товары и картинки
+            ->with(['items.product.images'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -31,7 +31,6 @@ class OrderController extends Controller
     public function store(StoreOrderRequest $request): JsonResponse
     {
         try {
-            // Передаем список ID выбранных товаров
             $selectedIds = $request->validated('items');
 
             $order = $this->orderService->createOrder($request->user(), $selectedIds);

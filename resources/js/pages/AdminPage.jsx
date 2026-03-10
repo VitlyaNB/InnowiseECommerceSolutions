@@ -25,7 +25,6 @@ export default function AdminPage() {
 
     const fetchAll = () => {
         setLoading(true);
-        // Грузим категории всегда для селекта
         api.get('/categories').then(res => {
             const data = res.data.data || res.data;
             setCategories(data);
@@ -50,6 +49,15 @@ export default function AdminPage() {
         setProductImages(prev => [...prev, ...files]);
         const newPreviews = files.map(file => URL.createObjectURL(file));
         setProductPreviews(prev => [...prev, ...newPreviews]);
+    };
+
+    // Новый обработчик для файла категории
+    const handleCategoryFile = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setCategoryImage(file);
+            setCategoryPreview(URL.createObjectURL(file));
+        }
     };
 
     const handleProductSubmit = async (e) => {
@@ -111,7 +119,6 @@ export default function AdminPage() {
                     </div>
                 )}
 
-                {/* ТАБ: ПОЛЬЗОВАТЕЛИ (РЕАЛИЗОВАНО) */}
                 {activeTab === 'users' && (
                     <div className="glass-card rounded-[2.5rem] overflow-hidden animate-in fade-in duration-500 border border-white/20">
                         <div className="p-8 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm">
@@ -172,32 +179,56 @@ export default function AdminPage() {
                     </div>
                 )}
 
-                {/* ТАБ: КАТЕГОРИИ */}
+                {/* ТАБ: КАТЕГОРИИ (ОБНОВЛЕННЫЙ) */}
                 {activeTab === 'categories' && (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-500">
                         <div className="glass-card p-8 rounded-[2.5rem]">
-                            <h3 className="text-xl font-black mb-6 dark:text-white">Новая категория</h3>
+                            <h3 className="text-xl font-black mb-6 dark:text-white uppercase tracking-tight">Новая категория</h3>
                             <form onSubmit={handleCategorySubmit} className="space-y-6">
-                                <input type="text" placeholder="Название категории" required value={categoryName} onChange={e => setCategoryName(e.target.value)} className="admin-input"/>
-                                <div className="flex items-center gap-6">
-                                    <div className="w-24 h-24 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden shrink-0 border-2 border-dashed border-slate-300 dark:border-slate-600">
-                                        {categoryPreview ? <img src={categoryPreview} className="w-full h-full object-cover" /> : <ImageIcon className="text-slate-400" />}
-                                    </div>
-                                    <div className="relative flex-1">
-                                        <div className="absolute inset-0">
-                                            <button type="button" className="w-full py-3 bg-white dark:bg-slate-800 text-indigo-600 font-bold rounded-xl border border-indigo-100 dark:border-indigo-900 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors">Загрузить обложку</button>
-                                        </div>
-                                        <input type="file" onChange={(e) => {
-                                            setCategoryImage(e.target.files[0]);
-                                            setCategoryPreview(URL.createObjectURL(e.target.files[0]));
-                                        }} className="absolute inset-0 opacity-0 cursor-pointer z-10" accept="image/*" />
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase text-slate-400 tracking-wider ml-2">Название</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Название категории"
+                                        required
+                                        value={categoryName}
+                                        onChange={e => setCategoryName(e.target.value)}
+                                        className="admin-input"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase text-slate-400 tracking-wider ml-2">Обложка</label>
+                                    <div className="relative group border-3 border-dashed border-indigo-100 hover:border-indigo-400 dark:border-slate-700 dark:hover:border-indigo-500 rounded-[2rem] p-8 transition-all flex flex-col items-center justify-center bg-indigo-50/30 dark:bg-slate-800/30 hover:bg-indigo-50/60 h-48 cursor-pointer overflow-hidden text-center">
+                                        {categoryPreview ? (
+                                            <div className="absolute inset-0 w-full h-full">
+                                                <img src={categoryPreview} className="w-full h-full object-cover" alt="Preview" />
+                                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <RefreshCw className="text-white animate-spin-slow" size={32} />
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <Upload className="text-indigo-400 mb-2 group-hover:scale-110 transition-transform duration-300" size={32} />
+                                                <p className="text-xs font-black text-indigo-900 dark:text-indigo-300 uppercase tracking-widest">Кликните для выбора фото</p>
+                                            </>
+                                        )}
+                                        <input
+                                            type="file"
+                                            onChange={handleCategoryFile}
+                                            className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                            accept="image/*"
+                                        />
                                     </div>
                                 </div>
-                                <button className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-indigo-500/30 hover:scale-[1.02] active:scale-95 transition-all">СОЗДАТЬ</button>
+
+                                <button className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-indigo-500/30 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest">
+                                    СОЗДАТЬ
+                                </button>
                             </form>
                         </div>
                         <div className="glass-card p-8 rounded-[2.5rem]">
-                            <h3 className="text-xl font-black mb-6 dark:text-white">Список категорий</h3>
+                            <h3 className="text-xl font-black mb-6 dark:text-white uppercase tracking-tight">Список категорий</h3>
                             <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                                 {categories.map(c => (
                                     <div key={c.id} className="flex justify-between items-center p-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all group">
@@ -215,7 +246,6 @@ export default function AdminPage() {
                     </div>
                 )}
 
-                {/* ТАБ: ВСЕ ТОВАРЫ */}
                 {activeTab === 'manageProducts' && (
                     <div className="glass-card rounded-[2.5rem] overflow-hidden animate-in fade-in duration-500 border border-white/20">
                         <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm">
@@ -251,7 +281,6 @@ export default function AdminPage() {
                     </div>
                 )}
 
-                {/* ТАБ: НОВЫЙ ТОВАР */}
                 {activeTab === 'addProduct' && (
                     <div className="max-w-5xl glass-card p-10 rounded-[2.5rem] animate-in slide-in-from-bottom-4 duration-500 border border-white/20 shadow-2xl">
                         <h3 className="text-3xl font-black mb-10 tracking-tighter uppercase text-center lg:text-left dark:text-white">Создание товара</h3>

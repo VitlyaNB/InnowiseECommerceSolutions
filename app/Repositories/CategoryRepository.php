@@ -18,9 +18,6 @@ class CategoryRepository implements CategoryRepositoryInterface
         return Category::find($id);
     }
 
-    /**
-     * Создание из массива данных
-     */
     public function create(array $data): Category
     {
         return Category::create($data);

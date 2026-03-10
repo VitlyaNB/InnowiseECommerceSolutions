@@ -19,22 +19,18 @@ class OrderService
         $this->cartItemRepository = $cartItemRepository;
     }
 
-    // Принимаем массив ID товаров, которые выбрал пользователь
     public function createOrder(User $user, array $selectedItemIds): Order
     {
         return DB::transaction(function () use ($user, $selectedItemIds) {
 
-            // 1. Блокируем пользователя (защита баланса)
             $user = User::lockForUpdate()->find($user->id);
 
-            // 2. Получаем ТОЛЬКО выбранные товары
             $cartItems = $this->cartItemRepository->getSelectedItems($user->id, $selectedItemIds);
 
             if ($cartItems->isEmpty()) {
                 throw new Exception('Выбранные товары не найдены в корзине.');
             }
 
-            // 3. Считаем сумму
             $totalAmount = 0;
             foreach ($cartItems as $item) {
                 $totalAmount += $item->product->price * $item->quantity;
@@ -44,21 +40,18 @@ class OrderService
                 }
             }
 
-            // 4. Проверяем баланс
             if ($user->balance < $totalAmount) {
                 throw new Exception('Недостаточно средств на кошельке.');
             }
 
-            // 5. Списываем деньги
             $user->balance -= $totalAmount;
             $user->save();
 
-            // 6. Создаем заказ (ИСПРАВЛЕНА ОШИБКА ЗДЕСЬ)
             $order = Order::create([
                 'user_id' => $user->id,
-                'total_amount' => $totalAmount, // Было total_price, стало total_amount
+                'total_amount' => $totalAmount,
                 'status' => 'paid',
-                'shipping_address' => 'Адрес не указан', // Обязательное поле в БД
+                'shipping_address' => 'Адрес не указан',
             ]);
 
             foreach ($cartItems as $item) {
@@ -72,7 +65,6 @@ class OrderService
                 $item->product->decrement('quantity', $item->quantity);
             }
 
-            // 7. Удаляем из корзины только купленное
             $this->cartItemRepository->deleteSelectedItems($user->id, $selectedItemIds);
 
             DB::afterCommit(function () use ($order) {

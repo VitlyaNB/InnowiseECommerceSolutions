@@ -29,17 +29,14 @@ use Matchish\ScoutElasticSearch\Engines\ElasticSearchEngine;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
-        // 1. Привязываем PSR-интерфейс клиента к Guzzle (нужно для работы библиотеки)
+        // привязка PSR-интерфейса клиента к Guzzle
         $this->app->bind(ClientInterface::class, function () {
             return new GuzzleClient();
         });
 
-        // 2. Регистрируем клиент Elasticsearch
+        // регистрация с эластиком
         $this->app->singleton(Client::class, function () {
             // Берем хосты из конфига или ставим дефолт
             $hosts = config('scout.elasticsearch.hosts', ['http://elasticsearch:9200']);
@@ -49,7 +46,7 @@ class AppServiceProvider extends ServiceProvider
                 ->build();
         });
 
-        // Регистрация репозиториев
+        // регистрация репозиториев
         $this->app->bind(ProductRepositoryInterface::class, ProductRepository::class);
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
         $this->app->bind(CategoryRepositoryInterface::class, CategoryRepository::class);
@@ -59,16 +56,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ProductViewRepositoryInterface::class, ProductViewRepository::class);
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         \App\Models\ProductImage::observe(\App\Observers\ProductImageObserver::class);
 
-        // 3. Ручная регистрация драйвера (исправленная версия)
         resolve(EngineManager::class)->extend('elasticsearch', function ($app) {
-            // Конструктор ElasticSearchEngine принимает только клиента
             return new ElasticSearchEngine(
                 $app->make(Client::class)
             );

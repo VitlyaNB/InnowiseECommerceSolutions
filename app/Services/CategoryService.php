@@ -9,11 +9,11 @@ use App\Repositories\Interfaces\CategoryRepositoryInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 
-class CategoryService
+readonly class CategoryService
 {
     public function __construct(
-        private readonly CategoryRepositoryInterface $categoryRepository,
-        private readonly FileService $fileService
+        private CategoryRepositoryInterface $categoryRepository,
+        private FileService                 $fileService
     ) {}
 
     public function getAllCategories(): Collection
@@ -52,7 +52,6 @@ class CategoryService
         $updateData = ['name' => $data->name];
 
         if ($data->image) {
-            // Удаляем старое фото перед загрузкой нового
             if ($category->image_path) {
                 $this->fileService->delete($category->image_path);
             }

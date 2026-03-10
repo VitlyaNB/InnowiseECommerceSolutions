@@ -19,7 +19,6 @@ class AuthController extends Controller
         private readonly AuthService $authService
     ) {}
 
-    // ПОЛУЧЕНИЕ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ (для админки)
     public function index(): JsonResponse
     {
         $users = $this->authService->getAllUsers();
@@ -40,7 +39,6 @@ class AuthController extends Controller
         return response()->json($result, 201);
     }
 
-    // ОБНОВЛЕНИЕ (для админки)
     public function update(UpdateUserRequest $request, int $id): JsonResponse
     {
         $dto = UpdateUserDTO::fromRequest($request);
@@ -48,7 +46,6 @@ class AuthController extends Controller
         return response()->json(['message' => 'User updated successfully']);
     }
 
-    // УДАЛЕНИЕ (для админки)
     public function destroy(Request $request, int $id): JsonResponse
     {
         if ($request->user()->id === $id) {

@@ -48,6 +48,9 @@ class ProductService
         });
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function updateProduct(int $id, ProductDTO $dto)
     {
         return DB::transaction(function () use ($id, $dto) {

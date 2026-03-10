@@ -9,11 +9,7 @@ class FileService
 {
     public function upload(UploadImageDTO $dto): string
     {
-        // Сохраняем файл и получаем относительный путь (categories/hash.jpg)
         $path = Storage::disk($dto->disk)->putFile($dto->folder, $dto->file, 'public');
-
-        // ВСЕГДА возвращаем только путь. Не надо генерировать URL здесь.
-        // URL будет сформирован в CategoryResource.
         return $path;
     }
 
@@ -29,8 +25,6 @@ class FileService
         return false;
     }
 
-    // Остальные методы можно оставить, но они могут не понадобиться,
-    // если мы храним только относительные пути.
     public function getAbsoluteUrl(string $pathOrUrl, string $disk = null): string
     {
         $disk = $disk ?? config('filesystems.media_disk', 's3');
@@ -57,7 +51,6 @@ class FileService
             return ltrim(parse_url($pathOrUrl, PHP_URL_PATH), '/');
         }
 
-        // Fallback для MinIO bucket path
         $bucket = config("filesystems.disks.{$disk}.bucket");
         if ($bucket && str_contains($pathOrUrl, "/{$bucket}/")) {
             $parts = explode("/{$bucket}/", $pathOrUrl, 2);

@@ -13,11 +13,11 @@ interface CartItemRepositoryInterface
 
     public function getCartItems(array $identifier): Collection;
 
-    // --- НОВЫЕ МЕТОДЫ (Ради них ошибка) ---
     public function getSelectedItems(int $userId, array $ids): Collection;
 
     public function deleteSelectedItems(int $userId, array $ids): bool;
-    // -------------------------------------
+
+
 
     public function findById(int $id): ?CartItem;
 

@@ -12,11 +12,11 @@ use App\Http\Controllers\Api\Product\GetCategoryProductsAction;
 use App\Http\Controllers\Api\RecommendationController;
 use App\Http\Controllers\Api\ReviewController;
 
-// Auth
+// авторизация
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// --- ТОВАРЫ ---
+// товары
 Route::get('/products/search', SearchProductAction::class);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', GetProductByIdAction::class);
@@ -24,31 +24,29 @@ Route::get('/products/{id}/recommendations', [RecommendationController::class, '
 Route::post('/products/{id}/view', [RecommendationController::class, 'view']);
 Route::get('/products/{id}/reviews', [ReviewController::class, 'index']);
 
-// Homepage recommendations
+//рекомендации
 Route::get('/recommendations/home', [RecommendationController::class, 'home']);
 
-// --- КАТЕГОРИИ ---
+// категории
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{categoryId}/products', GetCategoryProductsAction::class);
 
-// --- КОРЗИНА (Теперь доступна всем) ---
-// Мы вынесли её из middleware auth:sanctum, чтобы работала для гостей
+// корзина
 Route::get('/cart', [CartController::class, 'index']);
 Route::post('/cart', [CartController::class, 'store']);
 Route::put('/cart/{id}', [CartController::class, 'update']);
 Route::delete('/cart/{id}', [CartController::class, 'destroy']);
 Route::delete('/cart', [CartController::class, 'clear']);
 
-// Cookie Consent
+// куки
 Route::get('/cookie-consent', fn () => response()->json(['accepted' => request()->cookie('cookie_consent') === 'accepted']));
 Route::post('/cookie-consent', function () {
     $cookie = cookie('cookie_consent', request()->boolean('accepted') ? 'accepted' : 'declined', 365 * 24 * 60);
     return response()->json(['accepted' => request()->boolean('accepted')])->cookie($cookie);
 });
 
-// --- ТОЛЬКО АВТОРИЗОВАННЫЕ ---
 Route::middleware(['auth:sanctum'])->group(function () {
-    // Кошелек и Заказы (покупать могут только авторизованные)
+    // Кошелек и заказы
     Route::post('/wallet/top-up', [AuthController::class, 'topUp']);
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders', [OrderController::class, 'index']);

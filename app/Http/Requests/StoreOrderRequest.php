@@ -14,7 +14,6 @@ class StoreOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Ожидаем массив items с ID товаров
             'items' => ['required', 'array', 'min:1'],
             'items.*' => ['integer', 'exists:cart_items,id'],
         ];

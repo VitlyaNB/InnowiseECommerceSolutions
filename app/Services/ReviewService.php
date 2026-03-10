@@ -10,26 +10,23 @@ use Exception;
 
 class ReviewService
 {
-    // Проверка: покупал ли юзер этот товар и был ли заказ оплачен
     public function canReview(int $userId, int $productId): bool
     {
         return OrderItem::where('product_id', $productId)
             ->whereHas('order', function ($query) use ($userId) {
                 $query->where('user_id', $userId)
-                    ->whereIn('status', ['paid', 'shipped']); // Только оплаченные заказы
+                    ->whereIn('status', ['paid', 'shipped']);
             })
             ->exists();
     }
 
     public function createReview(int $userId, array $data): Review
     {
-        // Если это не ответ на комментарий, проверяем право на отзыв
         if (empty($data['parent_id'])) {
             if (!$this->canReview($userId, $data['product_id'])) {
                 throw new Exception('Вы можете оставлять отзывы только на купленные товары.');
             }
 
-            // Опционально: проверка, не оставлял ли уже отзыв
             $exists = Review::where('user_id', $userId)
                 ->where('product_id', $data['product_id'])
                 ->whereNull('parent_id')
@@ -44,7 +41,7 @@ class ReviewService
             'user_id' => $userId,
             'product_id' => $data['product_id'],
             'parent_id' => $data['parent_id'] ?? null,
-            'rating' => $data['rating'] ?? null, // У ответов рейтинга нет
+            'rating' => $data['rating'] ?? null,
             'comment' => $data['comment'],
         ]);
     }
@@ -55,23 +52,22 @@ class ReviewService
 
         if ($like) {
             $like->delete();
-            return false; // Лайк убран
+            return false;
         } else {
             ReviewLike::create(['user_id' => $userId, 'review_id' => $reviewId]);
-            return true; // Лайк поставлен
+            return true;
         }
     }
 
     public function getProductReviews(int $productId)
     {
         return Review::where('product_id', $productId)
-            ->whereNull('parent_id') // Берем только корневые отзывы
-            ->with(['replies.user', 'replies.likes']) // Подгружаем ответы
-            ->withCount('likes') // Считаем лайки
+            ->whereNull('parent_id')
+            ->with(['replies.user', 'replies.likes'])
+            ->withCount('likes')
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($review) {
-                // Добавляем флаг is_liked для фронта
                 $review->is_liked = $review->isLiked;
                 $review->replies->each(function($reply) {
                     $reply->likes_count = $reply->likes()->count();

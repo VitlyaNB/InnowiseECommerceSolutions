@@ -44,7 +44,6 @@ class ReviewController extends Controller
         return response()->json(['liked' => $isLiked]);
     }
 
-    // Проверка, может ли юзер оставить отзыв (для UI)
     public function checkPermission(Request $request, $productId): JsonResponse
     {
         $can = $this->service->canReview($request->user()->id, $productId);
