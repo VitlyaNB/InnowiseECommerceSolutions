@@ -14,9 +14,9 @@ class ProductService
         protected FileService $fileService
     ) {}
 
-    public function getAllProducts(int $perPage = 15)
+    public function getAllProducts(array $filters = [], int $perPage = 15)
     {
-        return $this->productRepository->getAll($perPage);
+        return $this->productRepository->getAll($filters, $perPage);
     }
 
     public function getProductsByCategory(int $categoryId)
@@ -48,9 +48,6 @@ class ProductService
         });
     }
 
-    /**
-     * @throws \Throwable
-     */
     public function updateProduct(int $id, ProductDTO $dto)
     {
         return DB::transaction(function () use ($id, $dto) {

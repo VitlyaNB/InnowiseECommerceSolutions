@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Search, Zap, Sun, Moon, Wallet, Plus } from 'lucide-react';
+import { ShoppingCart, Search, Zap, Sun, Moon, Wallet, Plus, Filter } from 'lucide-react';
 import UserDropdown from '../contexts/UserDropdown';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -44,6 +44,14 @@ export default function Navbar() {
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyDown={handleSearch}
                     />
+                    <button
+                        onClick={() => window.dispatchEvent(new CustomEvent('open-filters'))}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold text-xs hover:scale-105 transition-transform shadow-lg"
+                        type="button"
+                    >
+                        <Filter className="w-4 h-4" />
+                        Фильтры
+                    </button>
                 </div>
 
                 <div className="flex items-center gap-3 sm:gap-5 flex-shrink-0">

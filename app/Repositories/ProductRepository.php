@@ -9,11 +9,24 @@ use Illuminate\Support\Collection;
 
 class ProductRepository implements ProductRepositoryInterface
 {
-    public function getAll(int $perPage = 15): LengthAwarePaginator
+    public function getAll(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        return Product::with(['category', 'images'])
-            ->orderByDesc('created_at')
-            ->paginate($perPage);
+        $query = Product::with(['category', 'images']);
+
+        if (!empty($filters['category_id'])) {
+            $query->where('category_id', $filters['category_id']);
+        }
+        if (!empty($filters['price_min'])) {
+            $query->where('price', '>=', $filters['price_min']);
+        }
+        if (!empty($filters['price_max'])) {
+            $query->where('price', '<=', $filters['price_max']);
+        }
+        if (!empty($filters['in_stock']) && filter_var($filters['in_stock'], FILTER_VALIDATE_BOOLEAN)) {
+            $query->where('quantity', '>', 0);
+        }
+
+        return $query->orderByDesc('created_at')->paginate($perPage);
     }
 
     public function getById(int $id): Product

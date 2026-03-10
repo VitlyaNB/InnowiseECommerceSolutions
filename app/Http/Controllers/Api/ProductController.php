@@ -19,10 +19,11 @@ class ProductController extends Controller
     public function index(Request $request): JsonResponse
     {
         $perPage = (int) $request->input('per_page', 15);
-        $products = $this->productService->getAllProducts($perPage);
+        $filters = $request->only(['category_id', 'price_min', 'price_max', 'in_stock']);
 
-        return ProductResource::collection($products)
-            ->response();
+        $products = $this->productService->getAllProducts($filters, $perPage);
+
+        return ProductResource::collection($products)->response();
     }
 
     public function store(StoreProductRequest $request): JsonResponse
