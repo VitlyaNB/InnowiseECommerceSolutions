@@ -5,6 +5,7 @@ namespace App\Services;
 use App\DTO\CategoryDTO;
 use App\DTO\UploadImageDTO;
 use App\Models\Category;
+use App\Models\Product;
 use App\Repositories\Interfaces\CategoryRepositoryInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
@@ -16,6 +17,7 @@ readonly class CategoryService
         private FileService                 $fileService
     ) {}
 
+    /** @return Collection<int, Category> */
     public function getAllCategories(): Collection
     {
         return $this->categoryRepository->getAll();
@@ -36,10 +38,12 @@ readonly class CategoryService
     {
         $categoryData = ['name' => $data->name];
         if ($data->image) {
+            /** @var string $disk */
+            $disk = config('filesystems.media_disk', 's3');
             $categoryData['image_path'] = $this->fileService->upload(new UploadImageDTO(
                 file: $data->image,
                 folder: 'categories',
-                disk: config('filesystems.media_disk', 's3')
+                disk: $disk
             ));
         }
 
@@ -56,9 +60,12 @@ readonly class CategoryService
                 $this->fileService->delete($category->image_path);
             }
 
+            /** @var string $disk */
+            $disk = config('filesystems.media_disk', 's3');
             $updateData['image_path'] = $this->fileService->upload(new UploadImageDTO(
                 file: $data->image,
-                folder: 'categories'
+                folder: 'categories',
+                disk: $disk
             ));
         }
 
@@ -72,6 +79,7 @@ readonly class CategoryService
         $category = $this->getCategoryById($id);
 
         // Delete associated products via Eloquent to trigger ProductObserver/ProductImageObserver
+        /** @var Product $product */
         foreach ($category->products as $product) {
             $product->delete();
         }

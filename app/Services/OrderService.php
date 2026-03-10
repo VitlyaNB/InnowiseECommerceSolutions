@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
@@ -19,41 +20,46 @@ class OrderService
         $this->cartItemRepository = $cartItemRepository;
     }
 
-    public function createOrder(User $user, array $selectedItemIds): Order
+    /** @param array<int, int> $selectedItemIds */
+    public function createOrder(User $user, array $selectedItemIds, string $shippingAddress): Order
     {
-        return DB::transaction(function () use ($user, $selectedItemIds) {
+        /** @var Order $finalOrder */
+        $finalOrder = DB::transaction(function () use ($user, $selectedItemIds, $shippingAddress) {
 
-            $user = User::lockForUpdate()->find($user->id);
+            /** @var User $lockedUser */
+            $lockedUser = User::query()->lockForUpdate()->find($user->id) ?? $user;
 
-            $cartItems = $this->cartItemRepository->getSelectedItems($user->id, $selectedItemIds);
+            $cartItems = $this->cartItemRepository->getSelectedItems($lockedUser->id, $selectedItemIds);
 
             if ($cartItems->isEmpty()) {
                 throw new Exception('Выбранные товары не найдены в корзине.');
             }
 
-            $totalAmount = 0;
+            $totalAmount = 0.0;
+            /** @var CartItem $item */
             foreach ($cartItems as $item) {
-                $totalAmount += $item->product->price * $item->quantity;
+                $totalAmount += (float) $item->product->price * $item->quantity;
 
                 if ($item->product->quantity < $item->quantity) {
                     throw new Exception("Товара {$item->product->name} недостаточно на складе.");
                 }
             }
 
-            if ($user->balance < $totalAmount) {
+            if ($lockedUser->balance < $totalAmount) {
                 throw new Exception('Недостаточно средств на кошельке.');
             }
 
-            $user->balance -= $totalAmount;
-            $user->save();
+            $lockedUser->balance -= $totalAmount;
+            $lockedUser->save();
 
             $order = Order::create([
-                'user_id' => $user->id,
+                'user_id' => $lockedUser->id,
                 'total_amount' => $totalAmount,
                 'status' => 'paid',
-                'shipping_address' => 'Адрес не указан',
+                'shipping_address' => $shippingAddress,
             ]);
 
+            /** @var CartItem $item */
             foreach ($cartItems as $item) {
                 OrderItem::create([
                     'order_id' => $order->id,
@@ -62,10 +68,10 @@ class OrderService
                     'price' => $item->product->price,
                 ]);
 
-                $item->product->decrement('quantity', $item->quantity);
+                \App\Models\Product::query()->where('id', $item->product_id)->decrement('quantity', $item->quantity);
             }
 
-            $this->cartItemRepository->deleteSelectedItems($user->id, $selectedItemIds);
+            $this->cartItemRepository->deleteSelectedItems($lockedUser->id, $selectedItemIds);
 
             DB::afterCommit(function () use ($order) {
                 SendOrderConfirmationJob::dispatch($order->id);
@@ -73,5 +79,7 @@ class OrderService
 
             return $order;
         });
+        
+        return $finalOrder;
     }
 }

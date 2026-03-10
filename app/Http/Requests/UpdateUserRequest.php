@@ -11,13 +11,18 @@ class UpdateUserRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
+        $userId = $this->route('id');
+
         return [
             'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:users,email,' . $this->route('id'),
+            'email' => 'sometimes|email|unique:users,email,' . (is_scalar($userId) ? $userId : ''),
             'role' => 'sometimes|string|in:user,admin',
-            'balance' => 'sometimes|numeric|min:0|max:99999999',
+            'balance' => 'sometimes|numeric|min:0',
         ];
     }
 }

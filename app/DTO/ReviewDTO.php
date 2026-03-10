@@ -4,20 +4,20 @@ namespace App\DTO;
 
 use Illuminate\Http\Request;
 
-class ReviewDTO extends BaseDTO
+final readonly class ReviewDTO extends BaseDTO
 {
     public function __construct(
-        public readonly int $product_id,
-        public readonly int $rating,
-        public readonly ?string $comment = null,
+        public int $product_id = 0,
+        public int $rating = 0,
+        public ?string $comment = null,
     ) {}
 
-    public static function fromRequest(Request $request): self
+    public static function fromRequest(Request $request): static
     {
         return new self(
-            product_id: $request->validated('product_id'),
-            rating: $request->validated('rating'),
-            comment: $request->validated('comment'),
+            product_id: $request->integer('product_id'),
+            rating: $request->integer('rating'),
+            comment: $request->has('comment') ? $request->string('comment')->value() : null,
         );
     }
 }

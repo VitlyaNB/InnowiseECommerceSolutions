@@ -3,7 +3,6 @@
 namespace App\Events;
 
 use App\Models\Message;
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -18,6 +17,9 @@ class MessageSent implements ShouldBroadcast
     {
     }
 
+    /**
+     * @return array<int, \Illuminate\Broadcasting\Channel>
+     */
     public function broadcastOn(): array
     {
         return [
@@ -25,6 +27,9 @@ class MessageSent implements ShouldBroadcast
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function broadcastWith(): array
     {
         return [

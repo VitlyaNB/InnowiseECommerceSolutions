@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\DTO\CartItemDTO;
 use App\Models\CartItem;
+use App\Models\User;
 use App\Repositories\Interfaces\CartItemRepositoryInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Str;
 
@@ -21,7 +23,7 @@ class CartService
     {
         $sessionId = $request->cookie(self::CART_SESSION_COOKIE);
 
-        if (!$sessionId) {
+        if (!is_string($sessionId) || empty($sessionId)) {
             $sessionId = Str::uuid()->toString();
             Cookie::queue(self::CART_SESSION_COOKIE, $sessionId, 60 * 24 * 30, '/', null, false, true, false, 'Lax');
         }
@@ -29,6 +31,7 @@ class CartService
         return $sessionId;
     }
 
+    /** @return array<string, mixed> */
     private function getIdentifier(): array
     {
         if (auth('sanctum')->check()) {
@@ -44,10 +47,11 @@ class CartService
 
         if ($existing) {
             $this->cartRepository->updateQuantity($existing->id, $existing->quantity + $dto->quantity);
-            return $existing->fresh('product.images');
+            /** @var CartItem $fresh */
+            $fresh = $existing->fresh('product.images');
+            return $fresh;
         }
 
-        // --- ИСПРАВЛЕНИЕ: Загружаем связи для нового элемента ---
         $newItem = $this->cartRepository->create(array_merge($identifier, [
             'product_id' => $dto->product_id,
             'quantity' => $dto->quantity,
@@ -56,6 +60,7 @@ class CartService
         return $newItem->load('product.images');
     }
 
+    /** @return array{items: Collection<int, CartItem>, totals: array<string, float>} */
     public function getCart(): array
     {
         $items = $this->cartRepository->getCartItems($this->getIdentifier());
@@ -79,7 +84,9 @@ class CartService
         }
 
         $this->cartRepository->updateQuantity($id, $quantity);
-        return $item->fresh('product.images');
+        /** @var CartItem|null $fresh */
+        $fresh = $item->fresh('product.images');
+        return $fresh;
     }
 
     public function removeItem(int $id): bool
@@ -94,19 +101,23 @@ class CartService
     public function clearCart(): bool
     {
         if (auth('sanctum')->check()) {
-            return $this->cartRepository->clearUserCart(auth('sanctum')->id());
+            /** @var int $userId */
+            $userId = auth('sanctum')->id();
+            return $this->cartRepository->clearUserCart($userId);
         }
         $sessionId = request()->cookie(self::CART_SESSION_COOKIE);
-        if ($sessionId) {
+        if (is_string($sessionId) && !empty($sessionId)) {
             return $this->cartRepository->clearSessionCart($sessionId);
         }
         return true;
     }
 
+    /** @param array<string, mixed> $identifier */
     private function itemBelongsToIdentifier(CartItem $item, array $identifier): bool
     {
         if (isset($identifier['user_id'])) {
-            return (int) $item->user_id === (int) $identifier['user_id'];
+            $idValue = $identifier['user_id'];
+            return (int) $item->user_id === (int) (is_numeric($idValue) ? $idValue : 0);
         }
         if (isset($identifier['session_id'])) {
             return $item->session_id === $identifier['session_id'];
@@ -114,15 +125,19 @@ class CartService
         return false;
     }
 
-    private function calculateTotals($items): array
+    /** 
+     * @param Collection<int, CartItem> $items 
+     * @return array<string, float>
+     */
+    private function calculateTotals(Collection $items): array
     {
-        $subtotal = $items->sum(fn ($i) => $i->product->price * $i->quantity);
+        $subtotal = $items->sum(fn (CartItem $i) => $i->product->price * $i->quantity);
         $total = $subtotal;
 
         return [
-            'subtotal' => round($subtotal, 2),
-            'tax' => 0,
-            'total' => round($total, 2),
+            'subtotal' => round((float) $subtotal, 2),
+            'tax' => 0.0,
+            'total' => round((float) $total, 2),
         ];
     }
 }

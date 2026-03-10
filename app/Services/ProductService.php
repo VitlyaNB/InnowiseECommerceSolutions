@@ -4,7 +4,11 @@ namespace App\Services;
 
 use App\DTO\ProductDTO;
 use App\DTO\UploadImageDTO;
+use App\Models\Product;
+use App\Models\ProductImage;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class ProductService
@@ -14,24 +18,30 @@ class ProductService
         protected FileService $fileService
     ) {}
 
-    public function getAllProducts(array $filters = [], int $perPage = 15)
+    /** 
+     * @param array<string, mixed> $filters
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator<(int|string), Product> 
+     */
+    public function getAllProducts(array $filters = [], int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
         return $this->productRepository->getAll($filters, $perPage);
     }
 
-    public function getProductsByCategory(int $categoryId)
+    /** @return Collection<int, Product> */
+    public function getProductsByCategory(int $categoryId): Collection
     {
         return $this->productRepository->getByCategory($categoryId);
     }
 
-    public function getProductById(int $id)
+    public function getProductById(int $id): ?Product
     {
         return $this->productRepository->getById($id);
     }
 
-    public function createProduct(ProductDTO $dto)
+    public function createProduct(ProductDTO $dto): Product
     {
-        return DB::transaction(function () use ($dto) {
+        /** @var Product $finalProduct */
+        $finalProduct = DB::transaction(function () use ($dto) {
             $productData = [
                 'name' => $dto->name,
                 'description' => $dto->description,
@@ -47,12 +57,19 @@ class ProductService
 
             return $product->load('images');
         });
+        
+        return $finalProduct;
     }
 
-    public function updateProduct(int $id, ProductDTO $dto)
+    public function updateProduct(int $id, ProductDTO $dto): Product
     {
-        return DB::transaction(function () use ($id, $dto) {
+        /** @var Product $finalProduct */
+        $finalProduct = DB::transaction(function () use ($id, $dto) {
             $product = $this->productRepository->getById($id);
+
+            if (!$product) {
+                throw new \Illuminate\Database\Eloquent\ModelNotFoundException("Product with ID {$id} not found.");
+            }
 
             $productData = [
                 'name' => $dto->name,
@@ -70,25 +87,33 @@ class ProductService
                 $this->handleImages($product, $dto->images);
             }
 
-            return $product->fresh('images');
+            return $product->fresh('images') ?? $product;
         });
+        
+        return $finalProduct;
     }
 
     public function deleteProduct(int $id): void
     {
         $product = $this->productRepository->getById($id);
 
+        if (!$product) {
+            throw new \Illuminate\Database\Eloquent\ModelNotFoundException("Product with ID {$id} not found.");
+        }
+
         $this->deleteProductImages($product);
 
         $this->productRepository->delete($product);
     }
 
-    private function handleImages($product, ?array $images): void
+    /** @param array<int, \Illuminate\Http\UploadedFile> $images */
+    private function handleImages(Product $product, ?array $images): void
     {
         if (empty($images)) {
             return;
         }
 
+        /** @var string $disk */
         $disk = config('filesystems.media_disk', 'public');
 
         foreach ($images as $file) {
@@ -98,10 +123,12 @@ class ProductService
         }
     }
 
-    private function deleteProductImages($product): void
+    private function deleteProductImages(Product $product): void
     {
+        /** @var string|null $disk */
         $disk = config('filesystems.media_disk', 'public');
 
+        /** @var ProductImage $img */
         foreach ($product->images as $img) {
             $this->fileService->delete($img->image_path, $disk);
             $img->delete();

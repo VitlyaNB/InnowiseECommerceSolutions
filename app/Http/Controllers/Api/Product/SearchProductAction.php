@@ -6,147 +6,136 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Elastic\Elasticsearch\Client;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Log;
 
 class SearchProductAction extends Controller
 {
-    /**
-     * Поиск товаров через прямой запрос к Elasticsearch.
-     */
-    public function __invoke(Request $request)
+    public function __construct(
+        private readonly Client $elasticsearch
+    ) {}
+
+    public function __invoke(Request $request): JsonResponse
     {
-        $query = $request->input('query') ?? $request->input('q');
+        $query = $request->string('query')->value();
+        /** @var mixed $categoriesInput */
+        $categoriesInput = $request->input('categories', []);
+        $categoryIds = is_array($categoriesInput) ? $categoriesInput : [];
+        
+        $minPrice = $request->has('min_price') ? $request->float('min_price') : null;
+        $maxPrice = $request->has('max_price') ? $request->float('max_price') : null;
+        $sort = $request->string('sort', 'created_at_desc')->value();
+        $perPage = $request->integer('per_page', 12);
+        $page = $request->integer('page', 1);
 
-        // Если запрос пустой, возвращаем пустой список
-        if (!$query) {
-            return ProductResource::collection([]);
-        }
-
-        try {
-            // 1. Получаем клиент Elasticsearch из контейнера
-            $client = app(Client::class);
-
-            // 2. Настройки пагинации
-            $page = (int) $request->input('page', 1);
-            $perPage = 12;
-            $from = ($page - 1) * $perPage;
-
-            $categoryIds = $request->input('category_id');
-            $priceMin = $request->input('price_min');
-            $priceMax = $request->input('price_max');
-            $inStock = $request->boolean('in_stock', false);
-
-            $filters = [];
-            if (!empty($categoryIds)) {
-                $ids = is_array($categoryIds) ? $categoryIds : explode(',', (string) $categoryIds);
-                $filters[] = ['terms' => ['category_id' => array_map('intval', $ids)]];
-            }
-            if ($priceMin !== null || $priceMax !== null) {
-                $range = [];
-                if ($priceMin !== null) {
-                    $range['gte'] = (float) $priceMin;
-                }
-                if ($priceMax !== null) {
-                    $range['lte'] = (float) $priceMax;
-                }
-                $filters[] = ['range' => ['price' => $range]];
-            }
-            if ($inStock) {
-                $filters[] = ['range' => ['quantity' => ['gt' => 0]]];
-            }
-
-            // 3. Формируем "сырой" запрос к Elastic
-            $response = $client->search([
-                'index' => (new Product)->searchableAs(), // Имя индекса (обычно shop_products)
-                'body'  => [
-                    'query' => [
-                        'bool' => [
-                            'must' => [
-                                [
-                                    'multi_match' => [
-                                        'query'     => $query,
-                                        'fields'    => ['name^5', 'description'], // Имя важнее описания в 5 раз
-                                        'fuzziness' => 'AUTO', // Включаем поддержку опечаток
-                                        'operator'  => 'and',
-                                    ],
-                                ],
-                            ],
-                            'filter' => $filters,
-                        ],
-                    ],
-                    'from' => $from,
-                    'size' => $perPage,
-                    'aggs' => [
-                        'categories' => [
-                            'terms' => [
-                                'field' => 'category_id',
-                                'size' => 20,
-                            ],
-                        ],
-                        'price_stats' => [
-                            'stats' => [
-                                'field' => 'price',
-                            ],
-                        ],
-                    ],
+        $params = [
+            'index' => 'products_index',
+            'body'  => [
+                'from' => ($page - 1) * $perPage,
+                'size' => $perPage,
+                'query' => [
+                    'bool' => [
+                        'must' => [],
+                        'filter' => [
+                            ['term' => ['is_active' => true]]
+                        ]
+                    ]
                 ],
-            ]);
+                'aggs' => [
+                    'categories' => [
+                        'terms' => ['field' => 'category_id', 'size' => 50]
+                    ],
+                    'min_price' => ['min' => ['field' => 'price']],
+                    'max_price' => ['max' => ['field' => 'price']]
+                ]
+            ]
+        ];
 
-            // 4. Обрабатываем ответ
-            $hits = $response['hits']['hits'];
-            $total = $response['hits']['total']['value'];
-
-            // Собираем ID найденных товаров
-            $ids = array_column($hits, '_id');
-
-            if (empty($ids)) {
-                return ProductResource::collection([]);
-            }
-
-            // 5. Загружаем модели из базы данных (чтобы были картинки, категории и т.д.)
-            $products = Product::with(['category', 'images'])
-                ->whereIn('id', $ids)
-                ->where('is_active', true)
-                ->get();
-
-            // 6. Сортируем модели в том порядке, в котором их вернул Elastic (по релевантности)
-            $sortedProducts = $products->sortBy(function ($model) use ($ids) {
-                return array_search($model->id, $ids);
-            })->values();
-
-            // 7. Создаем пагинатор вручную
-            $paginator = new LengthAwarePaginator(
-                $sortedProducts,
-                $total,
-                $perPage,
-                $page,
-                ['path' => $request->url(), 'query' => $request->query()]
-            );
-
-            $facets = [
-                'categories' => collect($response['aggregations']['categories']['buckets'] ?? [])
-                    ->map(fn ($bucket) => [
-                        'id' => (int) $bucket['key'],
-                        'count' => (int) $bucket['doc_count'],
-                    ])
-                    ->values(),
-                'price' => [
-                    'min' => (float) ($response['aggregations']['price_stats']['min'] ?? 0),
-                    'max' => (float) ($response['aggregations']['price_stats']['max'] ?? 0),
-                ],
+        // Search query
+        if (!empty($query)) {
+            $params['body']['query']['bool']['must'][] = [
+                'multi_match' => [
+                    'query' => $query,
+                    'fields' => ['name^3', 'description', 'category_name'],
+                    'fuzziness' => 'AUTO'
+                ]
             ];
-
-            return ProductResource::collection($paginator)
-                ->additional(['meta' => ['facets' => $facets]]);
-
-        } catch (\Exception $e) {
-            // Логируем ошибку, чтобы видеть детали в docker logs
-            Log::error("Elasticsearch Direct Search Error: " . $e->getMessage());
-
-            // Возвращаем пустой результат вместо 500 ошибки, чтобы сайт не падал
-            return ProductResource::collection([]);
         }
+
+        // Category filter
+        if (!empty($categoryIds)) {
+            $categoryIds = array_map(fn($v) => (int) (is_scalar($v) ? $v : 0), $categoryIds);
+            $params['body']['query']['bool']['filter'][] = [
+                'terms' => ['category_id' => $categoryIds]
+            ];
+        }
+
+        // Price range
+        if ($minPrice !== null || $maxPrice !== null) {
+            $range = ['price' => []];
+            if ($minPrice !== null) $range['price']['gte'] = $minPrice;
+            if ($maxPrice !== null) $range['price']['lte'] = $maxPrice;
+            $params['body']['query']['bool']['filter'][] = ['range' => $range];
+        }
+
+        // Sorting
+        switch ($sort) {
+            case 'price_asc':
+                $params['body']['sort'] = [['price' => 'asc']];
+                break;
+            case 'price_desc':
+                $params['body']['sort'] = [['price' => 'desc']];
+                break;
+            case 'name_asc':
+                $params['body']['sort'] = [['name.keyword' => 'asc']];
+                break;
+            default:
+                $params['body']['sort'] = [['created_at' => 'desc']];
+        }
+
+        /** @var \Elastic\Elasticsearch\Response\Elasticsearch $response */
+        $response = $this->elasticsearch->search($params);
+        /** @var array<string, mixed> $results */
+        $results = $response->asArray();
+
+        /** @var array{total: array{value: int}, hits: array<int, array{_id: string|int}>} $hits */
+        $hits = $results['hits'];
+        
+        $hitItems = $hits['hits'];
+        
+        $ids = array_map(fn($hit) => (int) $hit['_id'], $hitItems);
+
+        if (empty($ids)) {
+            $products = collect();
+        } else {
+            $products = Product::whereIn('id', $ids)
+                ->with(['images', 'category'])
+                ->orderByRaw('FIELD(id, ' . implode(',', array_reverse($ids)) . ') DESC')
+                ->get();
+        }
+
+        /** @var array<string, array{buckets?: array<int, array{key: int|string, doc_count: int|string}>, value: float|int}> $aggregations */
+        $aggregations = $results['aggregations'] ?? [];
+
+        $total = $hits['total']['value'];
+
+        return response()->json([
+            'data' => ProductResource::collection($products),
+            'meta' => [
+                'total' => $total,
+                'per_page' => $perPage,
+                'current_page' => $page,
+                'last_page' => ceil($total / $perPage),
+            ],
+            'filters' => [
+                'categories' => collect($aggregations['categories']['buckets'] ?? [])
+                    ->map(fn($b) => [
+                        'id' => (int) $b['key'],
+                        'count' => (int) $b['doc_count']
+                    ]),
+                'min_price' => $aggregations['min_price']['value'],
+                'max_price' => $aggregations['max_price']['value'],
+            ]
+        ]);
     }
 }

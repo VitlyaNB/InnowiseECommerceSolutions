@@ -8,9 +8,13 @@ use Illuminate\Support\Facades\Log;
 
 class ExternalCategorySyncService
 {
+    /** @return array{ok: bool, message: string, synced: int, status: int} */
     public function sync(): array
     {
+        /** @var string|null $apiUrl */
         $apiUrl = config('services.external_project.api_url');
+        
+        /** @var string|null $apiKey */
         $apiKey = config('services.external_project.api_key');
 
         if (empty($apiUrl)) {
@@ -25,10 +29,10 @@ class ExternalCategorySyncService
         try {
             $headers = ['Accept' => 'application/json'];
             if (!empty($apiKey)) {
-                $headers['Authorization'] = 'Bearer ' . $apiKey;
+                $headers['Authorization'] = 'Bearer ' . (string) $apiKey;
             }
 
-            $response = Http::withHeaders($headers)->get($apiUrl);
+            $response = Http::withHeaders($headers)->get((string) $apiUrl);
 
             if (!$response->successful()) {
                 return [
@@ -39,8 +43,11 @@ class ExternalCategorySyncService
                 ];
             }
 
+            /** @var mixed $data */
             $data = $response->json();
-            $categories = $data['data'] ?? $data['categories'] ?? $data ?? [];
+            
+            /** @var mixed $categories */
+            $categories = is_array($data) ? ($data['data'] ?? $data['categories'] ?? $data) : [];
 
             if (!is_array($categories)) {
                 return [
@@ -54,6 +61,7 @@ class ExternalCategorySyncService
             $synced = 0;
 
             foreach ($categories as $item) {
+                /** @var string|null $name */
                 $name = is_array($item) ? ($item['name'] ?? $item['title'] ?? null) : (is_string($item) ? $item : null);
 
                 if (empty($name)) {

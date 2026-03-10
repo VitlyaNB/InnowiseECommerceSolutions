@@ -11,10 +11,13 @@ class UpdateCartItemRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
-            'quantity' => ['required', 'integer', 'min:0'],
+            'quantity' => 'required|integer|min:0',
         ];
     }
 }

@@ -36,10 +36,10 @@ class AppServiceProvider extends ServiceProvider
             return new GuzzleClient();
         });
 
-        // регистрация с эластиком
         $this->app->singleton(Client::class, function () {
             // Берем хосты из конфига или ставим дефолт
-            $hosts = config('scout.elasticsearch.hosts', ['http://elasticsearch:9200']);
+            /** @var array<int, string> $hosts */
+            $hosts = (array) config('scout.elasticsearch.hosts', ['http://elasticsearch:9200']);
 
             return ClientBuilder::create()
                 ->setHosts($hosts)

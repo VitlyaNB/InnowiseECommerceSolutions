@@ -10,6 +10,7 @@ use App\Services\AuthService;
 use App\DTO\LoginDTO;
 use App\DTO\RegisterDTO;
 use App\DTO\UpdateUserDTO;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -48,24 +49,35 @@ class AuthController extends Controller
 
     public function destroy(Request $request, int $id): JsonResponse
     {
-        if ($request->user()->id === $id) {
+        /** @var User $currentUser */
+        $currentUser = $request->user();
+
+        if ($currentUser->id === $id) {
             return response()->json(['message' => 'Нельзя удалить самого себя'], 403);
         }
-        $this->authService->deleteUser($id, $request->user()->id);
+        $this->authService->deleteUser($id, $currentUser->id);
         return response()->json(['message' => 'User deleted successfully']);
     }
 
     public function logout(Request $request): JsonResponse
     {
-        $this->authService->logout($request->user());
+        /** @var User $currentUser */
+        $currentUser = $request->user();
+        $this->authService->logout($currentUser);
         return response()->json(['message' => 'Successfully logged out']);
     }
 
-    public function topUp(Request $request)
+    public function topUp(Request $request): JsonResponse
     {
         $request->validate(['amount' => 'required|numeric|min:1']);
+        
+        /** @var User $user */
         $user = $request->user();
-        $user->balance += $request->amount;
+        
+        /** @var float $amount */
+        $amount = $request->input('amount');
+        
+        $user->balance += $amount;
         $user->save();
 
         return response()->json([

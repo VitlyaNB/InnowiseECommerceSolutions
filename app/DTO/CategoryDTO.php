@@ -3,19 +3,20 @@
 namespace App\DTO;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 
-class CategoryDTO extends BaseDTO
+final readonly class CategoryDTO extends BaseDTO
 {
     public function __construct(
-        public readonly string $name,
-        public readonly ?\Illuminate\Http\UploadedFile $image = null,
+        public string $name = '',
+        public ?UploadedFile $image = null,
     ) {}
 
     public static function fromRequest(Request $request): static
     {
-        return new static(
-            name: $request->input('name'),
-            image: $request->file('image'),
+        return new self(
+            name: $request->string('name')->value(),
+            image: $request->file('image') instanceof UploadedFile ? $request->file('image') : null,
         );
     }
 }

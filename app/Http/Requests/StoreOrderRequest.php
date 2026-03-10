@@ -11,19 +11,15 @@ class StoreOrderRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
-            'items' => ['required', 'array', 'min:1'],
-            'items.*' => ['integer', 'exists:cart_items,id'],
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'items.required' => 'Выберите товары для оплаты.',
-            'items.min' => 'Выберите хотя бы один товар.',
+            'shipping_address' => 'required|string',
+            'selected_item_ids' => 'required|array',
+            'selected_item_ids.*' => 'exists:cart_items,id',
         ];
     }
 }

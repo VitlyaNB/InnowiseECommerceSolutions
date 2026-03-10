@@ -9,52 +9,55 @@ use Illuminate\Support\Collection;
 
 class ProductRepository implements ProductRepositoryInterface
 {
-    public function getAll(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    /** 
+     * @param array<string, mixed> $filters
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator<(int|string), Product> 
+     */
+    public function getAll(array $filters = [], int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        $query = Product::with(['category', 'images']);
+        $query = Product::query()->with(['images', 'category']);
 
-        if (!empty($filters['category_id'])) {
+        if (isset($filters['category_id'])) {
             $query->where('category_id', $filters['category_id']);
         }
-        if (!empty($filters['price_min'])) {
-            $query->where('price', '>=', $filters['price_min']);
-        }
-        if (!empty($filters['price_max'])) {
-            $query->where('price', '<=', $filters['price_max']);
-        }
-        if (!empty($filters['in_stock']) && filter_var($filters['in_stock'], FILTER_VALIDATE_BOOLEAN)) {
-            $query->where('quantity', '>', 0);
-        }
 
-        return $query->orderByDesc('created_at')->paginate($perPage);
+        /** @var \Illuminate\Contracts\Pagination\LengthAwarePaginator<(int|string), Product> $paginator */
+        $paginator = $query->latest()->paginate($perPage);
+        return $paginator;
     }
 
-    public function getById(int $id): Product
+    /** @return Collection<int, Product> */
+    public function getByCategory(int $categoryId): Collection
     {
-        return Product::with(['category', 'images'])->findOrFail($id);
+        /** @var Collection<int, Product> $products */
+        $products = Product::query()
+            ->with(['images', 'category'])
+            ->where('category_id', $categoryId)
+            ->get();
+        return $products;
     }
 
+    public function getById(int $id): ?Product
+    {
+        /** @var Product|null $product */
+        $product = Product::query()->with(['images', 'category'])->find($id);
+        return $product;
+    }
+
+    /** @param array<string, mixed> $data */
     public function create(array $data): Product
     {
         return Product::create($data);
     }
 
-    public function update(Product $product, array $data): Product
+    /** @param array<string, mixed> $data */
+    public function update(Product $product, array $data): bool
     {
-        $product->update($data);
-        return $product;
+        return $product->update($data);
     }
 
     public function delete(Product $product): bool
     {
-        return $product->delete();
-    }
-
-    public function getByCategory(int $categoryId): Collection
-    {
-        return Product::with(['category', 'images'])
-            ->where('category_id', $categoryId)
-            ->orderByDesc('created_at')
-            ->get();
+        return (bool) $product->delete();
     }
 }

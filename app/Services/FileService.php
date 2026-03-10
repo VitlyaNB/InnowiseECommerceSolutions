@@ -9,32 +9,43 @@ class FileService
 {
     public function upload(UploadImageDTO $dto): string
     {
+        /** @var string|false $path */
         $path = Storage::disk($dto->disk)->putFile($dto->folder, $dto->file, 'public');
+        
+        if ($path === false) {
+            throw new \RuntimeException("Failed to upload file to disk {$dto->disk}");
+        }
+        
         return $path;
     }
 
-    public function delete(string $pathOrUrl, string $disk = null): bool
+    public function delete(string $pathOrUrl, ?string $disk = null): bool
     {
-        $disk = $disk ?? config('filesystems.media_disk', 's3');
-        $path = $this->extractPathFromUrl($pathOrUrl, $disk);
+        /** @var string $actualDisk */
+        $actualDisk = $disk ?? config('filesystems.media_disk', 's3');
+        
+        $path = $this->extractPathFromUrl($pathOrUrl, $actualDisk);
 
-        if (Storage::disk($disk)->exists($path)) {
-            return Storage::disk($disk)->delete($path);
+        if (Storage::disk($actualDisk)->exists($path)) {
+            return Storage::disk($actualDisk)->delete($path);
         }
 
         return false;
     }
 
-    public function getAbsoluteUrl(string $pathOrUrl, string $disk = null): string
+    public function getAbsoluteUrl(string $pathOrUrl, ?string $disk = null): string
     {
-        $disk = $disk ?? config('filesystems.media_disk', 's3');
+        /** @var string $actualDisk */
+        $actualDisk = $disk ?? config('filesystems.media_disk', 's3');
+        
         if ($this->isAbsoluteUrl($pathOrUrl)) return $pathOrUrl;
-        return Storage::disk($disk)->url($pathOrUrl);
-    }
-
-    private function isS3Disk(string $disk): bool
-    {
-        return config("filesystems.disks.{$disk}.driver") === 's3';
+        
+        /** @var \Illuminate\Contracts\Filesystem\Filesystem $storageDisk */
+        $storageDisk = Storage::disk($actualDisk);
+        
+        // Storage::disk() implementation usually has url() method
+        /** @phpstan-ignore-next-line */
+        return $storageDisk->url($pathOrUrl);
     }
 
     private function isAbsoluteUrl(string $value): bool
@@ -46,14 +57,20 @@ class FileService
     {
         if (!$this->isAbsoluteUrl($pathOrUrl)) return $pathOrUrl;
 
-        $baseUrl = rtrim(config("filesystems.disks.{$disk}.url") ?? '', '/');
+        /** @var string $rawBaseUrl */
+        $rawBaseUrl = config("filesystems.disks.{$disk}.url") ?? '';
+        $baseUrl = rtrim($rawBaseUrl, '/');
+        
         if ($baseUrl && str_starts_with($pathOrUrl, $baseUrl)) {
-            return ltrim(parse_url($pathOrUrl, PHP_URL_PATH), '/');
+            /** @var string|null $path */
+            $path = parse_url($pathOrUrl, PHP_URL_PATH);
+            return ltrim((string) $path, '/');
         }
 
+        /** @var string|null $bucket */
         $bucket = config("filesystems.disks.{$disk}.bucket");
-        if ($bucket && str_contains($pathOrUrl, "/{$bucket}/")) {
-            $parts = explode("/{$bucket}/", $pathOrUrl, 2);
+        if (!is_null($bucket) && str_contains($pathOrUrl, "/" . (string) $bucket . "/")) {
+            $parts = explode("/" . (string) $bucket . "/", $pathOrUrl, 2);
             return $parts[1] ?? $pathOrUrl;
         }
 

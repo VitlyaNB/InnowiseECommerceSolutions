@@ -3,17 +3,13 @@
 namespace App\Repositories\Interfaces;
 
 use App\Models\Order;
-use Illuminate\Support\Collection;
+use App\Models\OrderItem;
 
 interface OrderRepositoryInterface
 {
-    public function getUserOrders(int $userId): Collection;
-
-    public function findById(int $id): ?Order;
-
+    /** @param array<string, mixed> $orderData */
     public function create(array $orderData): Order;
 
-    public function createItem(array $itemData): void;
-
-    public function updateStatus(int $id, string $status): bool;
+    /** @param array<string, mixed> $itemData */
+    public function createItem(array $itemData): OrderItem;
 }

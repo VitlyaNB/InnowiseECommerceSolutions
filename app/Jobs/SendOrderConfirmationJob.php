@@ -21,6 +21,7 @@ class SendOrderConfirmationJob implements ShouldQueue
 
     public function handle(): void
     {
+        /** @var Order|null $order */
         $order = Order::query()->with('user')->find($this->orderId);
         if (!$order || !$order->user) {
             return;

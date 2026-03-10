@@ -40,7 +40,7 @@ class CartController extends Controller
 
     public function update(UpdateCartItemRequest $request, int $id): JsonResponse
     {
-        $quantity = (int) $request->validated('quantity');
+        $quantity = $request->integer('quantity');
         $item = $this->cartService->updateQuantity($id, $quantity);
 
         if (!$item) {

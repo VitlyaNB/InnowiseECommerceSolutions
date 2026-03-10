@@ -2,33 +2,103 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property int $product_id
+ * @property int $user_id
+ * @property int|null $parent_id
+ * @property int $rating
+ * @property string $comment
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon $updated_at
+ * 
+ * @method static \Illuminate\Database\Eloquent\Builder|Review query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Review where(string|array|\Closure $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
+ * @method static Review create(array $attributes = [])
+ * @method static Review find(mixed $id, array $columns = ['*'])
+ */
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property int $product_id
+ * @property int|null $parent_id
+ * @property int|null $rating
+ * @property string $comment
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon $updated_at
+ * @property User $user
+ * @property Product $product
+ * @property \Illuminate\Database\Eloquent\Collection<int, ReviewLike> $likes
+ * @property \Illuminate\Database\Eloquent\Collection<int, Review> $replies
+ * @property bool $isLiked
+ * @property bool $is_liked
+ * @property int $likes_count
+ * 
+ * @method static \Illuminate\Database\Eloquent\Builder<Review> query()
+ * @method static \Illuminate\Database\Eloquent\Builder<Review> where(string|array<string, mixed>|\Closure $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
+ * @method static Review create(array<string, mixed> $attributes = [])
+ * @method static Review find(mixed $id, array<int, string> $columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Builder<Review> whereNull(string|array<int, string> $columns, string $boolean = 'and', bool $not = false)
+ */
 class Review extends Model
 {
-    protected $fillable = ['user_id', 'product_id', 'parent_id', 'rating', 'comment'];
+    /** @use HasFactory<\Illuminate\Database\Eloquent\Factories\Factory> */
+    use HasFactory;
 
-    protected $with = ['user']; // подгружаем именно автора
+    protected $fillable = [
+        'product_id',
+        'user_id',
+        'parent_id',
+        'rating',
+        'comment',
+    ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<User, $this>
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function replies()
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<Product, $this>
+     */
+    public function product()
     {
-        return $this->hasMany(Review::class, 'parent_id')->orderBy('created_at', 'asc');
+        return $this->belongsTo(Product::class);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<ReviewLike, $this>
+     */
     public function likes()
     {
         return $this->hasMany(ReviewLike::class);
     }
 
-    // проверОЧКА лайкнул ли юзер
-    public function getIsLikedAttribute()
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<Review, $this>
+     */
+    public function replies()
     {
-        if (!auth('sanctum')->check()) return false;
-        return $this->likes()->where('user_id', auth('sanctum')->id())->exists();
+        return $this->hasMany(Review::class, 'parent_id');
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsLikedAttribute(): bool
+    {
+        /** @var int|null $userId */
+        $userId = auth('sanctum')->id();
+        if (!$userId) {
+            return false;
+        }
+
+        return $this->likes()->where('user_id', $userId)->exists();
     }
 }

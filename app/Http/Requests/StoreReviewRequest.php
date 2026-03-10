@@ -11,12 +11,16 @@ class StoreReviewRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
-            'product_id' => ['required', 'integer', 'exists:products,id'],
-            'rating' => ['required', 'integer', 'min:1', 'max:5'],
-            'comment' => ['nullable', 'string', 'max:1000'],
+            'product_id' => 'required|exists:products,id',
+            'rating' => 'nullable|integer|min:1|max:5',
+            'comment' => 'required|string|max:1000',
+            'parent_id' => 'nullable|exists:reviews,id'
         ];
     }
 }

@@ -11,11 +11,14 @@ class StoreCategoryRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:5096'],
+            'name' => ['required', 'string', 'max:255', 'unique:categories'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
         ];
     }
 }

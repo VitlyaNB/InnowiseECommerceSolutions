@@ -8,31 +8,43 @@ use Illuminate\Support\Collection;
 
 class CategoryRepository implements CategoryRepositoryInterface
 {
+    /** @return Collection<int, Category> */
     public function getAll(): Collection
     {
-        return Category::all();
+        /** @var Collection<int, Category> $categories */
+        $categories = Category::query()->get();
+        return $categories;
     }
 
     public function findById(int $id): ?Category
     {
-        return Category::find($id);
+        /** @var Category|null $category */
+        $category = Category::query()->find($id);
+        return $category;
     }
 
+    /** @param array<string, mixed> $data */
     public function create(array $data): Category
     {
         return Category::create($data);
     }
 
-
-    public function update(int $id, array $data): bool
+    /** @param array<string, mixed> $data */
+    public function update(int $id, array $data): Category
     {
-        $category = $this->findById($id);
-        return $category ? $category->update($data) : false;
+        /** @var Category $category */
+        $category = Category::query()->findOrFail($id);
+        $category->update($data);
+        return $category;
     }
 
     public function delete(int $id): bool
     {
-        $category = $this->findById($id);
-        return $category ? $category->delete() : false;
+        /** @var Category|null $category */
+        $category = Category::query()->find($id);
+        if (!$category) {
+            return false;
+        }
+        return (bool) $category->delete();
     }
 }

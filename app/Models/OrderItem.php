@@ -2,11 +2,25 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property int $order_id
+ * @property int $product_id
+ * @property int $quantity
+ * @property float $price
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon $updated_at
+ * @property Product $product
+ * 
+ * @method static OrderItem create(array<string, mixed> $attributes = [])
+ */
 class OrderItem extends Model
 {
-    public $timestamps = false;
+    /** @use HasFactory<\Illuminate\Database\Eloquent\Factories\Factory> */
+    use HasFactory;
 
     protected $fillable = [
         'order_id',
@@ -15,11 +29,9 @@ class OrderItem extends Model
         'price',
     ];
 
-    public function order()
-    {
-        return $this->belongsTo(Order::class);
-    }
-
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<Product, $this>
+     */
     public function product()
     {
         return $this->belongsTo(Product::class);

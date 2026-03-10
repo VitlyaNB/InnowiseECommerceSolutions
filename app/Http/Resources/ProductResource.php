@@ -2,42 +2,34 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
 
+/**
+ * @mixin Product
+ */
 class ProductResource extends JsonResource
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
+            'category_id' => $this->category_id,
+            'category_name' => $this->category !== null ? $this->category->name : '',
             'name' => $this->name,
             'description' => $this->description,
             'price' => (float) $this->price,
             'old_price' => $this->old_price ? (float) $this->old_price : null,
             'quantity' => (int) $this->quantity,
-            'is_available' => $this->quantity > 0,
-            'category_id' => $this->category_id,
-            'category' => new CategoryResource($this->whenLoaded('category')),
-            'images' => $this->relationLoaded('images')
-                ? $this->images->map(fn($image) => [
-                    'id' => $image->id,
-                    'url' => $this->resolveImageUrl($image->image_path),
-                ])
-                : [],
-            'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
+            'images' => $this->images->map(fn($img) => [
+                'id' => $img->id,
+                'url' => $img->image_path
+            ]),
+            'created_at' => $this->created_at,
         ];
-    }
-
-    private function resolveImageUrl(?string $path): ?string
-    {
-        if (!$path) return null;
-
-        if (str_starts_with($path, 'http')) {
-            return $path;
-        }
-
-        return Storage::disk(config('filesystems.media_disk', 's3'))->url($path);
     }
 }

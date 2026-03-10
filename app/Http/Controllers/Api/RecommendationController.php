@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
+use App\Models\User;
 use App\Services\RecommendationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,7 +22,10 @@ class RecommendationController extends Controller
     public function view(Request $request, int $id): JsonResponse
     {
         $sessionId = $this->resolveViewSessionId($request);
-        $userId = $request->user()?->id;
+        
+        /** @var User|null $user */
+        $user = $request->user();
+        $userId = $user?->id;
 
         $this->recommendationService->recordView($userId, $sessionId, $id);
 
@@ -31,7 +35,10 @@ class RecommendationController extends Controller
     public function product(Request $request, int $id): JsonResponse
     {
         $sessionId = $this->resolveViewSessionId($request);
-        $userId = $request->user()?->id;
+        
+        /** @var User|null $user */
+        $user = $request->user();
+        $userId = $user?->id;
 
         $data = $this->recommendationService->getProductRecommendations($id, $userId, $sessionId);
 
@@ -45,7 +52,10 @@ class RecommendationController extends Controller
     public function home(Request $request): JsonResponse
     {
         $sessionId = $this->resolveViewSessionId($request);
-        $userId = $request->user()?->id;
+        
+        /** @var User|null $user */
+        $user = $request->user();
+        $userId = $user?->id;
 
         $items = $this->recommendationService->getHomeRecommendations($userId, $sessionId);
 
@@ -54,11 +64,11 @@ class RecommendationController extends Controller
         ]);
     }
 
-    private function resolveViewSessionId(Request $request): ?string
+    private function resolveViewSessionId(Request $request): string
     {
         $sessionId = $request->cookie(self::VIEW_SESSION_COOKIE);
 
-        if (!$sessionId) {
+        if (!is_string($sessionId) || empty($sessionId)) {
             $sessionId = Str::uuid()->toString();
             Cookie::queue(self::VIEW_SESSION_COOKIE, $sessionId, 60 * 24 * 30, '/', null, false, true, false, 'Lax');
         }

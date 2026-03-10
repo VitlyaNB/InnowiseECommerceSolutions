@@ -5,6 +5,7 @@ namespace App\Services;
 use App\DTO\RegisterDTO;
 use App\DTO\LoginDTO;
 use App\DTO\UpdateUserDTO;
+use App\Models\User;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -15,6 +16,9 @@ class AuthService
         private readonly UserRepositoryInterface $userRepository
     ) {}
 
+    /**
+     * @return array{user: User, token: string}
+     */
     public function register(RegisterDTO $data): array
     {
         $user = $this->userRepository->create($data);
@@ -23,11 +27,17 @@ class AuthService
         return ['user' => $user, 'token' => $token];
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Collection<int, User>
+     */
     public function getAllUsers()
     {
         return $this->userRepository->getAll();
     }
 
+    /**
+     * @return array{user: User, token: string}
+     */
     public function login(LoginDTO $data): array
     {
         $user = $this->userRepository->findByEmail($data->email);
@@ -57,5 +67,10 @@ class AuthService
         }
 
         return $this->userRepository->delete($userIdToDelete);
+    }
+
+    public function logout(User $user): void
+    {
+        $user->tokens()->delete();
     }
 }

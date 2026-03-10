@@ -4,6 +4,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\ReviewService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -14,7 +15,7 @@ class ReviewController extends Controller
     {
     }
 
-    public function index($productId): JsonResponse
+    public function index(int $productId): JsonResponse
     {
         return response()->json([
             'data' => $this->service->getProductReviews($productId)
@@ -30,23 +31,34 @@ class ReviewController extends Controller
             'parent_id' => 'nullable|exists:reviews,id'
         ]);
 
+        /** @var User $user */
+        $user = $request->user();
+
         try {
-            $review = $this->service->createReview($request->user()->id, $request->all());
+            /** @var array<string, mixed> $data */
+            $data = $request->all();
+            $review = $this->service->createReview($user->id, $data);
             return response()->json(['message' => 'Отзыв опубликован', 'data' => $review], 201);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 403);
         }
     }
 
-    public function like(Request $request, $id): JsonResponse
+    public function like(Request $request, int $id): JsonResponse
     {
-        $isLiked = $this->service->toggleLike($request->user()->id, $id);
+        /** @var User $user */
+        $user = $request->user();
+        
+        $isLiked = $this->service->toggleLike($user->id, $id);
         return response()->json(['liked' => $isLiked]);
     }
 
-    public function checkPermission(Request $request, $productId): JsonResponse
+    public function checkPermission(Request $request, int $productId): JsonResponse
     {
-        $can = $this->service->canReview($request->user()->id, $productId);
+        /** @var User $user */
+        $user = $request->user();
+        
+        $can = $this->service->canReview($user->id, $productId);
         return response()->json(['can_review' => $can]);
     }
 }

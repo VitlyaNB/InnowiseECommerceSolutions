@@ -4,46 +4,44 @@ namespace App\Repositories;
 
 use App\Models\ProductView;
 use App\Repositories\Interfaces\ProductViewRepositoryInterface;
-use Illuminate\Support\Facades\DB;
 
 class ProductViewRepository implements ProductViewRepositoryInterface
 {
-    public function recordView(?int $userId, ?string $sessionId, int $productId): void
+    public function recordView(?int $userId, string $sessionId, int $productId): void
     {
-        if (!$userId && !$sessionId) {
-            return;
-        }
-
-        $attributes = [
-            'user_id' => $userId,
-            'session_id' => $sessionId,
-            'product_id' => $productId,
-        ];
+        $identifier = $userId 
+            ? ['user_id' => $userId, 'product_id' => $productId] 
+            : ['session_id' => $sessionId, 'product_id' => $productId];
 
         ProductView::query()->updateOrCreate(
-            $attributes,
-            ['viewed_at' => now()]
+            $identifier,
+            ['viewed_at' => now(), 'session_id' => $sessionId]
         );
     }
 
-    public function getRecentlyViewedProductIds(?int $userId, ?string $sessionId, int $limit = 12): array
+    /** @return array<int, int> */
+    public function getRecentlyViewedProductIds(?int $userId, string $sessionId, int $limit = 12): array
     {
         if ($userId) {
-            return ProductView::query()
+            /** @var array<int, int> $ids */
+            $ids = ProductView::query()
                 ->where('user_id', $userId)
                 ->orderByDesc('viewed_at')
                 ->limit($limit)
                 ->pluck('product_id')
                 ->all();
+            return $ids;
         }
 
-        if ($sessionId) {
-            return ProductView::query()
+        if (!empty($sessionId)) {
+            /** @var array<int, int> $ids */
+            $ids = ProductView::query()
                 ->where('session_id', $sessionId)
                 ->orderByDesc('viewed_at')
                 ->limit($limit)
                 ->pluck('product_id')
                 ->all();
+            return $ids;
         }
 
         return [];

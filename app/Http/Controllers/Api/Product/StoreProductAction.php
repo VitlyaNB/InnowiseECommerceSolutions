@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProductRequest;
 use App\Services\ProductService;
 use App\DTO\ProductDTO;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 
 class StoreProductAction extends Controller
 {
@@ -13,9 +15,12 @@ class StoreProductAction extends Controller
         private readonly ProductService $productService
     ) {}
 
-    public function __invoke(StoreProductRequest $request)
+    public function __invoke(StoreProductRequest $request): JsonResponse
     {
-        if ($request->user() && $request->user()->role !== 'admin') {
+        /** @var User|null $user */
+        $user = $request->user();
+
+        if ($user && $user->role !== 'admin') {
             return response()->json(['message' => 'Доступ запрещен'], 403);
         }
 

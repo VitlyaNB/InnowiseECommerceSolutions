@@ -8,13 +8,17 @@ use App\Http\Resources\ChatResource;
 use App\Http\Resources\MessageResource;
 use App\Models\Chat;
 use App\Models\Message;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
 
 class ChatController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): AnonymousResourceCollection|ChatResource
     {
+        /** @var User $user */
         $user = Auth::user();
 
         if ($user->role === 'admin') {
@@ -27,7 +31,8 @@ class ChatController extends Controller
             ->first();
 
         if (!$chat) {
-            $chat = Chat::create([
+            /** @var Chat $chat */
+            $chat = Chat::query()->create([
                 'user_id' => $user->id,
                 'last_message_at' => now(),
             ]);
@@ -37,7 +42,7 @@ class ChatController extends Controller
         return new ChatResource($chat);
     }
 
-    public function show(Chat $chat)
+    public function show(Chat $chat): ChatResource
     {
         $this->authorizeAccess($chat);
 
@@ -51,7 +56,7 @@ class ChatController extends Controller
         return new ChatResource($chat);
     }
 
-    public function store(Request $request, Chat $chat)
+    public function store(Request $request, Chat $chat): MessageResource
     {
         $this->authorizeAccess($chat);
 
@@ -59,10 +64,14 @@ class ChatController extends Controller
             'message' => 'required|string',
         ]);
 
-        $message = Message::create([
+        /** @var string $messageContent */
+        $messageContent = $request->input('message');
+
+        /** @var Message $message */
+        $message = Message::query()->create([
             'chat_id' => $chat->id,
-            'user_id' => Auth::id(),
-            'message' => $request->message,
+            'user_id' => (int) Auth::id(),
+            'message' => $messageContent,
         ]);
 
         $chat->update(['last_message_at' => now()]);
@@ -72,11 +81,13 @@ class ChatController extends Controller
         return new MessageResource($message);
     }
 
-    public function startChat(Request $request)
+    public function startChat(Request $request): ChatResource
     {
+        /** @var User $user */
         $user = Auth::user();
         
-        $chat = Chat::firstOrCreate(
+        /** @var Chat $chat */
+        $chat = Chat::query()->firstOrCreate(
             ['user_id' => $user->id],
             ['last_message_at' => now()]
         );
@@ -84,8 +95,9 @@ class ChatController extends Controller
         return new ChatResource($chat);
     }
 
-    private function authorizeAccess(Chat $chat)
+    private function authorizeAccess(Chat $chat): void
     {
+        /** @var User $user */
         $user = Auth::user();
         if ($user->role !== 'admin' && $user->id !== $chat->user_id) {
             abort(403, 'Доступ запрещен');

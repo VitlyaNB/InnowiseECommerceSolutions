@@ -3,15 +3,27 @@
 namespace App\Repositories\Interfaces;
 
 use App\Models\Product;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface ProductRepositoryInterface
 {
-    public function getAll(array $filters = [], int $perPage = 15): LengthAwarePaginator;
+    /** 
+     * @param array<string, mixed> $filters
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator<(int|string), Product> 
+     */
+    public function getAll(array $filters = [], int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator;
+
+    /** @return Collection<int, Product> */
     public function getByCategory(int $categoryId): Collection;
-    public function getById(int $id): Product;
+
+    public function getById(int $id): ?Product;
+
+    /** @param array<string, mixed> $data */
     public function create(array $data): Product;
-    public function update(Product $product, array $data): Product;
+
+    /** @param array<string, mixed> $data */
+    public function update(Product $product, array $data): bool;
+
     public function delete(Product $product): bool;
 }

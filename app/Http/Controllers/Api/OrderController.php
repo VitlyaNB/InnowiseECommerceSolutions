@@ -5,45 +5,53 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
 use App\Services\OrderService;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
     protected OrderService $orderService;
-
-    public function index(Request $request)
-    {
-        $orders = $request->user()->orders()
-            ->with(['items.product.images'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return response()->json(['data' => $orders]);
-    }
 
     public function __construct(OrderService $orderService)
     {
         $this->orderService = $orderService;
     }
 
+    public function index(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        
+        $orders = $user->orders()->with('items.product.images')->latest()->get();
+
+        return response()->json([
+            'data' => $orders
+        ]);
+    }
+
     public function store(StoreOrderRequest $request): JsonResponse
     {
-        try {
-            $selectedIds = $request->validated('items');
+        /** @var User $user */
+        $user = $request->user();
+        
+        /** @var array<int, int> $selectedItemIds */
+        $selectedItemIds = $request->input('selected_item_ids');
+        
+        /** @var string $shippingAddress */
+        $shippingAddress = $request->input('shipping_address');
 
-            $order = $this->orderService->createOrder($request->user(), $selectedIds);
+        try {
+            $order = $this->orderService->createOrder($user, $selectedItemIds, $shippingAddress);
 
             return response()->json([
-                'message' => 'Заказ успешно оформлен!',
-                'order' => $order,
-                'new_balance' => $request->user()->fresh()->balance
+                'message' => 'Заказ успешно оформлен',
+                'order' => $order->fresh(['items.product.images'])
             ], 201);
-
         } catch (\Exception $e) {
-            Log::error('Order failed: ' . $e->getMessage());
-            return response()->json(['message' => $e->getMessage()], 400);
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 400);
         }
     }
 }

@@ -14,7 +14,9 @@ class ProductImageObserver
 
     public function deleted(ProductImage $productImage): void
     {
-        $disk = config('filesystems.media_disk', 'public');
+        $diskConfig = config('filesystems.media_disk', 'public');
+        /** @var string $disk */
+        $disk = is_string($diskConfig) ? $diskConfig : 'public';
 
         try {
             $this->fileService->delete($productImage->image_path, $disk);
