@@ -71,6 +71,11 @@ readonly class CategoryService
     {
         $category = $this->getCategoryById($id);
 
+        // Delete associated products via Eloquent to trigger ProductObserver/ProductImageObserver
+        foreach ($category->products as $product) {
+            $product->delete();
+        }
+
         if ($category->image_path) {
             $this->fileService->delete($category->image_path);
         }

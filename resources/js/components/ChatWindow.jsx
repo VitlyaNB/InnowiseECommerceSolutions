@@ -11,6 +11,12 @@ export default function ChatWindow({ chatId, onClose, isAdmin = false }) {
     const messagesEndRef = useRef(null);
     const [currentChatId, setCurrentChatId] = useState(chatId);
 
+    useEffect(() => {
+        if (isAdmin && chatId) {
+            setCurrentChatId(chatId);
+        }
+    }, [chatId, isAdmin]);
+
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };

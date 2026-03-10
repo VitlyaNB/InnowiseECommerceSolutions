@@ -114,15 +114,14 @@ class CartService
         return false;
     }
 
-    private function calculateTotals($items, float $taxRate = 0.20): array
+    private function calculateTotals($items): array
     {
         $subtotal = $items->sum(fn ($i) => $i->product->price * $i->quantity);
-        $tax = $subtotal * $taxRate;
-        $total = $subtotal + $tax;
+        $total = $subtotal;
 
         return [
             'subtotal' => round($subtotal, 2),
-            'tax' => round($tax, 2),
+            'tax' => 0,
             'total' => round($total, 2),
         ];
     }

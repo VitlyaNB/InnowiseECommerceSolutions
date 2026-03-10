@@ -59,6 +59,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \App\Models\ProductImage::observe(\App\Observers\ProductImageObserver::class);
+        \App\Models\Product::observe(\App\Observers\ProductObserver::class);
 
         resolve(EngineManager::class)->extend('elasticsearch', function ($app) {
             return new ElasticSearchEngine(

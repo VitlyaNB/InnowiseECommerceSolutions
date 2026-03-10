@@ -11,14 +11,21 @@ import {
 export default function AdminPage() {
     const [activeTab, setActiveTab] = useState('addProduct');
     const [chats, setChats] = useState([]);
+    const [users, setUsers] = useState([]);
     const [selectedChat, setSelectedChat] = useState(null);
     const [categories, setCategories] = useState([]);
     const [products, setProducts] = useState([]);
     const [msg, setMsg] = useState({ text: '', isError: false });
     const [loading, setLoading] = useState(false);
 
+    // Editing states
+    const [editingProduct, setEditingProduct] = useState(null);
+    const [editingCategory, setEditingCategory] = useState(null);
+    const [editingUser, setEditingUser] = useState(null);
+
     // Form States
-    const [formData, setFormData] = useState({ name: '', description: '', price: '', quantity: '1', category_id: '' });
+    const [formData, setFormData] = useState({ name: '', description: '', price: '', old_price: '', quantity: '1', category_id: '' });
+    const [userData, setUserData] = useState({ name: '', email: '', role: 'user', balance: '0' });
     const [productImages, setProductImages] = useState([]);
     const [productPreviews, setProductPreviews] = useState([]);
     const [categoryName, setCategoryName] = useState('');
@@ -64,16 +71,76 @@ export default function AdminPage() {
         }
     };
 
+    const handleProductEdit = (product) => {
+        setEditingProduct(product);
+        setFormData({
+            name: product.name,
+            description: product.description || '',
+            price: product.price,
+            old_price: product.old_price || '',
+            quantity: product.quantity,
+            category_id: product.category_id || (categories[0]?.id || '')
+        });
+        setProductPreviews([]);
+        setProductImages([]);
+        setActiveTab('addProduct');
+    };
+
+    const handleCategoryEdit = (category) => {
+        setEditingCategory(category);
+        setCategoryName(category.name);
+        setCategoryPreview(category.image_path);
+        setCategoryImage(null);
+        setActiveTab('categories');
+    };
+
+    const handleUserEdit = (user) => {
+        setEditingUser(user);
+        setUserData({
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            balance: user.balance
+        });
+    };
+
+    const handleUserSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await api.put(`/users/${editingUser.id}`, userData);
+            setMsg({ text: 'Пользователь обновлен!', isError: false });
+            setEditingUser(null);
+            fetchAll();
+        } catch (err) {
+            setMsg({ text: err.response?.data?.message || 'Ошибка обновления', isError: true });
+        }
+    };
+
     const handleProductSubmit = async (e) => {
         e.preventDefault();
         const form = new FormData();
-        Object.keys(formData).forEach(key => form.append(key, formData[key]));
+        Object.keys(formData).forEach(key => {
+            if (formData[key] !== null && formData[key] !== undefined) {
+                form.append(key, formData[key]);
+            }
+        });
         productImages.forEach(file => form.append('images[]', file));
+        
+        if (editingProduct) {
+            form.append('_method', 'PUT');
+        }
+
         try {
-            await api.post('/products', form);
-            setMsg({ text: 'Товар создан!', isError: false });
-            setFormData({ name: '', description: '', price: '', quantity: '1', category_id: categories[0]?.id || '' });
+            if (editingProduct) {
+                await api.post(`/products/${editingProduct.id}`, form);
+                setMsg({ text: 'Товар обновлен!', isError: false });
+            } else {
+                await api.post('/products', form);
+                setMsg({ text: 'Товар создан!', isError: false });
+            }
+            setFormData({ name: '', description: '', price: '', old_price: '', quantity: '1', category_id: categories[0]?.id || '' });
             setProductImages([]); setProductPreviews([]);
+            setEditingProduct(null);
             fetchAll();
         } catch (err) { setMsg({ text: err.response?.data?.message || 'Ошибка', isError: true }); }
     };
@@ -83,12 +150,23 @@ export default function AdminPage() {
         const form = new FormData();
         form.append('name', categoryName);
         if (categoryImage) form.append('image', categoryImage);
+        
+        if (editingCategory) {
+            form.append('_method', 'PUT');
+        }
+
         try {
-            await api.post('/categories', form);
-            setMsg({ text: 'Категория добавлена', isError: false });
+            if (editingCategory) {
+                await api.post(`/categories/${editingCategory.id}`, form);
+                setMsg({ text: 'Категория обновлена', isError: false });
+            } else {
+                await api.post('/categories', form);
+                setMsg({ text: 'Категория добавлена', isError: false });
+            }
             setCategoryName(''); setCategoryImage(null); setCategoryPreview(null);
+            setEditingCategory(null);
             fetchAll();
-        } catch (err) { setMsg({ text: 'Ошибка создания', isError: true }); }
+        } catch (err) { setMsg({ text: 'Ошибка сохранения', isError: true }); }
     };
 
     const deleteUser = async (id) => {
@@ -125,61 +203,93 @@ export default function AdminPage() {
                 )}
 
                 {activeTab === 'users' && (
-                    <div className="glass-card rounded-[2.5rem] overflow-hidden animate-in fade-in duration-500 border border-white/20">
-                        <div className="p-8 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm">
-                            <div>
-                                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Пользователи</h3>
-                                <p className="text-slate-500 font-medium text-sm mt-1">Управление клиентами и администраторами</p>
-                            </div>
-                            <button onClick={fetchAll} className="p-3 text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl hover:scale-105 transition-transform"><RefreshCw size={20} /></button>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-500">
+                        {/* Форма редактирования */}
+                        <div className="glass-card p-8 rounded-[2.5rem]">
+                            <h3 className="text-xl font-black mb-6 dark:text-white uppercase tracking-tight">
+                                {editingUser ? `Редактирование: ${editingUser.name}` : 'Управление пользователями'}
+                            </h3>
+                            {editingUser ? (
+                                <form onSubmit={handleUserSubmit} className="space-y-4">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider ml-2">Имя</label>
+                                        <input type="text" value={userData.name} onChange={e => setUserData({...userData, name: e.target.value})} className="admin-input" required />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider ml-2">Email</label>
+                                        <input type="email" value={userData.email} onChange={e => setUserData({...userData, email: e.target.value})} className="admin-input" required />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider ml-2">Баланс (BYN)</label>
+                                        <input type="number" step="0.01" value={userData.balance} onChange={e => setUserData({...userData, balance: e.target.value})} className="admin-input" required />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider ml-2">Роль</label>
+                                        <select value={userData.role} onChange={e => setUserData({...userData, role: e.target.value})} className="admin-input">
+                                            <option value="user">Пользователь (User)</option>
+                                            <option value="admin">Администратор (Admin)</option>
+                                        </select>
+                                    </div>
+                                    <div className="flex gap-4 pt-4">
+                                        <button className="flex-1 bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest text-xs">
+                                            Сохранить
+                                        </button>
+                                        <button type="button" onClick={() => setEditingUser(null)} className="flex-1 bg-slate-100 dark:bg-slate-700 font-black py-4 rounded-2xl uppercase tracking-widest text-xs">
+                                            Отмена
+                                        </button>
+                                    </div>
+                                </form>
+                            ) : (
+                                <div className="h-64 flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-[2rem]">
+                                    <Users size={48} className="mb-4 opacity-20" />
+                                    <p className="font-black uppercase tracking-widest text-[10px] opacity-50">Выберите пользователя для редактирования</p>
+                                </div>
+                            )}
                         </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead className="bg-slate-50 dark:bg-slate-900/50 text-xs font-black uppercase text-slate-400 tracking-widest">
-                                <tr>
-                                    <th className="p-6 pl-8">Пользователь</th>
-                                    <th className="p-6">Роль</th>
-                                    <th className="p-6">Баланс</th>
-                                    <th className="p-6 text-right pr-8">Действия</th>
-                                </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                                {users.map(u => (
-                                    <tr key={u.id} className="hover:bg-indigo-50/30 dark:hover:bg-slate-800/30 transition-colors group">
-                                        <td className="p-6 pl-8">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-black shadow-md">
-                                                    {u.name[0].toUpperCase()}
+
+                        {/* Список пользователей */}
+                        <div className="glass-card rounded-[2.5rem] overflow-hidden border border-white/20">
+                            <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm">
+                                <h3 className="text-xl font-black dark:text-white uppercase tracking-tight">Пользователи</h3>
+                                <button onClick={fetchAll} className="p-2 text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl hover:rotate-180 transition-transform duration-500"><RefreshCw size={20} /></button>
+                            </div>
+                            <div className="overflow-x-auto max-h-[600px] custom-scrollbar">
+                                <table className="w-full text-left">
+                                    <thead className="bg-slate-50 dark:bg-slate-900/50 text-[10px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-200 dark:border-slate-700">
+                                        <tr>
+                                            <th className="p-6 pl-8">Имя / Email</th>
+                                            <th className="p-6 text-right pr-8">Действия</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                                    {users.map(u => (
+                                        <tr key={u.id} className={`hover:bg-indigo-50/30 dark:hover:bg-slate-800/30 transition-colors group ${editingUser?.id === u.id ? 'bg-indigo-50/50 dark:bg-indigo-900/20' : ''}`}>
+                                            <td className="p-4 pl-8">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 flex items-center justify-center font-black">
+                                                        {u.name[0].toUpperCase()}
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-bold text-slate-900 dark:text-white text-sm">{u.name}</div>
+                                                        <div className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">{u.email}</div>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <div className="font-bold text-slate-900 dark:text-white">{u.name}</div>
-                                                    <div className="text-xs text-slate-500 font-medium">{u.email}</div>
+                                            </td>
+                                            <td className="p-4 text-right pr-8">
+                                                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                                    <button onClick={() => handleUserEdit(u)} className="p-2 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl transition-all">
+                                                        <RefreshCw size={18}/>
+                                                    </button>
+                                                    <button onClick={() => api.delete(`/users/${u.id}`).then(fetchAll)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all">
+                                                        <Trash2 size={18}/>
+                                                    </button>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="p-6">
-                                            {u.role === 'admin' ? (
-                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 rounded-full text-xs font-black uppercase tracking-wider">
-                                                    <ShieldCheck size={12}/> Admin
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 rounded-full text-xs font-bold uppercase tracking-wider">
-                                                    User
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="p-6 font-mono font-bold text-slate-700 dark:text-slate-300">
-                                            {parseFloat(u.balance || 0).toFixed(2)} BYN
-                                        </td>
-                                        <td className="p-6 text-right pr-8">
-                                            <button onClick={() => deleteUser(u.id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all opacity-0 group-hover:opacity-100">
-                                                <Trash2 size={18}/>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                                </tbody>
-                            </table>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -188,7 +298,24 @@ export default function AdminPage() {
                 {activeTab === 'categories' && (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-500">
                         <div className="glass-card p-8 rounded-[2.5rem]">
-                            <h3 className="text-xl font-black mb-6 dark:text-white uppercase tracking-tight">Новая категория</h3>
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-black dark:text-white uppercase tracking-tight">
+                                    {editingCategory ? 'Редактирование категории' : 'Новая категория'}
+                                </h3>
+                                {editingCategory && (
+                                    <button 
+                                        onClick={() => {
+                                            setEditingCategory(null);
+                                            setCategoryName('');
+                                            setCategoryPreview(null);
+                                            setCategoryImage(null);
+                                        }}
+                                        className="px-3 py-1 bg-slate-200 dark:bg-slate-700 rounded-lg font-bold text-[10px] uppercase"
+                                    >
+                                        Отмена
+                                    </button>
+                                )}
+                            </div>
                             <form onSubmit={handleCategorySubmit} className="space-y-6">
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold uppercase text-slate-400 tracking-wider ml-2">Название</label>
@@ -228,7 +355,7 @@ export default function AdminPage() {
                                 </div>
 
                                 <button className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-indigo-500/30 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest">
-                                    СОЗДАТЬ
+                                    {editingCategory ? 'СОХРАНИТЬ' : 'СОЗДАТЬ'}
                                 </button>
                             </form>
                         </div>
@@ -243,7 +370,10 @@ export default function AdminPage() {
                                             </div>
                                             <span className="font-bold text-slate-800 dark:text-slate-200">{c.name}</span>
                                         </div>
-                                        <button onClick={() => api.delete(`/categories/${c.id}`).then(fetchAll)} className="text-red-400 hover:text-red-600 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={18}/></button>
+                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onClick={() => handleCategoryEdit(c)} className="text-indigo-400 hover:text-indigo-600 p-2 rounded-lg transition-colors"><RefreshCw size={18}/></button>
+                                            <button onClick={() => api.delete(`/categories/${c.id}`).then(fetchAll)} className="text-red-400 hover:text-red-600 p-2 rounded-lg transition-colors"><Trash2 size={18}/></button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -276,7 +406,14 @@ export default function AdminPage() {
                                         </td>
                                         <td className="p-4 font-mono text-indigo-600 font-black text-lg">{p.price}</td>
                                         <td className="p-4 text-right pr-8">
-                                            <button onClick={() => api.delete(`/products/${p.id}`).then(fetchAll)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all opacity-0 group-hover:opacity-100"><Trash2 size={20}/></button>
+                                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                                <button onClick={() => handleProductEdit(p)} className="p-2 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl transition-all">
+                                                    <RefreshCw size={18}/>
+                                                </button>
+                                                <button onClick={() => api.delete(`/products/${p.id}`).then(fetchAll)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all">
+                                                    <Trash2 size={18}/>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -288,7 +425,23 @@ export default function AdminPage() {
 
                 {activeTab === 'addProduct' && (
                     <div className="max-w-5xl glass-card p-10 rounded-[2.5rem] animate-in slide-in-from-bottom-4 duration-500 border border-white/20 shadow-2xl">
-                        <h3 className="text-3xl font-black mb-10 tracking-tighter uppercase text-center lg:text-left dark:text-white">Создание товара</h3>
+                        <div className="flex justify-between items-center mb-10">
+                            <h3 className="text-3xl font-black tracking-tighter uppercase dark:text-white">
+                                {editingProduct ? 'Редактирование товара' : 'Создание товара'}
+                            </h3>
+                            {editingProduct && (
+                                <button 
+                                    onClick={() => {
+                                        setEditingProduct(null);
+                                        setFormData({ name: '', description: '', price: '', old_price: '', quantity: '1', category_id: categories[0]?.id || '' });
+                                        setProductImages([]); setProductPreviews([]);
+                                    }}
+                                    className="px-4 py-2 bg-slate-200 dark:bg-slate-700 rounded-xl font-bold text-xs uppercase"
+                                >
+                                    Отмена
+                                </button>
+                            )}
+                        </div>
                         <form onSubmit={handleProductSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-12">
                             <div className="space-y-6">
                                 <div className="space-y-2">
@@ -301,15 +454,21 @@ export default function AdminPage() {
                                         <input type="number" step="0.01" placeholder="0.00" required value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="admin-input font-mono"/>
                                     </div>
                                     <div className="space-y-2">
+                                        <label className="text-xs font-bold uppercase text-slate-400 tracking-wider ml-2">Старая цена (BYN)</label>
+                                        <input type="number" step="0.01" placeholder="0.00" value={formData.old_price} onChange={e => setFormData({...formData, old_price: e.target.value})} className="admin-input font-mono"/>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="space-y-2">
                                         <label className="text-xs font-bold uppercase text-slate-400 tracking-wider ml-2">Склад</label>
                                         <input type="number" placeholder="1" required value={formData.quantity} onChange={e => setFormData({...formData, quantity: e.target.value})} className="admin-input font-mono"/>
                                     </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase text-slate-400 tracking-wider ml-2">Категория</label>
-                                    <select value={formData.category_id} onChange={e => setFormData({...formData, category_id: e.target.value})} className="admin-input appearance-none cursor-pointer">
-                                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                    </select>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold uppercase text-slate-400 tracking-wider ml-2">Категория</label>
+                                        <select value={formData.category_id} onChange={e => setFormData({...formData, category_id: e.target.value})} className="admin-input appearance-none cursor-pointer">
+                                            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                        </select>
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold uppercase text-slate-400 tracking-wider ml-2">Описание</label>
@@ -336,8 +495,17 @@ export default function AdminPage() {
                                         ))}
                                     </div>
                                 )}
+                                {editingProduct && editingProduct.images?.length > 0 && productPreviews.length === 0 && (
+                                    <div className="grid grid-cols-4 gap-4">
+                                        {editingProduct.images.map((img, idx) => (
+                                            <img key={idx} src={img.url} className="aspect-square rounded-2xl object-cover shadow-sm border border-slate-200 dark:border-slate-700 opacity-50" />
+                                        ))}
+                                    </div>
+                                )}
 
-                                <button className="w-full bg-indigo-600 text-white font-black py-5 rounded-[1.5rem] shadow-xl shadow-indigo-500/30 uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">Опубликовать</button>
+                                <button className="w-full bg-indigo-600 text-white font-black py-5 rounded-[1.5rem] shadow-xl shadow-indigo-500/30 uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">
+                                    {editingProduct ? 'Сохранить изменения' : 'Опубликовать'}
+                                </button>
                             </div>
                         </form>
                     </div>

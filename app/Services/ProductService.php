@@ -36,6 +36,7 @@ class ProductService
                 'name' => $dto->name,
                 'description' => $dto->description,
                 'price' => $dto->price,
+                'old_price' => $dto->old_price,
                 'quantity' => $dto->quantity,
                 'category_id' => $dto->category_id,
             ];
@@ -57,6 +58,7 @@ class ProductService
                 'name' => $dto->name,
                 'description' => $dto->description,
                 'price' => $dto->price,
+                'old_price' => $dto->old_price,
                 'quantity' => $dto->quantity,
                 'category_id' => $dto->category_id,
             ];
