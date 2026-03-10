@@ -2,7 +2,7 @@
 
 namespace App\DTO;
 
-use Illuminate\Http\Request; // Используем базовый Request, как в BaseDTO
+use Illuminate\Http\Request;
 
 class CartItemDTO extends BaseDTO
 {
@@ -11,7 +11,6 @@ class CartItemDTO extends BaseDTO
         public readonly int $quantity = 1,
     ) {}
 
-    // Тип аргумента должен быть Request, чтобы совпадать с BaseDTO
     public static function fromRequest(Request $request): static
     {
         return new static(
