@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\Product\SearchProductAction;
 use App\Http\Controllers\Api\Product\GetProductByIdAction;
 use App\Http\Controllers\Api\Product\GetCategoryProductsAction;
+use App\Http\Controllers\Api\RecommendationController;
+use App\Http\Controllers\Api\ReviewController;
 
 // Auth
 Route::post('/register', [AuthController::class, 'register']);
@@ -18,6 +20,12 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/products/search', SearchProductAction::class);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', GetProductByIdAction::class);
+Route::get('/products/{id}/recommendations', [RecommendationController::class, 'product']);
+Route::post('/products/{id}/view', [RecommendationController::class, 'view']);
+Route::get('/products/{id}/reviews', [ReviewController::class, 'index']);
+
+// Homepage recommendations
+Route::get('/recommendations/home', [RecommendationController::class, 'home']);
 
 // --- КАТЕГОРИИ ---
 Route::get('/categories', [CategoryController::class, 'index']);
@@ -43,17 +51,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Кошелек и Заказы (покупать могут только авторизованные)
     Route::post('/wallet/top-up', [AuthController::class, 'topUp']);
     Route::post('/orders', [OrderController::class, 'store']);
+    Route::get('/orders', [OrderController::class, 'index']);
+
+    // Отзывы
+    Route::post('/reviews', [ReviewController::class, 'store']);
+    Route::post('/reviews/{id}/like', [ReviewController::class, 'like']);
+    Route::get('/products/{id}/can-review', [ReviewController::class, 'checkPermission']);
 
     // Админка
     Route::middleware([\App\Http\Middleware\CheckAdmin::class])->group(function () {
-        // История заказов
-        Route::get('/orders', [\App\Http\Controllers\Api\OrderController::class, 'index']);
-
-        // Отзывы
-        Route::post('/reviews', [\App\Http\Controllers\Api\ReviewController::class, 'store']);
-        Route::post('/reviews/{id}/like', [\App\Http\Controllers\Api\ReviewController::class, 'like']);
-        Route::get('/products/{id}/can-review', [\App\Http\Controllers\Api\ReviewController::class, 'checkPermission']);
-
         Route::get('/users', [AuthController::class, 'index']);
         Route::put('/users/{id}', [AuthController::class, 'update']);
         Route::delete('/users/{id}', [AuthController::class, 'destroy']);

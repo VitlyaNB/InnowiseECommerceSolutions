@@ -21,6 +21,7 @@ InnowiseECommerceSolutions/
 │   │   │   ├── CategoryController.php
 │   │   │   ├── ExternalCategorySyncController.php
 │   │   │   ├── ProductController.php
+│   │   │   ├── RecommendationController.php
 │   │   │   └── Product/
 │   │   │       ├── GetCategoryProductsAction.php
 │   │   │       ├── GetProductByIdAction.php
@@ -46,6 +47,7 @@ InnowiseECommerceSolutions/
 │   │   ├── OrderItem.php
 │   │   ├── Product.php
 │   │   ├── ProductImage.php
+│   │   ├── ProductView.php
 │   │   ├── Review.php
 │   │   └── User.php
 │   ├── Observers/
@@ -59,21 +61,25 @@ InnowiseECommerceSolutions/
 │   │   │   ├── CategoryRepositoryInterface.php
 │   │   │   ├── OrderRepositoryInterface.php
 │   │   │   ├── ProductRepositoryInterface.php
+│   │   │   ├── ProductViewRepositoryInterface.php
 │   │   │   ├── ReviewRepositoryInterface.php
 │   │   │   └── UserRepositoryInterface.php
 │   │   ├── CartItemRepository.php
 │   │   ├── CategoryRepository.php
 │   │   ├── OrderRepository.php
 │   │   ├── ProductRepository.php
+│   │   ├── ProductViewRepository.php
 │   │   ├── ReviewRepository.php
 │   │   └── UserRepository.php
 │   └── Services/
 │       ├── AuthService.php
 │       ├── CartService.php
 │       ├── CategoryService.php
+│       ├── ExternalCategorySyncService.php
 │       ├── FileService.php
 │       ├── OrderService.php
 │       ├── ProductService.php
+│       ├── RecommendationService.php
 │       └── ReviewService.php
 ├── config/
 │   ├── filesystems.php
@@ -125,8 +131,17 @@ InnowiseECommerceSolutions/
 - **MinIO** in `docker-compose.yml` for S3-compatible storage
 - **.env** S3/MinIO: `AWS_ENDPOINT`, `AWS_USE_PATH_STYLE_ENDPOINT=true`, `FILESYSTEM_MEDIA_DISK`
 - **External project**: `EXTERNAL_PROJECT_API_URL`, `EXTERNAL_PROJECT_API_KEY` for category sync
+- **Queue worker**: `shop_worker` runs `php artisan queue:work`
 
 ## Cookie & Cart
 
 - **Cookie consent** popup; accept → long-lived cart cookie; decline → volatile session
 - **Cart** API: GET/POST/PUT/DELETE `/api/cart` with cookie-based `cart_session`
+
+## Recommendations & Search
+
+- **Product views** tracked in `product_views` by `user_id` or `view_session` cookie
+- **Recommendations endpoints**: `GET /api/recommendations/home`
+- **Recommendations endpoints**: `GET /api/products/{id}/recommendations`
+- **Recommendations endpoints**: `POST /api/products/{id}/view`
+- **Search facets**: `/api/products/search` supports `category_id`, `price_min`, `price_max`, `in_stock`

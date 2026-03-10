@@ -20,6 +20,7 @@ import SearchPage from './pages/SearchPage';
 import AboutPage from './pages/AboutPage';
 import TopUpPage from './pages/TopUpPage';
 import AdminPage from './pages/AdminPage';
+import OrdersPage from './pages/OrdersPage';
 
 function App() {
     return (
@@ -39,6 +40,7 @@ function App() {
                                 <Route path="/search" element={<SearchPage />} />
                                 <Route path="/login" element={<LoginPage />} />
                                 <Route path="/top-up" element={<TopUpPage />} />
+                                <Route path="/orders" element={<OrdersPage />} />
                                 <Route path="/about" element={<AboutPage />} />
                                 <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
                             </Routes>

@@ -15,6 +15,8 @@ use App\Repositories\Interfaces\OrderRepositoryInterface;
 use App\Repositories\OrderRepository;
 use App\Repositories\Interfaces\ReviewRepositoryInterface;
 use App\Repositories\ReviewRepository;
+use App\Repositories\Interfaces\ProductViewRepositoryInterface;
+use App\Repositories\ProductViewRepository;
 
 // Импорты для Elasticsearch
 use Elastic\Elasticsearch\Client;
@@ -54,6 +56,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(CartItemRepositoryInterface::class, CartItemRepository::class);
         $this->app->bind(OrderRepositoryInterface::class, OrderRepository::class);
         $this->app->bind(ReviewRepositoryInterface::class, ReviewRepository::class);
+        $this->app->bind(ProductViewRepositoryInterface::class, ProductViewRepository::class);
     }
 
     /**

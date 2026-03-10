@@ -3,12 +3,14 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../api';
 import { ShoppingCart, ArrowLeft, Check } from 'lucide-react';
 import Reviews from '../components/Reviews';
+import RecommendationGrid from '../components/RecommendationGrid';
 
 export default function SingleProductPage() {
     const { id } = useParams();
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [mainImage, setMainImage] = useState(null);
+    const [recs, setRecs] = useState({ also_bought: [], similar: [], recently_viewed: [] });
 
     useEffect(() => {
         setLoading(true);
@@ -22,6 +24,17 @@ export default function SingleProductPage() {
             })
             .catch(err => console.error("Ошибка загрузки товара:", err))
             .finally(() => setLoading(false));
+
+        api.post(`/products/${id}/view`).catch(() => {});
+        api.get(`/products/${id}/recommendations`)
+            .then(res => {
+                setRecs({
+                    also_bought: res.data.also_bought?.data || res.data.also_bought || [],
+                    similar: res.data.similar?.data || res.data.similar || [],
+                    recently_viewed: res.data.recently_viewed?.data || res.data.recently_viewed || [],
+                });
+            })
+            .catch(() => {});
     }, [id]);
 
     const addToCart = async () => {
@@ -114,6 +127,22 @@ export default function SingleProductPage() {
 
             {/* Блок отзывов */}
             <Reviews productId={id} />
+
+            <RecommendationGrid
+                title="Похожие товары"
+                subtitle="На основе категории и описания"
+                items={recs.similar}
+            />
+            <RecommendationGrid
+                title="С этим также покупают"
+                subtitle="Частые сочетания в заказах"
+                items={recs.also_bought}
+            />
+            <RecommendationGrid
+                title="Вы недавно смотрели"
+                subtitle="История просмотров"
+                items={recs.recently_viewed}
+            />
         </div>
     );
 }

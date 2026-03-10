@@ -3,14 +3,22 @@ import api from '../api';
 import { Link } from 'react-router-dom';
 import { ShoppingCart } from 'lucide-react';
 import Hero from '../components/Hero';
+import RecommendationGrid from '../components/RecommendationGrid';
 
 export default function Catalog() {
     const [products, setProducts] = useState([]);
+    const [homeRecs, setHomeRecs] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        api.get('/products')
-            .then(res => setProducts(res.data.data || res.data))
+        Promise.all([
+            api.get('/products'),
+            api.get('/recommendations/home'),
+        ])
+            .then(([productsRes, recsRes]) => {
+                setProducts(productsRes.data.data || productsRes.data);
+                setHomeRecs(recsRes.data.items?.data || recsRes.data.items || []);
+            })
             .catch(err => console.error(err))
             .finally(() => setLoading(false));
     }, []);
@@ -83,6 +91,12 @@ export default function Catalog() {
                     ))}
                 </div>
             )}
+
+            <RecommendationGrid
+                title="Рекомендации для вас"
+                subtitle="Собрано на основе ваших просмотров"
+                items={homeRecs}
+            />
         </div>
     );
 }

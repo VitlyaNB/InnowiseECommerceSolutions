@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Repositories\CartItemRepository;
 use Illuminate\Support\Facades\DB;
 use Exception;
+use App\Jobs\SendOrderConfirmationJob;
 
 class OrderService
 {
@@ -73,6 +74,10 @@ class OrderService
 
             // 7. Удаляем из корзины только купленное
             $this->cartItemRepository->deleteSelectedItems($user->id, $selectedItemIds);
+
+            DB::afterCommit(function () use ($order) {
+                SendOrderConfirmationJob::dispatch($order->id);
+            });
 
             return $order;
         });

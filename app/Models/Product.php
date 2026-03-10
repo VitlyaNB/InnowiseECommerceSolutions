@@ -30,6 +30,7 @@ class Product extends Model
             'name' => $this->name,
             'description' => $this->description,
             'price' => (float) $this->price,
+            'quantity' => (int) $this->quantity,
             'category_id' => (int) $this->category_id,
             'category_name' => $this->category ? $this->category->name : '',
             'is_active' => (bool) $this->is_active,
