@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\Product\GetProductByIdAction;
 use App\Http\Controllers\Api\Product\GetCategoryProductsAction;
 use App\Http\Controllers\Api\RecommendationController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\ChatController;
 
 // авторизация
 Route::post('/register', [AuthController::class, 'register']);
@@ -55,6 +56,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/reviews', [ReviewController::class, 'store']);
     Route::post('/reviews/{id}/like', [ReviewController::class, 'like']);
     Route::get('/products/{id}/can-review', [ReviewController::class, 'checkPermission']);
+
+    // Чат
+    Route::get('/chats', [ChatController::class, 'index']);
+    Route::get('/chats/{chat}', [ChatController::class, 'show']);
+    Route::post('/chats/{chat}/messages', [ChatController::class, 'store']);
+    Route::post('/chats/start', [ChatController::class, 'startChat']);
 
     // Админка
     Route::middleware([\App\Http\Middleware\CheckAdmin::class])->group(function () {

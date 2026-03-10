@@ -7,6 +7,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Navbar from './components/Navbar';
 import CookieConsent from './components/CookieConsent';
+import ChatWidget from './components/ChatWidget';
 import AdminRoute from './components/AdminRoute';
 
 // Pages
@@ -45,6 +46,7 @@ function App() {
                                 <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
                             </Routes>
                         </main>
+                        <ChatWidget />
                         <CookieConsent />
                     </div>
                 </BrowserRouter>

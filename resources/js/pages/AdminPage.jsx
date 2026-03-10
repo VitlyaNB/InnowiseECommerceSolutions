@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { Link } from 'react-router-dom';
+import ChatWindow from '../components/ChatWindow';
 import {
     ArrowLeft, PlusCircle, Users, LayoutDashboard,
-    Trash2, FolderTree, RefreshCw, X,
+    Trash2, FolderTree, RefreshCw, X, MessageCircle,
     Package, Upload, Image as ImageIcon, ShieldCheck
 } from 'lucide-react';
 
 export default function AdminPage() {
     const [activeTab, setActiveTab] = useState('addProduct');
-    const [users, setUsers] = useState([]);
+    const [chats, setChats] = useState([]);
+    const [selectedChat, setSelectedChat] = useState(null);
     const [categories, setCategories] = useState([]);
     const [products, setProducts] = useState([]);
     const [msg, setMsg] = useState({ text: '', isError: false });
@@ -37,6 +39,8 @@ export default function AdminPage() {
             api.get('/users').then(res => setUsers(res.data.data || res.data)).finally(() => setLoading(false));
         } else if (activeTab === 'manageProducts') {
             api.get('/products').then(res => setProducts(res.data.data || res.data)).finally(() => setLoading(false));
+        } else if (activeTab === 'chats') {
+            api.get('/chats').then(res => setChats(res.data.data || res.data)).finally(() => setLoading(false));
         } else {
             setLoading(false);
         }
@@ -107,6 +111,7 @@ export default function AdminPage() {
                     <button onClick={() => setActiveTab('manageProducts')} className={`w-full flex items-center gap-3 p-4 rounded-2xl font-bold transition-all ${activeTab === 'manageProducts' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-500 hover:bg-white dark:hover:bg-slate-800'}`}><Package size={20}/> Все товары</button>
                     <button onClick={() => setActiveTab('categories')} className={`w-full flex items-center gap-3 p-4 rounded-2xl font-bold transition-all ${activeTab === 'categories' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-500 hover:bg-white dark:hover:bg-slate-800'}`}><FolderTree size={20}/> Категории</button>
                     <button onClick={() => setActiveTab('users')} className={`w-full flex items-center gap-3 p-4 rounded-2xl font-bold transition-all ${activeTab === 'users' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-500 hover:bg-white dark:hover:bg-slate-800'}`}><Users size={20}/> Пользователи</button>
+                    <button onClick={() => setActiveTab('chats')} className={`w-full flex items-center gap-3 p-4 rounded-2xl font-bold transition-all ${activeTab === 'chats' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-500 hover:bg-white dark:hover:bg-slate-800'}`}><MessageCircle size={20}/> Сообщения</button>
                 </div>
                 <Link to="/" className="absolute bottom-8 left-8 flex items-center gap-2 text-slate-400 font-bold hover:text-indigo-600 transition-colors"><ArrowLeft size={18}/> В магазин</Link>
             </div>
@@ -335,6 +340,55 @@ export default function AdminPage() {
                                 <button className="w-full bg-indigo-600 text-white font-black py-5 rounded-[1.5rem] shadow-xl shadow-indigo-500/30 uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">Опубликовать</button>
                             </div>
                         </form>
+                    </div>
+                )}
+                {activeTab === 'chats' && (
+                    <div className="flex h-[700px] glass-card rounded-[2.5rem] overflow-hidden animate-in fade-in duration-500 border border-white/20">
+                        {/* Chat List */}
+                        <div className="w-80 border-r border-slate-200 dark:border-slate-700 flex flex-col bg-white/50 dark:bg-slate-800/50">
+                            <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+                                <h3 className="text-xl font-black dark:text-white uppercase tracking-tight">Чаты</h3>
+                            </div>
+                            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                {chats.map(chat => (
+                                    <button
+                                        key={chat.id}
+                                        onClick={() => setSelectedChat(chat)}
+                                        className={`w-full p-4 flex items-center gap-4 hover:bg-indigo-50 dark:hover:bg-slate-700/50 transition-colors text-left border-b border-slate-50 dark:border-slate-700/30 ${selectedChat?.id === chat.id ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''}`}
+                                    >
+                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-black shrink-0">
+                                            {chat.user.name[0].toUpperCase()}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-bold text-slate-900 dark:text-white truncate">{chat.user.name}</div>
+                                            <div className="text-xs text-slate-500 truncate">{chat.last_message?.message || 'Нет сообщений'}</div>
+                                        </div>
+                                        {chat.last_message && (
+                                            <div className="text-[10px] text-slate-400 font-bold">
+                                                {new Date(chat.last_message.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                            </div>
+                                        )}
+                                    </button>
+                                ))}
+                                {chats.length === 0 && (
+                                    <div className="p-10 text-center text-slate-400 font-bold uppercase text-xs tracking-widest opacity-50 mt-20">
+                                        Чаты отсутствуют
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Chat Area */}
+                        <div className="flex-1 bg-slate-50 dark:bg-slate-950 flex flex-col">
+                            {selectedChat ? (
+                                <ChatWindow chatId={selectedChat.id} isAdmin={true} />
+                            ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
+                                    <MessageCircle size={64} className="mb-4 opacity-20" />
+                                    <p className="font-black uppercase tracking-widest text-xs opacity-50">Выберите чат для общения</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>
