@@ -5,7 +5,18 @@ namespace App\Http\Resources;
 use App\Models\CartItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use OpenApi\Attributes as OA;
 
+#[OA\Schema(
+    schema: 'CartResource',
+    description: 'Cart item resource representation',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'product_id', type: 'integer', example: 5),
+        new OA\Property(property: 'quantity', type: 'integer', example: 2),
+        new OA\Property(property: 'product', ref: '#/components/schemas/ProductResource'),
+    ]
+)]
 /**
  * @mixin CartItem
  */
@@ -17,10 +28,10 @@ class CartResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
+            'id'         => $this->id,
             'product_id' => $this->product_id,
-            'quantity' => $this->quantity,
-            'product' => new ProductResource($this->whenLoaded('product')),
+            'quantity'   => $this->quantity,
+            'product'    => new ProductResource($this->whenLoaded('product')),
         ];
     }
 }

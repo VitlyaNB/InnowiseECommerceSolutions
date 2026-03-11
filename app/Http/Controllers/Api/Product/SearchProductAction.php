@@ -5,48 +5,97 @@ namespace App\Http\Controllers\Api\Product;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
+use App\Services\ProductService;
 use Elastic\Elasticsearch\Client;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use OpenApi\Attributes as OA;
 
 class SearchProductAction extends Controller
 {
-    public function __construct(
-        private readonly Client $elasticsearch
-    ) {}
-
+    #[OA\Get(
+        path: '/api/products/search',
+        summary: 'Search products using Elasticsearch',
+        description: 'Full-text search with filters, sorting and aggregation. Returns paginated results plus filter metadata (available categories, min/max prices).',
+        tags: ['Products'],
+        parameters: [
+            new OA\Parameter(name: 'query', in: 'query', required: false, description: 'Search term', schema: new OA\Schema(type: 'string', example: 'smartphone')),
+            new OA\Parameter(name: 'categories', in: 'query', required: false, description: 'Array of category IDs to filter by', schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'integer'))),
+            new OA\Parameter(name: 'min_price', in: 'query', required: false, description: 'Minimum price filter', schema: new OA\Schema(type: 'number', format: 'float', example: 10.0)),
+            new OA\Parameter(name: 'max_price', in: 'query', required: false, description: 'Maximum price filter', schema: new OA\Schema(type: 'number', format: 'float', example: 999.99)),
+            new OA\Parameter(
+                name: 'sort',
+                in: 'query',
+                required: false,
+                description: 'Sort order',
+                schema: new OA\Schema(type: 'string', enum: ['created_at_desc', 'price_asc', 'price_desc', 'name_asc'], default: 'created_at_desc')
+            ),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Results per page', schema: new OA\Schema(type: 'integer', default: 12)),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Search results',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/ProductResource')),
+                        new OA\Property(
+                            property: 'meta',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'total', type: 'integer', example: 42),
+                                new OA\Property(property: 'per_page', type: 'integer', example: 12),
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page', type: 'number', example: 4),
+                            ]
+                        ),
+                        new OA\Property(
+                            property: 'filters',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'categories', type: 'array', items: new OA\Items(type: 'object')),
+                                new OA\Property(property: 'min_price', type: 'number', example: 5.0),
+                                new OA\Property(property: 'max_price', type: 'number', example: 1999.0),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+        ]
+    )]
     public function __invoke(Request $request): JsonResponse
     {
         $query = $request->string('query')->value();
         /** @var mixed $categoriesInput */
         $categoriesInput = $request->input('categories', []);
-        $categoryIds = is_array($categoriesInput) ? $categoriesInput : [];
-        
+        $categoryIds     = is_array($categoriesInput) ? $categoriesInput : [];
+
         $minPrice = $request->has('min_price') ? $request->float('min_price') : null;
         $maxPrice = $request->has('max_price') ? $request->float('max_price') : null;
-        $sort = $request->string('sort', 'created_at_desc')->value();
-        $perPage = $request->integer('per_page', 12);
-        $page = $request->integer('page', 1);
+        $sort     = $request->string('sort', 'created_at_desc')->value();
+        $perPage  = $request->integer('per_page', 12);
+        $page     = $request->integer('page', 1);
 
         $params = [
             'index' => 'products_index',
             'body'  => [
-                'from' => ($page - 1) * $perPage,
-                'size' => $perPage,
+                'from'  => ($page - 1) * $perPage,
+                'size'  => $perPage,
                 'query' => [
                     'bool' => [
-                        'must' => [],
+                        'must'   => [],
                         'filter' => [
                             ['term' => ['is_active' => true]]
                         ]
                     ]
                 ],
-                'aggs' => [
+                'aggs'  => [
                     'categories' => [
                         'terms' => ['field' => 'category_id', 'size' => 50]
                     ],
-                    'min_price' => ['min' => ['field' => 'price']],
-                    'max_price' => ['max' => ['field' => 'price']]
+                    'min_price'  => ['min' => ['field' => 'price']],
+                    'max_price'  => ['max' => ['field' => 'price']]
                 ]
             ]
         ];
@@ -55,8 +104,8 @@ class SearchProductAction extends Controller
         if (!empty($query)) {
             $params['body']['query']['bool']['must'][] = [
                 'multi_match' => [
-                    'query' => $query,
-                    'fields' => ['name^3', 'description', 'category_name'],
+                    'query'     => $query,
+                    'fields'    => ['name^3', 'description', 'category_name'],
                     'fuzziness' => 'AUTO'
                 ]
             ];
@@ -64,7 +113,7 @@ class SearchProductAction extends Controller
 
         // Category filter
         if (!empty($categoryIds)) {
-            $categoryIds = array_map(fn($v) => (int) (is_scalar($v) ? $v : 0), $categoryIds);
+            $categoryIds                                   = array_map(fn ($v) => (int) (is_scalar($v) ? $v : 0), $categoryIds);
             $params['body']['query']['bool']['filter'][] = [
                 'terms' => ['category_id' => $categoryIds]
             ];
@@ -100,10 +149,10 @@ class SearchProductAction extends Controller
 
         /** @var array{total: array{value: int}, hits: array<int, array{_id: string|int}>} $hits */
         $hits = $results['hits'];
-        
+
         $hitItems = $hits['hits'];
-        
-        $ids = array_map(fn($hit) => (int) $hit['_id'], $hitItems);
+
+        $ids = array_map(fn ($hit) => (int) $hit['_id'], $hitItems);
 
         if (empty($ids)) {
             $products = collect();
@@ -114,7 +163,7 @@ class SearchProductAction extends Controller
 
             // Sort by the order of IDs returned by Elasticsearch
             $idToIndex = array_flip($ids);
-            $products = $fetchedProducts->sortBy(fn($product) => $idToIndex[$product->id])->values();
+            $products  = $fetchedProducts->sortBy(fn ($product) => $idToIndex[$product->id])->values();
         }
 
         /** @var array<string, array{buckets?: array<int, array{key: int|string, doc_count: int|string}>, value: float|int}> $aggregations */
@@ -123,22 +172,26 @@ class SearchProductAction extends Controller
         $total = $hits['total']['value'];
 
         return response()->json([
-            'data' => ProductResource::collection($products),
-            'meta' => [
-                'total' => $total,
-                'per_page' => $perPage,
+            'data'    => ProductResource::collection($products),
+            'meta'    => [
+                'total'        => $total,
+                'per_page'     => $perPage,
                 'current_page' => $page,
-                'last_page' => ceil($total / $perPage),
+                'last_page'    => ceil($total / $perPage),
             ],
             'filters' => [
                 'categories' => collect($aggregations['categories']['buckets'] ?? [])
-                    ->map(fn($b) => [
-                        'id' => (int) $b['key'],
+                    ->map(fn ($b) => [
+                        'id'    => (int) $b['key'],
                         'count' => (int) $b['doc_count']
                     ]),
-                'min_price' => $aggregations['min_price']['value'],
-                'max_price' => $aggregations['max_price']['value'],
+                'min_price'  => $aggregations['min_price']['value'],
+                'max_price'  => $aggregations['max_price']['value'],
             ]
         ]);
     }
+
+    public function __construct(
+        private readonly Client $elasticsearch
+    ) {}
 }
