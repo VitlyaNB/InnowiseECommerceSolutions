@@ -20,6 +20,7 @@ class AuthControllerTest extends TestCase
             'password_confirmation' => 'password123',
         ];
 
+
         $response = $this->postJson('/api/register', $userData);
 
         $response->assertStatus(201)
