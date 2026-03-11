@@ -47,8 +47,7 @@ class ChatController extends Controller
         $this->authorizeAccess($chat);
 
         $chat->load(['messages.user', 'user']);
-        
-        // Mark messages as read
+
         $chat->messages()
             ->where('user_id', '!=', Auth::id())
             ->update(['is_read' => true]);
@@ -85,7 +84,7 @@ class ChatController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        
+
         /** @var Chat $chat */
         $chat = Chat::query()->firstOrCreate(
             ['user_id' => $user->id],

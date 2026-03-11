@@ -108,10 +108,13 @@ class SearchProductAction extends Controller
         if (empty($ids)) {
             $products = collect();
         } else {
-            $products = Product::whereIn('id', $ids)
+            $fetchedProducts = Product::whereIn('id', $ids)
                 ->with(['images', 'category'])
-                ->orderByRaw('FIELD(id, ' . implode(',', array_reverse($ids)) . ') DESC')
                 ->get();
+
+            // Sort by the order of IDs returned by Elasticsearch
+            $idToIndex = array_flip($ids);
+            $products = $fetchedProducts->sortBy(fn($product) => $idToIndex[$product->id])->values();
         }
 
         /** @var array<string, array{buckets?: array<int, array{key: int|string, doc_count: int|string}>, value: float|int}> $aggregations */

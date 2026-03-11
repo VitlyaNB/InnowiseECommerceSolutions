@@ -125,11 +125,11 @@ class CartService
         return false;
     }
 
-    /** 
-     * @param Collection<int, CartItem> $items 
+    /**
+     * @param Collection<int, CartItem> $items
      * @return array<string, float>
      */
-    private function calculateTotals(Collection $items): array
+    public function calculateTotals(Collection $items): array
     {
         $subtotal = $items->sum(fn (CartItem $i) => $i->product->price * $i->quantity);
         $total = $subtotal;

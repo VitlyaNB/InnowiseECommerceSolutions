@@ -20,7 +20,9 @@ use Illuminate\Database\Eloquent\Model;
 class OrderItem extends Model
 {
     /** @use HasFactory<\Illuminate\Database\Eloquent\Factories\Factory> */
+    public $timestamps = false;
     use HasFactory;
+    public $timestamps = false;
 
     protected $fillable = [
         'order_id',

@@ -19,7 +19,9 @@ use Illuminate\Database\Eloquent\Model;
 class ReviewLike extends Model
 {
     /** @use HasFactory<\Illuminate\Database\Eloquent\Factories\Factory> */
+    public $timestamps = false;
     use HasFactory;
+    public $timestamps = false;
 
     protected $fillable = [
         'review_id',
