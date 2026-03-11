@@ -142,10 +142,16 @@ class SearchProductAction extends Controller
                 $params['body']['sort'] = [['created_at' => 'desc']];
         }
 
-        /** @var \Elastic\Elasticsearch\Response\Elasticsearch $response */
-        $response = $this->elasticsearch->search($params);
-        /** @var array<string, mixed> $results */
-        $results = $response->asArray();
+        try {
+            /** @var \Elastic\Elasticsearch\Response\Elasticsearch $response */
+            $response = $this->elasticsearch->search($params);
+            /** @var array<string, mixed> $results */
+            $results = $response->asArray();
+        } catch (\Exception $e) {
+            // Log error and fallback to DB search
+            \Illuminate\Support\Facades\Log::warning("Elasticsearch search failed: " . $e->getMessage());
+            return $this->fallbackSearch($query, $categoryIds, $minPrice, $maxPrice, $sort, $perPage, $page);
+        }
 
         /** @var array{total: array{value: int}, hits: array<int, array{_id: string|int}>} $hits */
         $hits = $results['hits'];
@@ -187,6 +193,61 @@ class SearchProductAction extends Controller
                     ]),
                 'min_price'  => $aggregations['min_price']['value'],
                 'max_price'  => $aggregations['max_price']['value'],
+            ]
+        ]);
+    }
+
+    private function fallbackSearch(string $query, array $categoryIds, ?float $minPrice, ?float $maxPrice, string $sort, int $perPage, int $page): JsonResponse
+    {
+        $dbQuery = Product::query()->where('is_active', true)->with(['images', 'category']);
+
+        if (!empty($query)) {
+            $dbQuery->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('description', 'like', "%{$query}%");
+            });
+        }
+
+        if (!empty($categoryIds)) {
+            $dbQuery->whereIn('category_id', $categoryIds);
+        }
+
+        if ($minPrice !== null) {
+            $dbQuery->where('price', '>=', $minPrice);
+        }
+
+        if ($maxPrice !== null) {
+            $dbQuery->where('price', '<=', $maxPrice);
+        }
+
+        switch ($sort) {
+            case 'price_asc':
+                $dbQuery->orderBy('price', 'asc');
+                break;
+            case 'price_desc':
+                $dbQuery->orderBy('price', 'desc');
+                break;
+            case 'name_asc':
+                $dbQuery->orderBy('name', 'asc');
+                break;
+            default:
+                $dbQuery->orderBy('created_at', 'desc');
+        }
+
+        $paginator = $dbQuery->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'data'    => ProductResource::collection($paginator->items()),
+            'meta'    => [
+                'total'        => $paginator->total(),
+                'per_page'     => $paginator->perPage(),
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+            ],
+            'filters' => [
+                'categories' => [], // DB fallback doesn't easily provide aggs without extra queries
+                'min_price'  => Product::where('is_active', true)->min('price') ?? 0,
+                'max_price'  => Product::where('is_active', true)->max('price') ?? 0,
             ]
         ]);
     }

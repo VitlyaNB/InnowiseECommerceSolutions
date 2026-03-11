@@ -69,9 +69,7 @@ readonly class CategoryService
             ));
         }
 
-        $this->categoryRepository->update($id, $updateData);
-
-        return $this->getCategoryById($id);
+        return $this->categoryRepository->update($id, $updateData);
     }
 
     public function deleteCategory(int $id): bool
@@ -82,10 +80,6 @@ readonly class CategoryService
         /** @var Product $product */
         foreach ($category->products as $product) {
             $product->delete();
-        }
-
-        if ($category->image_path) {
-            $this->fileService->delete($category->image_path);
         }
 
         return $this->categoryRepository->delete($id);

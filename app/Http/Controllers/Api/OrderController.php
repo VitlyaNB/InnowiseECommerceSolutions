@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
 use App\Models\User;
+use App\Http\Resources\OrderResource;
+use App\Http\Resources\ProductResource;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -53,9 +55,7 @@ class OrderController extends Controller
 
         $orders = $user->orders()->with('items.product.images')->latest()->get();
 
-        return response()->json([
-            'data' => $orders
-        ]);
+        return OrderResource::collection($orders)->response();
     }
 
     #[OA\Post(
@@ -85,7 +85,7 @@ class OrderController extends Controller
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'message', type: 'string', example: 'Заказ успешно оформлен'),
-                        new OA\Property(property: 'order', type: 'object'),
+                        new OA\Property(property: 'order', ref: '#/components/schemas/OrderResource'),
                     ]
                 )
             ),
@@ -108,10 +108,10 @@ class OrderController extends Controller
         try {
             $order = $this->orderService->createOrder($user, $selectedItemIds, $shippingAddress);
 
-            return response()->json([
-                'message' => 'Заказ успешно оформлен',
-                'order'   => $order->fresh(['items.product.images'])
-            ], 201);
+            return (new OrderResource($order->load(['items.product.images'])))
+                ->additional(['message' => 'Заказ успешно оформлен'])
+                ->response()
+                ->setStatusCode(201);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => $e->getMessage()

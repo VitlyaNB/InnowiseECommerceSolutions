@@ -11,12 +11,12 @@ final readonly class ProductDTO extends BaseDTO
      * @param array<int, UploadedFile> $images
      */
     public function __construct(
-        public string $name = '',
-        public string $description = '',
-        public float $price = 0.0,
+        public ?string $name = null,
+        public ?string $description = null,
+        public ?float $price = null,
         public ?float $old_price = null,
-        public int $quantity = 0,
-        public int $category_id = 0,
+        public ?int $quantity = null,
+        public ?int $category_id = null,
         public array $images = [],
     ) {}
 
@@ -28,13 +28,13 @@ final readonly class ProductDTO extends BaseDTO
         $validImages = array_filter($images, fn($img) => $img instanceof UploadedFile);
 
         return new self(
-            name: $request->string('name')->value(),
-            description: $request->string('description')->value(),
-            price: (float) $request->float('price'),
+            name: $request->has('name') ? $request->string('name')->value() : null,
+            description: $request->has('description') ? $request->string('description')->value() : null,
+            price: $request->has('price') ? (float) $request->float('price') : null,
             old_price: $request->has('old_price') ? $request->float('old_price') : null,
-            quantity: $request->integer('quantity'),
-            category_id: $request->integer('category_id'),
-            images: array_values($validImages), // Ensure int keys
+            quantity: $request->has('quantity') ? $request->integer('quantity') : null,
+            category_id: $request->has('category_id') ? $request->integer('category_id') : null,
+            images: array_values($validImages),
         );
     }
 }

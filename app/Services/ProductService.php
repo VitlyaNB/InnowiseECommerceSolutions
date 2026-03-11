@@ -71,14 +71,14 @@ class ProductService
                 throw new \Illuminate\Database\Eloquent\ModelNotFoundException("Product with ID {$id} not found.");
             }
 
-            $productData = [
+            $productData = array_filter([
                 'name' => $dto->name,
                 'description' => $dto->description,
                 'price' => $dto->price,
                 'old_price' => $dto->old_price,
                 'quantity' => $dto->quantity,
                 'category_id' => $dto->category_id,
-            ];
+            ], fn ($value) => !is_null($value));
 
             $this->productRepository->update($product, $productData);
 
@@ -130,7 +130,6 @@ class ProductService
 
         /** @var ProductImage $img */
         foreach ($product->images as $img) {
-            $this->fileService->delete($img->image_path, $disk);
             $img->delete();
         }
     }

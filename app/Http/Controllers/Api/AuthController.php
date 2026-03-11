@@ -7,6 +7,7 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
+use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use App\DTO\LoginDTO;
 use App\DTO\RegisterDTO;
@@ -53,7 +54,11 @@ class AuthController extends Controller
     {
         $dto    = LoginDTO::fromRequest($request);
         $result = $this->authService->login($dto);
-        return response()->json($result);
+        
+        return response()->json([
+            'user' => new UserResource($result['user']),
+            'token' => $result['token']
+        ]);
     }
 
     #[OA\Post(
@@ -90,7 +95,11 @@ class AuthController extends Controller
     {
         $dto    = RegisterDTO::fromRequest($request);
         $result = $this->authService->register($dto);
-        return response()->json($result, 201);
+        
+        return response()->json([
+            'user' => new UserResource($result['user']),
+            'token' => $result['token']
+        ], 201);
     }
 
     #[OA\Post(
@@ -130,14 +139,13 @@ class AuthController extends Controller
         $user = $request->user();
 
         /** @var float $amount */
-        $amount = $request->input('amount');
+        $amount = (float) $request->input('amount');
 
-        $user->balance += $amount;
-        $user->save();
+        $updatedUser = $this->authService->topUp($user, $amount);
 
         return response()->json([
             'message' => 'Баланс пополнен',
-            'user'    => $user
+            'user'    => new UserResource($updatedUser)
         ]);
     }
 
@@ -163,7 +171,7 @@ class AuthController extends Controller
     public function index(): JsonResponse
     {
         $users = $this->authService->getAllUsers();
-        return response()->json(['data' => $users]);
+        return UserResource::collection($users)->response();
     }
 
     #[OA\Put(

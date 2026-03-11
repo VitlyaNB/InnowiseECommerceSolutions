@@ -6,16 +6,16 @@ use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
-use App\Repositories\CartItemRepository;
+use App\Repositories\Interfaces\CartItemRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Exception;
 use App\Jobs\SendOrderConfirmationJob;
 
 class OrderService
 {
-    protected CartItemRepository $cartItemRepository;
+    protected CartItemRepositoryInterface $cartItemRepository;
 
-    public function __construct(CartItemRepository $cartItemRepository)
+    public function __construct(CartItemRepositoryInterface $cartItemRepository)
     {
         $this->cartItemRepository = $cartItemRepository;
     }

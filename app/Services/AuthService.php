@@ -73,4 +73,12 @@ class AuthService
     {
         $user->tokens()->delete();
     }
+
+    public function topUp(User $user, float $amount): User
+    {
+        $user->balance += $amount;
+        $user->save();
+
+        return $user;
+    }
 }

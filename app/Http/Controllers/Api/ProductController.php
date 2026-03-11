@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Services\ProductService;
 use App\DTO\ProductDTO;
@@ -141,7 +142,7 @@ class ProductController extends Controller
             new OA\Response(response: 422, description: 'Validation error'),
         ]
     )]
-    public function update(StoreProductRequest $request, int $id): ProductResource
+    public function update(UpdateProductRequest $request, int $id): ProductResource
     {
         $dto     = ProductDTO::fromRequest($request);
         $product = $this->productService->updateProduct($id, $dto);
