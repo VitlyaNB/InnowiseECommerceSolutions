@@ -16,17 +16,15 @@ class SendOrderConfirmationJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public function __construct(
-        public readonly int $orderId
+        public readonly Order $order
     ) {}
 
     public function handle(): void
     {
-        /** @var Order|null $order */
-        $order = Order::query()->with('user')->find($this->orderId);
-        if (!$order || !$order->user) {
+        if (!$this->order->user) {
             return;
         }
 
-        Mail::to($order->user->email)->send(new OrderPaidMail($order));
+        Mail::to($this->order->user->email)->send(new OrderPaidMail($this->order));
     }
 }

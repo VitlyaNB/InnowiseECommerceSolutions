@@ -14,6 +14,9 @@ class ProductResourceTest extends TestCase
 
     public function test_product_resource_has_required_fields()
     {
+        $mockFileService = $this->createMock(\App\Services\FileService::class);
+        $this->app->instance(\App\Services\FileService::class, $mockFileService);
+
         $category = Category::factory()->create(['name' => 'Electronics']);
         $product = Product::factory()->create([
             'name' => 'Test Product',

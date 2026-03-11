@@ -5,6 +5,8 @@ namespace App\Mail;
 use App\Models\Order;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 class OrderPaidMail extends Mailable
@@ -15,12 +17,20 @@ class OrderPaidMail extends Mailable
         public readonly Order $order
     ) {}
 
-    public function build(): self
+    public function envelope(): Envelope
     {
-        return $this->subject('Ваш заказ подтвержден')
-            ->view('emails.order_paid')
-            ->with([
+        return new Envelope(
+            subject: 'Order Paid Success',
+        );
+    }
+
+    public function content(): Content
+    {
+        return new Content(
+            view: 'emails.order_paid',
+            with: [
                 'order' => $this->order,
-            ]);
+            ],
+        );
     }
 }

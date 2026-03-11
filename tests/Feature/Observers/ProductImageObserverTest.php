@@ -14,19 +14,18 @@ class ProductImageObserverTest extends TestCase
 
     public function test_it_deletes_file_from_storage_on_model_delete()
     {
-        Storage::fake('s3');
-
-        $path = 'products/image.jpg';
-        Storage::disk('s3')->put($path, 'content');
+        $mockFileService = $this->createMock(\App\Services\FileService::class);
+        $mockFileService->expects($this->once())
+            ->method('delete')
+            ->with('products/image.jpg', 's3');
+        $this->app->instance(\App\Services\FileService::class, $mockFileService);
 
         $product = Product::factory()->create();
         $image = ProductImage::create([
             'product_id' => $product->id,
-            'image_path' => $path
+            'image_path' => 'products/image.jpg'
         ]);
 
         $image->delete();
-
-        Storage::disk('s3')->assertMissing($path);
     }
 }

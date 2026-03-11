@@ -74,7 +74,7 @@ class OrderService
             $this->cartItemRepository->deleteSelectedItems($lockedUser->id, $selectedItemIds);
 
             DB::afterCommit(function () use ($order) {
-                SendOrderConfirmationJob::dispatch($order->id);
+                SendOrderConfirmationJob::dispatch($order);
             });
 
             return $order;

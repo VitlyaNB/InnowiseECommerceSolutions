@@ -35,13 +35,13 @@ class ProductReviewLogicTest extends TestCase
             'product_id' => $product->id,
             'rating' => 5,
             'comment' => 'First'
-        ]);
+        ])->assertStatus(201);
 
         $this->actingAs($user2)->postJson("/api/reviews", [
             'product_id' => $product->id,
             'rating' => 1,
             'comment' => 'Second'
-        ]);
+        ])->assertStatus(201);
 
         $avgRating = $product->reviews()->avg('rating');
         $this->assertEquals(3.0, (float) $avgRating);

@@ -17,27 +17,23 @@ class ElasticsearchSearchTest extends TestCase
         $product1 = Product::factory()->create(['name' => 'Laravel Framework']);
         $product2 = Product::factory()->create(['name' => 'React Library']);
 
-        $mockClient = Mockery::mock(Client::class);
-        $this->app->instance(Client::class, $mockClient);
-
-        $mockClient->shouldReceive('search')
-            ->once()
-            ->andReturn(new class($product1) {
-                public function __construct(private $product) {}
-                public function asArray() {
-                    return [
-                        'hits' => [
-                            'total' => ['value' => 1],
-                            'hits' => [['_id' => (string) $this->product->id]]
-                        ],
-                        'aggregations' => [
-                            'categories' => ['buckets' => []],
-                            'min_price' => ['value' => 0],
-                            'max_price' => ['value' => 1000]
-                        ]
-                    ];
-                }
-            });
+        $mockHandler = new \GuzzleHttp\Handler\MockHandler([
+            new \GuzzleHttp\Psr7\Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([
+                'hits' => [
+                    'total' => ['value' => 1],
+                    'hits' => [['_id' => (string) $product1->id]]
+                ],
+                'aggregations' => [
+                    'categories' => ['buckets' => []],
+                    'min_price' => ['value' => 0],
+                    'max_price' => ['value' => 1000]
+                ]
+            ]))
+        ]);
+        $client = \Elastic\Elasticsearch\ClientBuilder::create()
+            ->setHttpClient(new \GuzzleHttp\Client(['handler' => $mockHandler]))
+            ->build();
+        $this->app->instance(Client::class, $client);
 
         $response = $this->getJson('/api/products/search?query=Laravel');
 
@@ -56,27 +52,23 @@ class ElasticsearchSearchTest extends TestCase
         $target = Product::factory()->create(['name' => 'Special Keyboard']);
         $other = Product::factory()->create(['name' => 'Mouse']);
 
-        $mockClient = Mockery::mock(Client::class);
-        $this->app->instance(Client::class, $mockClient);
-
-        $mockClient->shouldReceive('search')
-            ->once()
-            ->andReturn(new class($target) {
-                public function __construct(private $product) {}
-                public function asArray() {
-                    return [
-                        'hits' => [
-                            'total' => ['value' => 1],
-                            'hits' => [['_id' => (string) $this->product->id]]
-                        ],
-                        'aggregations' => [
-                            'categories' => ['buckets' => []],
-                            'min_price' => ['value' => 0],
-                            'max_price' => ['value' => 1000]
-                        ]
-                    ];
-                }
-            });
+        $mockHandler = new \GuzzleHttp\Handler\MockHandler([
+            new \GuzzleHttp\Psr7\Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([
+                'hits' => [
+                    'total' => ['value' => 1],
+                    'hits' => [['_id' => (string) $target->id]]
+                ],
+                'aggregations' => [
+                    'categories' => ['buckets' => []],
+                    'min_price' => ['value' => 0],
+                    'max_price' => ['value' => 1000]
+                ]
+            ]))
+        ]);
+        $client = \Elastic\Elasticsearch\ClientBuilder::create()
+            ->setHttpClient(new \GuzzleHttp\Client(['handler' => $mockHandler]))
+            ->build();
+        $this->app->instance(Client::class, $client);
 
         $response = $this->getJson('/api/products/search?query=Keyboard');
 

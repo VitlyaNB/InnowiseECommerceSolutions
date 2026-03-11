@@ -10,7 +10,7 @@ class UploadImageDTOTest extends TestCase
 {
     public function test_upload_image_dto_instantiation()
     {
-        $file = UploadedFile::fake()->image('avatar.png');
+        $file = UploadedFile::fake()->create('avatar.png', 100);
         $dto = new UploadImageDTO($file, 'avatars', 'public');
 
         $this->assertInstanceOf(UploadImageDTO::class, $dto);

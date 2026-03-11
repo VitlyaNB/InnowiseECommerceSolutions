@@ -20,7 +20,6 @@ use Illuminate\Database\Eloquent\Model;
 class OrderItem extends Model
 {
     /** @use HasFactory<\Illuminate\Database\Eloquent\Factories\Factory> */
-    public $timestamps = false;
     use HasFactory;
     public $timestamps = false;
 
@@ -37,5 +36,13 @@ class OrderItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<Order, $this>
+     */
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
     }
 }

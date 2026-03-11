@@ -11,6 +11,10 @@ class ProductObserver
         private readonly FileService $fileService
     ) {}
 
+    public function created(Product $product): void
+    {
+        \Illuminate\Support\Facades\Log::info("Product created: {$product->name}");
+    }
 
     public function deleted(Product $product): void
     {

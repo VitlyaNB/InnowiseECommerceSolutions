@@ -21,7 +21,7 @@ class CartService
 
     public function resolveSessionId(Request $request): string
     {
-        $sessionId = $request->cookie(self::CART_SESSION_COOKIE);
+        $sessionId = $request->header('X-Session-Id') ?? $request->cookie(self::CART_SESSION_COOKIE);
 
         if (!is_string($sessionId) || empty($sessionId)) {
             $sessionId = Str::uuid()->toString();
@@ -37,7 +37,7 @@ class CartService
         if (auth('sanctum')->check()) {
             return ['user_id' => auth('sanctum')->id()];
         }
-        return ['session_id' => $this->resolveSessionId(request())];
+        return ['session_id' => $this->resolveSessionId(app('request'))];
     }
 
     public function addToCart(CartItemDTO $dto): CartItem

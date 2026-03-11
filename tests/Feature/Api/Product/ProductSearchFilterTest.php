@@ -18,27 +18,23 @@ class ProductSearchFilterTest extends TestCase
         $target = Product::factory()->create(['name' => 'Cheap', 'price' => 50]);
         $other = Product::factory()->create(['name' => 'Expensive', 'price' => 500]);
 
-        $mockClient = Mockery::mock(Client::class);
-        $this->app->instance(Client::class, $mockClient);
-
-        $mockClient->shouldReceive('search')
-            ->once()
-            ->andReturn(new class($target) {
-                public function __construct(private $product) {}
-                public function asArray() {
-                    return [
-                        'hits' => [
-                            'total' => ['value' => 1],
-                            'hits' => [['_id' => (string) $this->product->id]]
-                        ],
-                        'aggregations' => [
-                            'categories' => ['buckets' => []],
-                            'min_price' => ['value' => 0],
-                            'max_price' => ['value' => 1000]
-                        ]
-                    ];
-                }
-            });
+        $mockHandler = new \GuzzleHttp\Handler\MockHandler([
+            new \GuzzleHttp\Psr7\Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([
+                'hits' => [
+                    'total' => ['value' => 1],
+                    'hits' => [['_id' => (string) $target->id]]
+                ],
+                'aggregations' => [
+                    'categories' => ['buckets' => []],
+                    'min_price' => ['value' => 0],
+                    'max_price' => ['value' => 1000]
+                ]
+            ]))
+        ]);
+        $client = \Elastic\Elasticsearch\ClientBuilder::create()
+            ->setHttpClient(new \GuzzleHttp\Client(['handler' => $mockHandler]))
+            ->build();
+        $this->app->instance(Client::class, $client);
 
         $response = $this->getJson('/api/products/search?query=Cheap&min_price=10&max_price=100');
 
@@ -53,27 +49,23 @@ class ProductSearchFilterTest extends TestCase
         $product = Product::factory()->create(['category_id' => $cat->id, 'name' => 'Target']);
         $other = Product::factory()->create(['name' => 'Target']);
 
-        $mockClient = Mockery::mock(Client::class);
-        $this->app->instance(Client::class, $mockClient);
-
-        $mockClient->shouldReceive('search')
-            ->once()
-            ->andReturn(new class($product) {
-                public function __construct(private $product) {}
-                public function asArray() {
-                    return [
-                        'hits' => [
-                            'total' => ['value' => 1],
-                            'hits' => [['_id' => (string) $this->product->id]]
-                        ],
-                        'aggregations' => [
-                            'categories' => ['buckets' => []],
-                            'min_price' => ['value' => 0],
-                            'max_price' => ['value' => 1000]
-                        ]
-                    ];
-                }
-            });
+        $mockHandler = new \GuzzleHttp\Handler\MockHandler([
+            new \GuzzleHttp\Psr7\Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([
+                'hits' => [
+                    'total' => ['value' => 1],
+                    'hits' => [['_id' => (string) $product->id]]
+                ],
+                'aggregations' => [
+                    'categories' => ['buckets' => []],
+                    'min_price' => ['value' => 0],
+                    'max_price' => ['value' => 1000]
+                ]
+            ]))
+        ]);
+        $client = \Elastic\Elasticsearch\ClientBuilder::create()
+            ->setHttpClient(new \GuzzleHttp\Client(['handler' => $mockHandler]))
+            ->build();
+        $this->app->instance(Client::class, $client);
 
         $response = $this->getJson("/api/products/search?query=Target&categories[]={$cat->id}");
 

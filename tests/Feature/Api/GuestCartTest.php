@@ -16,7 +16,7 @@ class GuestCartTest extends TestCase
         $product = Product::factory()->create();
         $sessionId = 'test_session_123';
 
-        $response = $this->withUnencryptedCookie('cart_session', $sessionId)
+        $response = $this->withHeader('X-Session-Id', $sessionId)
             ->postJson('/api/cart', [
                 'product_id' => $product->id,
                 'quantity' => 1

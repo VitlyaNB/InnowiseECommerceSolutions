@@ -23,7 +23,6 @@ use Illuminate\Database\Eloquent\Model;
 class CartItem extends Model
 {
     /** @use HasFactory<\Illuminate\Database\Eloquent\Factories\Factory> */
-    public $timestamps = false;
     use HasFactory;
     public $timestamps = false;
 
