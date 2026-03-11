@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Category;
+use App\Services\FileService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -19,7 +20,7 @@ class CategoryResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'image_path' => $this->image_path,
+            'image_path' => $this->image_path ? app(FileService::class)->getAbsoluteUrl($this->image_path) : null,
             'products_count' => $this->whenCounted('products'),
         ];
     }

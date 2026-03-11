@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Product;
+use App\Services\FileService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -27,7 +28,7 @@ class ProductResource extends JsonResource
             'quantity' => (int) $this->quantity,
             'images' => $this->images->map(fn($img) => [
                 'id' => $img->id,
-                'url' => $img->image_path
+                'url' => app(FileService::class)->getAbsoluteUrl($img->image_path)
             ]),
             'created_at' => $this->created_at,
         ];

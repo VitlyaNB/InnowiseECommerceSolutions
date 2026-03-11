@@ -114,7 +114,7 @@ class ProductService
         }
 
         /** @var string $disk */
-        $disk = config('filesystems.media_disk', 'public');
+        $disk = config('filesystems.media_disk', 's3');
 
         foreach ($images as $file) {
             $dto = new UploadImageDTO($file, 'products', $disk);
@@ -126,7 +126,7 @@ class ProductService
     private function deleteProductImages(Product $product): void
     {
         /** @var string|null $disk */
-        $disk = config('filesystems.media_disk', 'public');
+        $disk = config('filesystems.media_disk', 's3');
 
         /** @var ProductImage $img */
         foreach ($product->images as $img) {
