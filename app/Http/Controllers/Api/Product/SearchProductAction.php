@@ -197,6 +197,9 @@ class SearchProductAction extends Controller
         ]);
     }
 
+    /**
+     * @param array<int, mixed> $categoryIds
+     */
     private function fallbackSearch(string $query, array $categoryIds, ?float $minPrice, ?float $maxPrice, string $sort, int $perPage, int $page): JsonResponse
     {
         $dbQuery = Product::query()->where('is_active', true)->with(['images', 'category']);

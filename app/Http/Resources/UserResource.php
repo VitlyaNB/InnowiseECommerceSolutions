@@ -5,6 +5,9 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \App\Models\User
+ */
 class UserResource extends JsonResource
 {
     /**
@@ -20,7 +23,7 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'role' => $this->role,
             'balance' => (float) ($this->balance ?? 0),
-            'created_at' => $this->created_at?->toDateTimeString(),
+            'created_at' => $this->created_at->toDateTimeString(),
         ];
     }
 }

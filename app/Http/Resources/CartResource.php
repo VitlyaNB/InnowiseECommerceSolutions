@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use OpenApi\Attributes as OA;
 
+/**
+ * @mixin CartItem
+ */
 #[OA\Schema(
     schema: 'CartResource',
     description: 'Cart item resource representation',
@@ -17,9 +20,6 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'product', ref: '#/components/schemas/ProductResource'),
     ]
 )]
-/**
- * @mixin CartItem
- */
 class CartResource extends JsonResource
 {
     /**

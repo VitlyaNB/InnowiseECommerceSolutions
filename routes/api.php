@@ -47,6 +47,7 @@ Route::post('/cookie-consent', function () {
 });
 
 Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/me', [AuthController::class, 'me']);
     // Кошелек и заказы
     Route::post('/wallet/top-up', [AuthController::class, 'topUp']);
     Route::post('/orders', [OrderController::class, 'store']);

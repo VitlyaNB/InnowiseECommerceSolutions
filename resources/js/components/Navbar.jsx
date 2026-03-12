@@ -65,7 +65,7 @@ export default function Navbar() {
                         <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm">
                             <Wallet className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                             <span className="font-bold text-sm text-slate-900 dark:text-white">
-                                {user.balance ? parseFloat(user.balance).toFixed(2) : '0.00'}
+                                {(parseFloat(user.balance) || 0).toFixed(2)}
                             </span>
                             <Link to="/top-up" className="ml-1 hover:text-indigo-600 p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"><Plus className="w-3 h-3" /></Link>
                         </div>

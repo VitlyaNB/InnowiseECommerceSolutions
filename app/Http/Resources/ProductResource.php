@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use OpenApi\Attributes as OA;
 
+/**
+ * @mixin Product
+ */
 #[OA\Schema(
     schema: 'ProductResource',
     description: 'Product resource representation',
@@ -33,9 +36,6 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
     ]
 )]
-/**
- * @mixin Product
- */
 class ProductResource extends JsonResource
 {
     /**

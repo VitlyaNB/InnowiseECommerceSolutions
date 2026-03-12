@@ -138,8 +138,7 @@ class AuthController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        /** @var float $amount */
-        $amount = (float) $request->input('amount');
+        $amount = (float) $request->string('amount')->value();
 
         $updatedUser = $this->authService->topUp($user, $amount);
 
@@ -245,6 +244,31 @@ class AuthController extends Controller
         }
         $this->authService->deleteUser($id, $currentUser->id);
         return response()->json(['message' => 'User deleted successfully']);
+    }
+
+    #[OA\Get(
+        path: '/api/me',
+        summary: 'Get the authenticated user details',
+        tags: ['Authentication'],
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'User details',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'user', type: 'object'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthorized'),
+        ]
+    )]
+    public function me(Request $request): JsonResponse
+    {
+        return response()->json([
+            'user' => new UserResource($request->user())
+        ]);
     }
 
     #[OA\Post(

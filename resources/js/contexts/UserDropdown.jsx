@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { LogOut, Moon, Sun, LayoutDashboard, Settings, Package } from 'lucide-react';
+import { LogOut, Moon, Sun, LayoutDashboard, Settings, Package, Wallet } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Link } from 'react-router-dom';
@@ -43,6 +43,10 @@ export default function UserDropdown() {
                     <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
                         <p className="text-sm font-bold text-gray-900 dark:text-white">{user.name}</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                        <div className="mt-2 lg:hidden flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                            <Wallet className="w-3.5 h-3.5" />
+                            <span className="text-xs font-black uppercase tracking-wider">{(parseFloat(user.balance) || 0).toFixed(2)} BYN</span>
+                        </div>
                     </div>
 
                     {user.role === 'admin' && (

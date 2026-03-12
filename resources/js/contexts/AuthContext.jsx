@@ -15,6 +15,19 @@ export const AuthProvider = ({ children }) => {
         if (storedUser && token) {
             setUser(JSON.parse(storedUser));
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+            // Синхронизируем состояние с сервером для актуального баланса
+            axios.get('/api/me')
+                .then(res => {
+                    const freshUser = res.data.user;
+                    setUser(freshUser);
+                    localStorage.setItem('user', JSON.stringify(freshUser));
+                })
+                .catch(err => {
+                    if (err.response?.status === 401) {
+                        logout();
+                    }
+                });
         }
         setLoading(false);
     }, []);

@@ -200,7 +200,7 @@ export default function CartPage() {
                                 <Wallet className="w-5 h-5" />
                                 <div>
                                     <p className="text-xs font-bold uppercase opacity-70">Ваш баланс</p>
-                                    <p className="font-bold">{parseFloat(user.balance).toFixed(2)} BYN</p>
+                                    <p className="font-bold">{(parseFloat(user.balance) || 0).toFixed(2)} BYN</p>
                                 </div>
                             </div>
                         ) : (

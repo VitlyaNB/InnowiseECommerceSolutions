@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use OpenApi\Attributes as OA;
 
+/**
+ * @mixin \App\Models\Order
+ */
 #[OA\Schema(
     schema: "OrderResource",
     title: "Order",
@@ -49,7 +52,7 @@ class OrderResource extends JsonResource
             'total_amount' => (float) $this->total_amount,
             'status' => $this->status,
             'shipping_address' => $this->shipping_address,
-            'created_at' => $this->created_at?->toDateTimeString(),
+            'created_at' => $this->created_at->toDateTimeString(),
             'items' => $this->whenLoaded('items', function () {
                 return $this->items->map(fn($item) => [
                     'id' => $item->id,

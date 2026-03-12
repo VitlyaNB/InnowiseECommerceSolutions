@@ -39,7 +39,7 @@ export default function TopUpPage() {
                 <div className="p-8 bg-indigo-600 text-white text-center">
                     <Wallet className="w-12 h-12 mx-auto mb-4 opacity-80" />
                     <h1 className="text-2xl font-black uppercase tracking-wide">Пополнение кошелька</h1>
-                    <p className="opacity-80 mt-2">Текущий баланс: {user?.balance || 0} BYN</p>
+                    <p className="opacity-80 mt-2">Текущий баланс: {(parseFloat(user?.balance) || 0).toFixed(2)} BYN</p>
                 </div>
 
                 <form onSubmit={handleTopUp} className="p-8 space-y-6">

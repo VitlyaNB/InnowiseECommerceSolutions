@@ -37,7 +37,9 @@ class CartService
         if (auth('sanctum')->check()) {
             return ['user_id' => auth('sanctum')->id()];
         }
-        return ['session_id' => $this->resolveSessionId(app('request'))];
+        /** @var \Illuminate\Http\Request $request */
+        $request = app('request');
+        return ['session_id' => $this->resolveSessionId($request)];
     }
 
     public function addToCart(CartItemDTO $dto): CartItem
