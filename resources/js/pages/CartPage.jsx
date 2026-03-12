@@ -8,11 +8,37 @@ export default function CartPage() {
     const { user, login } = useAuth();
     const [cartData, setCartData] = useState({ items: [], totals: { total: 0 } });
     const [selectedItems, setSelectedItems] = useState(new Set()); // Храним ID выбранных
-    const [shippingAddress, setShippingAddress] = useState(''); // Стейт для адреса доставки
+    const [addressFields, setAddressFields] = useState({
+        city: '',
+        street: '',
+        house: '',
+        apartment: ''
+    });
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
+
+    // Форматирование адреса для отправки на сервер
+    const formattedAddress = () => {
+        const { city, street, house, apartment } = addressFields;
+        let addr = `г. ${city} ул. ${street} д. ${house}`;
+        if (apartment.trim()) {
+            addr += ` кв. ${apartment}`;
+        }
+        return addr;
+    };
+
+    // Валидация регуляркой: г. [Текст] ул. [Текст] д. [Текст]
+    const validateAddress = () => {
+        const { city, street, house } = addressFields;
+        if (!city.trim() || !street.trim() || !house.trim()) return false;
+        
+        const fullAddr = formattedAddress();
+        // Регулярка для проверки формата "г. Текст ул. Текст д. Текст [кв. Текст]"
+        const regex = /^г\.\s.+\sул\.\s.+\sд\.\s.+(?:\sкв\.\s.+)?$/;
+        return regex.test(fullAddr);
+    };
 
     const fetchCart = () => {
         api.get('/cart')
@@ -81,16 +107,20 @@ export default function CartPage() {
     const handleCheckout = async () => {
         if (!user) { navigate('/login'); return; }
         if (selectedItems.size === 0) { setError('Выберите товары для покупки'); return; }
-        if (!shippingAddress.trim()) { setError('Пожалуйста, введите адрес доставки'); return; }
+        
+        if (!validateAddress()) { 
+            setError('Пожалуйста, заполните адрес полностью в формате: г. Минск ул. Ленина д. 7'); 
+            return; 
+        }
 
         setProcessing(true);
         setError('');
 
         try {
-            // Отправляем правильные ключи: selected_item_ids и shipping_address
+            const finalAddress = formattedAddress();
             const res = await api.post('/orders', {
                 selected_item_ids: Array.from(selectedItems),
-                shipping_address: shippingAddress
+                shipping_address: finalAddress
             });
 
             if (res.data.new_balance !== undefined) {
@@ -101,7 +131,7 @@ export default function CartPage() {
 
             // Очищаем данные после успешного заказа
             setSelectedItems(new Set());
-            setShippingAddress('');
+            setAddressFields({ city: '', street: '', house: '', apartment: '' });
             fetchCart();
         } catch (err) {
             setError(err.response?.data?.message || 'Ошибка при оформлении заказа');
@@ -209,19 +239,61 @@ export default function CartPage() {
                             </div>
                         )}
 
-                        {/* НОВОЕ: Поле для ввода адреса */}
+                        {/* НОВОЕ: Поля для ввода адреса */}
                         {user && (
-                            <div className="mb-6">
-                                <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
-                                    Адрес доставки
-                                </label>
-                                <input
-                                    type="text"
-                                    value={shippingAddress}
-                                    onChange={(e) => setShippingAddress(e.target.value)}
-                                    placeholder="г. Минск, ул. Пушкина 10"
-                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all"
-                                />
+                            <div className="mb-6 space-y-4">
+                                <p className="text-sm font-bold text-gray-700 dark:text-gray-300">Адрес доставки</p>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Город</label>
+                                        <input
+                                            type="text"
+                                            value={addressFields.city}
+                                            onChange={(e) => setAddressFields({...addressFields, city: e.target.value})}
+                                            placeholder="Минск"
+                                            className="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Улица</label>
+                                        <input
+                                            type="text"
+                                            value={addressFields.street}
+                                            onChange={(e) => setAddressFields({...addressFields, street: e.target.value})}
+                                            placeholder="Ленина"
+                                            className="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all text-sm"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Дом</label>
+                                        <input
+                                            type="text"
+                                            value={addressFields.house}
+                                            onChange={(e) => setAddressFields({...addressFields, house: e.target.value})}
+                                            placeholder="7"
+                                            className="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Квартира (опц.)</label>
+                                        <input
+                                            type="text"
+                                            value={addressFields.apartment}
+                                            onChange={(e) => setAddressFields({...addressFields, apartment: e.target.value})}
+                                            placeholder="101"
+                                            className="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all text-sm"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800">
+                                    <p className="text-[10px] font-bold text-indigo-400 uppercase mb-1">Формат для отправки:</p>
+                                    <p className="text-xs text-indigo-700 dark:text-indigo-300 font-mono">
+                                        {formattedAddress()}
+                                    </p>
+                                </div>
                             </div>
                         )}
 

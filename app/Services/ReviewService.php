@@ -78,7 +78,7 @@ class ReviewService
         /** @var \Illuminate\Database\Eloquent\Collection<int, Review> $reviews */
         $reviews = Review::query()
             ->withCount('likes')
-            ->with(['replies.user', 'replies.likes'])
+            ->with(['user', 'replies.user', 'replies.likes'])
             ->where('product_id', $productId)
             ->whereNull('parent_id')
             ->orderBy('created_at', 'desc')

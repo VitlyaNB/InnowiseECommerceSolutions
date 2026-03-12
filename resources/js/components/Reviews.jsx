@@ -111,12 +111,12 @@ export default function Reviews({ productId }) {
                     <div key={review.id} className="border-b border-gray-50 dark:border-gray-800 pb-8 last:border-0">
                         <div className="flex gap-4">
                             <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center font-bold text-indigo-600 shrink-0">
-                                {review.user.name[0].toUpperCase()}
+                                {review.user?.name ? review.user.name[0].toUpperCase() : '?'}
                             </div>
                             <div className="flex-1">
                                 <div className="flex justify-between items-start mb-2">
                                     <div>
-                                        <h4 className="font-bold dark:text-white">{review.user.name}</h4>
+                                        <h4 className="font-bold dark:text-white">{review.user?.name || 'Аноним'}</h4>
                                         <div className="flex gap-2 text-xs text-gray-400 mt-1">
                                             {renderStars(review.rating)}
                                             <span>• {new Date(review.created_at).toLocaleDateString()}</span>
@@ -154,7 +154,7 @@ export default function Reviews({ productId }) {
                                         {review.replies.map(reply => (
                                             <div key={reply.id} className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
                                                 <div className="flex gap-2 items-center mb-2">
-                                                    <span className="font-bold text-sm dark:text-white">{reply.user.name}</span>
+                                                    <span className="font-bold text-sm dark:text-white">{reply.user?.name || 'Аноним'}</span>
                                                     <span className="text-xs text-gray-400">{new Date(reply.created_at).toLocaleDateString()}</span>
                                                 </div>
                                                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{reply.comment}</p>
