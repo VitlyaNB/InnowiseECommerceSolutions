@@ -4,7 +4,37 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use OpenApi\Attributes as OA;
 
+#[OA\Schema(
+    schema: "OrderResource",
+    title: "Order",
+    description: "Схема ресурса заказа",
+    properties: [
+        new OA\Property(property: "id", type: "integer", example: 1),
+        new OA\Property(property: "total_amount", type: "number", format: "float", example: 299.99),
+        new OA\Property(property: "status", type: "string", example: "paid"),
+        new OA\Property(property: "shipping_address", type: "string", example: "г. Минск, ул. Пушкина 10"),
+        new OA\Property(property: "created_at", type: "string", format: "date-time", example: "2023-10-25 15:00:00"),
+        new OA\Property(
+            property: "items",
+            type: "array",
+            items: new OA\Items(
+                properties: [
+                    new OA\Property(property: "id", type: "integer", example: 10),
+                    new OA\Property(property: "product_id", type: "integer", example: 5),
+                    new OA\Property(property: "quantity", type: "integer", example: 2),
+                    new OA\Property(property: "price", type: "number", format: "float", example: 149.99),
+                    new OA\Property(
+                        property: "product",
+                        type: "object",
+                        description: "Данные товара (ProductResource)"
+                    ),
+                ]
+            )
+        )
+    ]
+)]
 class OrderResource extends JsonResource
 {
     /**

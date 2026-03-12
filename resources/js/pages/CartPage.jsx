@@ -8,6 +8,7 @@ export default function CartPage() {
     const { user, login } = useAuth();
     const [cartData, setCartData] = useState({ items: [], totals: { total: 0 } });
     const [selectedItems, setSelectedItems] = useState(new Set()); // Храним ID выбранных
+    const [shippingAddress, setShippingAddress] = useState(''); // Стейт для адреса доставки
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
     const [error, setError] = useState('');
@@ -22,7 +23,6 @@ export default function CartPage() {
                     totals: res.data.totals || { total: 0 }
                 });
                 // По умолчанию выбираем всё, если список пуст был (удобство)
-                // Или можно оставить пустым. Давай выберем все при первой загрузке:
                 if (selectedItems.size === 0 && items.length > 0) {
                     setSelectedItems(new Set(items.map(i => i.id)));
                 }
@@ -81,14 +81,16 @@ export default function CartPage() {
     const handleCheckout = async () => {
         if (!user) { navigate('/login'); return; }
         if (selectedItems.size === 0) { setError('Выберите товары для покупки'); return; }
+        if (!shippingAddress.trim()) { setError('Пожалуйста, введите адрес доставки'); return; }
 
         setProcessing(true);
         setError('');
 
         try {
-            // Отправляем массив ID: [1, 5, 8]
+            // Отправляем правильные ключи: selected_item_ids и shipping_address
             const res = await api.post('/orders', {
-                items: Array.from(selectedItems)
+                selected_item_ids: Array.from(selectedItems),
+                shipping_address: shippingAddress
             });
 
             if (res.data.new_balance !== undefined) {
@@ -96,9 +98,11 @@ export default function CartPage() {
                 login({ ...user, balance: res.data.new_balance }, token);
             }
             alert('Заказ успешно оформлен!');
-            // Очищаем выбранные
+
+            // Очищаем данные после успешного заказа
             setSelectedItems(new Set());
-            fetchCart(); // Перезагружаем корзину (купленные удалятся)
+            setShippingAddress('');
+            fetchCart();
         } catch (err) {
             setError(err.response?.data?.message || 'Ошибка при оформлении заказа');
         } finally {
@@ -202,6 +206,22 @@ export default function CartPage() {
                         ) : (
                             <div className="mb-6 p-4 bg-yellow-50 text-yellow-800 rounded-xl text-sm font-bold">
                                 <Link to="/login" className="underline">Войдите</Link> для оплаты.
+                            </div>
+                        )}
+
+                        {/* НОВОЕ: Поле для ввода адреса */}
+                        {user && (
+                            <div className="mb-6">
+                                <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
+                                    Адрес доставки
+                                </label>
+                                <input
+                                    type="text"
+                                    value={shippingAddress}
+                                    onChange={(e) => setShippingAddress(e.target.value)}
+                                    placeholder="г. Минск, ул. Пушкина 10"
+                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all"
+                                />
                             </div>
                         )}
 

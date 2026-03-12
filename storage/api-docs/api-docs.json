@@ -1166,7 +1166,7 @@
                                             "example": "Заказ успешно оформлен"
                                         },
                                         "order": {
-                                            "type": "object"
+                                            "$ref": "#/components/schemas/OrderResource"
                                         }
                                     },
                                     "type": "object"
@@ -2113,6 +2113,64 @@
                     },
                     "product": {
                         "$ref": "#/components/schemas/ProductResource"
+                    }
+                },
+                "type": "object"
+            },
+            "OrderResource": {
+                "title": "Order",
+                "description": "Схема ресурса заказа",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "total_amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 299.99
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "paid"
+                    },
+                    "shipping_address": {
+                        "type": "string",
+                        "example": "г. Минск, ул. Пушкина 10"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-10-25 15:00:00"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "example": 10
+                                },
+                                "product_id": {
+                                    "type": "integer",
+                                    "example": 5
+                                },
+                                "quantity": {
+                                    "type": "integer",
+                                    "example": 2
+                                },
+                                "price": {
+                                    "type": "number",
+                                    "format": "float",
+                                    "example": 149.99
+                                },
+                                "product": {
+                                    "description": "Данные товара (ProductResource)",
+                                    "type": "object"
+                                }
+                            },
+                            "type": "object"
+                        }
                     }
                 },
                 "type": "object"
