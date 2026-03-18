@@ -2,84 +2,117 @@
 
 namespace App\Services;
 
-use App\Models\CartItem;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\User;
-use App\Repositories\Interfaces\CartItemRepositoryInterface;
-use Illuminate\Support\Facades\DB;
-use Exception;
+use App\Dto\OrderDetailsDto;
+use App\Dto\OrderDto;
+use App\Dto\OrderItemDto;
+use App\Dto\SelectedIdsDto;
+use App\Infrastructure\Interfaces\TransactionManagerInterface;
 use App\Jobs\SendOrderConfirmationJob;
+use App\Repositories\Interfaces\CartItemRepositoryInterface;
+use App\Repositories\Interfaces\OrderRepositoryInterface;
+use App\Repositories\Interfaces\ProductRepositoryInterface;
+use App\Repositories\Interfaces\UserRepositoryInterface;
+use RuntimeException;
+use Throwable;
 
-class OrderService
+final readonly class OrderService
 {
-    protected CartItemRepositoryInterface $cartItemRepository;
+    public function __construct(
+        private CartItemRepositoryInterface $cartItemRepository,
+        private OrderRepositoryInterface $orderRepository,
+        private ProductRepositoryInterface $productRepository,
+        private UserRepositoryInterface $userRepository,
+        private TransactionManagerInterface $transactionManager,
+    ) {}
 
-    public function __construct(CartItemRepositoryInterface $cartItemRepository)
+    public function createOrder(int $userId, OrderDto $orderDto): OrderDetailsDto
     {
-        $this->cartItemRepository = $cartItemRepository;
-    }
+        $this->transactionManager->beginTransaction();
 
-    /** @param array<int, int> $selectedItemIds */
-    public function createOrder(User $user, array $selectedItemIds, string $shippingAddress): Order
-    {
-        /** @var Order $finalOrder */
-        $finalOrder = DB::transaction(function () use ($user, $selectedItemIds, $shippingAddress) {
+        try {
+            $lockedUser = $this->userRepository->findByIdForUpdate($userId);
 
-            /** @var User $lockedUser */
-            $lockedUser = User::query()->lockForUpdate()->find($user->id) ?? $user;
+            if (!$lockedUser) {
+                throw new RuntimeException('Пользователь не найден.');
+            }
 
-            $cartItems = $this->cartItemRepository->getSelectedItems($lockedUser->id, $selectedItemIds);
+            $selectedIdsDto = new SelectedIdsDto($orderDto->selectedItemIds);
+            $cartItems = $this->cartItemRepository->getSelectedByUser($userId, $selectedIdsDto);
 
-            if ($cartItems->isEmpty()) {
-                throw new Exception('Выбранные товары не найдены в корзине.');
+            if ($cartItems === []) {
+                throw new RuntimeException('Выбранные товары не найдены в корзине.');
             }
 
             $totalAmount = 0.0;
-            /** @var CartItem $item */
             foreach ($cartItems as $item) {
-                $totalAmount += (float) $item->product->price * $item->quantity;
+                $product = $item->product;
 
-                if ($item->product->quantity < $item->quantity) {
-                    throw new Exception("Товара {$item->product->name} недостаточно на складе.");
+                if (!$product || $product->price === null || $product->quantity === null) {
+                    throw new RuntimeException('Товар в корзине недоступен.');
                 }
+
+                if ($product->quantity < $item->quantity) {
+                    throw new RuntimeException("Товара {$product->name} недостаточно на складе.");
+                }
+
+                $totalAmount += (float) $product->price * $item->quantity;
             }
 
             if ($lockedUser->balance < $totalAmount) {
-                throw new Exception('Недостаточно средств на кошельке.');
+                throw new RuntimeException('Недостаточно средств на кошельке.');
             }
 
-            $lockedUser->balance -= $totalAmount;
-            $lockedUser->save();
+            $balanceUpdated = $this->userRepository->decrementBalance($userId, $totalAmount);
+            if (!$balanceUpdated) {
+                throw new RuntimeException('Не удалось списать средства.');
+            }
 
-            $order = Order::create([
-                'user_id' => $lockedUser->id,
-                'total_amount' => $totalAmount,
-                'status' => 'paid',
-                'shipping_address' => $shippingAddress,
-            ]);
+            $order = $this->orderRepository->create(
+                userId: $userId,
+                totalAmount: $totalAmount,
+                shippingAddress: $orderDto->shippingAddress,
+                status: 'paid',
+            );
 
-            /** @var CartItem $item */
             foreach ($cartItems as $item) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item->product_id,
-                    'quantity' => $item->quantity,
-                    'price' => $item->product->price,
-                ]);
+                $product = $item->product;
 
-                \App\Models\Product::query()->where('id', $item->product_id)->decrement('quantity', $item->quantity);
+                if (!$product || $product->price === null) {
+                    throw new RuntimeException('Товар в корзине недоступен.');
+                }
+
+                $stockUpdated = $this->productRepository->decrementStock($item->productId, $item->quantity);
+                if (!$stockUpdated) {
+                    throw new RuntimeException("Товара {$product->name} недостаточно на складе.");
+                }
+
+                $this->orderRepository->createItem(
+                    $order->id,
+                    new OrderItemDto(
+                        productId: $item->productId,
+                        quantity: $item->quantity,
+                        price: (float) $product->price,
+                    )
+                );
             }
 
-            $this->cartItemRepository->deleteSelectedItems($lockedUser->id, $selectedItemIds);
+            $this->cartItemRepository->deleteSelectedByUser($userId, $selectedIdsDto);
 
-            DB::afterCommit(function () use ($order) {
-                SendOrderConfirmationJob::dispatch($order);
-            });
+            $this->transactionManager->commit();
 
-            return $order;
-        });
-        
-        return $finalOrder;
+            SendOrderConfirmationJob::dispatch($order->id);
+
+            $finalOrder = $this->orderRepository->findByIdWithItems($order->id);
+
+            if (!$finalOrder) {
+                throw new RuntimeException('Не удалось загрузить заказ после создания.');
+            }
+
+            return $finalOrder;
+        } catch (Throwable $exception) {
+            $this->transactionManager->rollBack();
+
+            throw $exception;
+        }
     }
 }

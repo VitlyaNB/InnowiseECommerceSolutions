@@ -2,23 +2,22 @@
 
 namespace App\Repositories\Interfaces;
 
-use App\Models\Review;
-use App\Models\ReviewLike;
-use Illuminate\Support\Collection;
+use App\Dto\ReviewDto;
 
 interface ReviewRepositoryInterface
 {
-    /** @return Collection<int, Review> */
-    public function getProductReviews(int $productId): Collection;
+    public function canReview(int $userId, int $productId): bool;
 
-    public function findLike(int $userId, int $reviewId): ?ReviewLike;
+    public function hasTopLevelReview(int $userId, int $productId): bool;
 
-    public function createLike(int $userId, int $reviewId): ReviewLike;
+    /** @return array<int, ReviewDto> */
+    public function getProductReviews(int $productId, ?int $viewerUserId = null): array;
 
-    public function deleteLike(ReviewLike $like): bool;
+    public function hasLike(int $userId, int $reviewId): bool;
 
-    /** @param array<string, mixed> $data */
-    public function create(array $data): Review;
+    public function createLike(int $userId, int $reviewId): void;
 
-    public function findById(int $id): ?Review;
+    public function deleteLike(int $userId, int $reviewId): bool;
+
+    public function create(ReviewDto $data): ReviewDto;
 }

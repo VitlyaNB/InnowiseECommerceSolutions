@@ -17,7 +17,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'paid', 'shipped', 'cancelled'])->default('pending');
             $table->decimal('total_amount', 10, 2);
             $table->text('shipping_address');
-            $table->timestamps(); // created_at и updated_at есть в схеме
+            $table->timestamps();
         });
     }
 

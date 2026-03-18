@@ -2,12 +2,13 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use OpenApi\Attributes as OA;
 
 /**
- * @mixin \App\Models\Order
+ * @mixin Order
  */
 #[OA\Schema(
     schema: "OrderResource",

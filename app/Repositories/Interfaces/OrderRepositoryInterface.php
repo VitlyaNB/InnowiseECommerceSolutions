@@ -2,14 +2,14 @@
 
 namespace App\Repositories\Interfaces;
 
-use App\Models\Order;
-use App\Models\OrderItem;
+use App\Dto\OrderDetailsDto;
+use App\Dto\OrderItemDto;
 
 interface OrderRepositoryInterface
 {
-    /** @param array<string, mixed> $orderData */
-    public function create(array $orderData): Order;
+    public function create(int $userId, float $totalAmount, string $shippingAddress, string $status = 'paid'): OrderDetailsDto;
 
-    /** @param array<string, mixed> $itemData */
-    public function createItem(array $itemData): OrderItem;
+    public function createItem(int $orderId, OrderItemDto $item): void;
+
+    public function findByIdWithItems(int $orderId): ?OrderDetailsDto;
 }

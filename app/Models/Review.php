@@ -4,22 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-/**
- * @property int $id
- * @property int $product_id
- * @property int $user_id
- * @property int|null $parent_id
- * @property int $rating
- * @property string $comment
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- * 
- * @method static \Illuminate\Database\Eloquent\Builder|Review query()
- * @method static \Illuminate\Database\Eloquent\Builder|Review where(string|array|\Closure $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
- * @method static Review create(array $attributes = [])
- * @method static Review find(mixed $id, array $columns = ['*'])
- */
 /**
  * @property int $id
  * @property int $user_id
@@ -33,8 +20,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property Product $product
  * @property \Illuminate\Database\Eloquent\Collection<int, ReviewLike> $likes
  * @property \Illuminate\Database\Eloquent\Collection<int, Review> $replies
- * @property bool $isLiked
- * @property bool $is_liked
  * @property int $likes_count
  * 
  * @method static \Illuminate\Database\Eloquent\Builder<Review> query()
@@ -59,7 +44,7 @@ class Review extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<User, $this>
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
@@ -67,7 +52,7 @@ class Review extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<Product, $this>
      */
-    public function product()
+    public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
@@ -75,7 +60,7 @@ class Review extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany<ReviewLike, $this>
      */
-    public function likes()
+    public function likes(): HasMany
     {
         return $this->hasMany(ReviewLike::class);
     }
@@ -83,22 +68,8 @@ class Review extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany<Review, $this>
      */
-    public function replies()
+    public function replies(): HasMany
     {
         return $this->hasMany(Review::class, 'parent_id');
-    }
-
-    /**
-     * @return bool
-     */
-    public function getIsLikedAttribute(): bool
-    {
-        /** @var int|null $userId */
-        $userId = auth('sanctum')->id();
-        if (!$userId) {
-            return false;
-        }
-
-        return $this->likes()->where('user_id', $userId)->exists();
     }
 }

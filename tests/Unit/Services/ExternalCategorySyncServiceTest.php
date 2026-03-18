@@ -2,18 +2,17 @@
 
 namespace Tests\Unit\Services;
 
-use App\Models\Category;
+use App\Dto\CategoryDto;
+use App\Repositories\Interfaces\CategoryRepositoryInterface;
 use App\Services\ExternalCategorySyncService;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use Mockery;
 use Tests\TestCase;
 
 class ExternalCategorySyncServiceTest extends TestCase
 {
-    use RefreshDatabase;
-
-    public function test_it_syncs_categories_from_external_api()
+    public function test_it_syncs_categories_from_external_api(): void
     {
         Config::set('services.external_project.api_url', 'https://external-api.com/categories');
 
@@ -21,16 +20,22 @@ class ExternalCategorySyncServiceTest extends TestCase
             'https://external-api.com/categories' => Http::response([
                 ['name' => 'External Cat 1'],
                 ['name' => 'External Cat 2'],
-            ], 200)
+            ], 200),
         ]);
 
-        $service = new ExternalCategorySyncService();
+        $categoryRepository = Mockery::mock(CategoryRepositoryInterface::class);
+        $categoryRepository->shouldReceive('existsByName')->with('External Cat 1')->once()->andReturnFalse();
+        $categoryRepository->shouldReceive('existsByName')->with('External Cat 2')->once()->andReturnFalse();
+        $categoryRepository->shouldReceive('create')
+            ->with(Mockery::type(CategoryDto::class))
+            ->twice()
+            ->andReturnUsing(static fn (CategoryDto $dto): CategoryDto => new CategoryDto(id: 1, name: $dto->name));
 
+        $service = new ExternalCategorySyncService($categoryRepository);
         $result = $service->sync();
 
-        $this->assertTrue($result['ok']);
-        $this->assertEquals(2, $result['synced']);
-        $this->assertDatabaseHas('categories', ['name' => 'External Cat 1']);
-        $this->assertDatabaseHas('categories', ['name' => 'External Cat 2']);
+        $this->assertTrue($result->ok);
+        $this->assertSame(2, $result->synced);
+        $this->assertSame(200, $result->status);
     }
 }

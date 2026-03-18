@@ -2,28 +2,27 @@
 
 namespace App\Services;
 
-use App\DTO\CategoryDTO;
-use App\DTO\UploadImageDTO;
-use App\Models\Category;
-use App\Models\Product;
+use App\Dto\CategoryDto;
+use App\Dto\UploadImageDto;
 use App\Repositories\Interfaces\CategoryRepositoryInterface;
+use App\Repositories\Interfaces\ProductRepositoryInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Collection;
 
-readonly class CategoryService
+final readonly class CategoryService
 {
     public function __construct(
         private CategoryRepositoryInterface $categoryRepository,
-        private FileService                 $fileService
+        private ProductRepositoryInterface $productRepository,
+        private FileService $fileService
     ) {}
 
-    /** @return Collection<int, Category> */
-    public function getAllCategories(): Collection
+    /** @return array<int, CategoryDto> */
+    public function getAllCategories(): array
     {
         return $this->categoryRepository->getAll();
     }
 
-    public function getCategoryById(int $id): Category
+    public function getCategoryById(int $id): CategoryDto
     {
         $category = $this->categoryRepository->findById($id);
 
@@ -34,52 +33,68 @@ readonly class CategoryService
         return $category;
     }
 
-    public function createCategory(CategoryDTO $data): Category
+    public function createCategory(CategoryDto $data): CategoryDto
     {
-        $categoryData = ['name' => $data->name];
+        $imagePath = null;
         if ($data->image) {
             /** @var string $disk */
             $disk = config('filesystems.media_disk', 's3');
-            $categoryData['image_path'] = $this->fileService->upload(new UploadImageDTO(
+            $imagePath = $this->fileService->upload(new UploadImageDto(
                 file: $data->image,
                 folder: 'categories',
                 disk: $disk
             ));
         }
 
-        return $this->categoryRepository->create($categoryData);
+        $dtoToSave = new CategoryDto(
+            name: $data->name,
+            imagePath: $imagePath
+        );
+
+        return $this->categoryRepository->create($dtoToSave);
     }
 
-    public function updateCategory(int $id, CategoryDTO $data): Category
+    public function updateCategory(int $id, CategoryDto $data): CategoryDto
     {
         $category = $this->getCategoryById($id);
-        $updateData = ['name' => $data->name];
+        
+        $imagePath = $category->imagePath;
 
         if ($data->image) {
-            if ($category->image_path) {
-                $this->fileService->delete($category->image_path);
+            if ($category->imagePath) {
+                $this->fileService->delete($category->imagePath);
             }
 
             /** @var string $disk */
             $disk = config('filesystems.media_disk', 's3');
-            $updateData['image_path'] = $this->fileService->upload(new UploadImageDTO(
+            $imagePath = $this->fileService->upload(new UploadImageDto(
                 file: $data->image,
                 folder: 'categories',
                 disk: $disk
             ));
         }
 
-        return $this->categoryRepository->update($id, $updateData);
+        $dtoToUpdate = new CategoryDto(
+            name: $data->name,
+            imagePath: $imagePath
+        );
+
+        $this->categoryRepository->update($id, $dtoToUpdate);
+
+        return $this->categoryRepository->findById($id);
     }
 
     public function deleteCategory(int $id): bool
     {
         $category = $this->getCategoryById($id);
 
-        // Delete associated products via Eloquent to trigger ProductObserver/ProductImageObserver
-        /** @var Product $product */
-        foreach ($category->products as $product) {
-            $product->delete();
+        $products = $this->productRepository->getByCategory($id);
+        foreach ($products as $product) {
+            $this->productRepository->delete($product->id);
+        }
+
+        if ($category->imagePath) {
+            $this->fileService->delete($category->imagePath);
         }
 
         return $this->categoryRepository->delete($id);

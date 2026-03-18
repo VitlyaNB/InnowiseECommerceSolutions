@@ -28,7 +28,8 @@ class ChatControllerTest extends TestCase
 
         Event::assertDispatched(MessageSent::class, function ($event) use ($user, $chat) {
             return $event->message->message === 'Hello, support!' &&
-                $event->message->user_id === $user->id;
+                $event->message->userId === $user->id &&
+                $event->message->chatId === $chat->id;
         });
     }
 

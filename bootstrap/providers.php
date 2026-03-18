@@ -1,6 +1,9 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use Matchish\ScoutElasticSearch\ElasticSearchServiceProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    Matchish\ScoutElasticSearch\ElasticSearchServiceProvider::class,
+    AppServiceProvider::class,
+    ElasticSearchServiceProvider::class,
 ];

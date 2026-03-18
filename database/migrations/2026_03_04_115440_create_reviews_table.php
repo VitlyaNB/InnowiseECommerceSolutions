@@ -8,18 +8,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Таблица отзывов
         Schema::create('reviews', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('parent_id')->nullable()->constrained('reviews')->cascadeOnDelete(); // Для ответов
-            $table->integer('rating')->nullable(); // Оценка (1-5), null для ответов
+            $table->foreignId('parent_id')->nullable()->constrained('reviews')->cascadeOnDelete();
+            $table->integer('rating')->nullable();
             $table->text('comment');
             $table->timestamps();
         });
 
-        // Таблица лайков к отзывам
         Schema::create('review_likes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();

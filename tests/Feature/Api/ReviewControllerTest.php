@@ -18,8 +18,7 @@ class ReviewControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $product = Product::factory()->create();
-        
-        // Mock that user bought the product
+
         $order = Order::factory()->create(['user_id' => $user->id, 'status' => 'paid']);
         OrderItem::factory()->create([
             'order_id' => $order->id,
@@ -45,8 +44,7 @@ class ReviewControllerTest extends TestCase
     public function test_user_can_toggle_like_on_review()
     {
         $user = User::factory()->create();
-        
-        // Create a product and a review
+
         $product = Product::factory()->create();
         $review = Review::query()->create([
             'user_id' => User::factory()->create()->id,
@@ -55,12 +53,10 @@ class ReviewControllerTest extends TestCase
             'comment' => 'Test Review'
         ]);
 
-        // First like
         $response = $this->actingAs($user)->postJson("/api/reviews/{$review->id}/like");
         $response->assertStatus(200);
         $this->assertDatabaseHas('review_likes', ['user_id' => $user->id, 'review_id' => $review->id]);
 
-        // Second call should unlike (toggle)
         $response = $this->actingAs($user)->postJson("/api/reviews/{$review->id}/like");
         $response->assertStatus(200);
         $this->assertDatabaseMissing('review_likes', ['user_id' => $user->id, 'review_id' => $review->id]);

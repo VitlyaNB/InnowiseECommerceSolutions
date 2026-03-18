@@ -2,21 +2,20 @@
 
 namespace App\Repositories\Interfaces;
 
-use App\Models\Category;
-use Illuminate\Support\Collection;
+use App\Dto\CategoryDto;
 
 interface CategoryRepositoryInterface
 {
-    /** @return Collection<int, Category> */
-    public function getAll(): Collection;
+    /** @return array<int, CategoryDto> */
+    public function getAll(): array;
 
-    public function findById(int $id): ?Category;
+    public function findById(int $id): ?CategoryDto;
 
-    /** @param array<string, mixed> $data */
-    public function create(array $data): Category;
+    public function create(CategoryDto $data): CategoryDto;
 
-    /** @param array<string, mixed> $data */
-    public function update(int $id, array $data): Category;
+    public function update(int $id, CategoryDto $data): bool;
 
     public function delete(int $id): bool;
+
+    public function existsByName(string $name): bool;
 }

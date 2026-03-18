@@ -2,97 +2,60 @@
 
 namespace App\Services;
 
-use App\Models\Review;
-use App\Models\ReviewLike;
-use App\Models\OrderItem;
-use Illuminate\Support\Facades\DB;
-use Exception;
+use App\Dto\ReviewDto;
+use App\Repositories\Interfaces\ReviewRepositoryInterface;
+use RuntimeException;
 
-class ReviewService
+final readonly class ReviewService
 {
+    public function __construct(
+        private ReviewRepositoryInterface $reviewRepository
+    ) {}
+
     public function canReview(int $userId, int $productId): bool
     {
-        return OrderItem::query()->where('product_id', $productId)
-            ->whereHas('order', function ($query) use ($userId) {
-                $query->where('user_id', $userId)
-                    ->whereIn('status', ['paid', 'shipped']);
-            })
-            ->exists();
+        return $this->reviewRepository->canReview($userId, $productId);
     }
 
-    /**
-     * @param array<string, mixed> $data
-     */
-    public function createReview(int $userId, array $data): Review
+    public function createReview(int $userId, ReviewDto $data): ReviewDto
     {
-        if (empty($data['parent_id'])) {
-            $rawProductId = $data['product_id'] ?? 0;
-            $productId = (int) (is_scalar($rawProductId) ? $rawProductId : 0);
-            if (!$this->canReview($userId, $productId)) {
-                throw new Exception('Вы можете оставлять отзывы только на купленные товары.');
+        if ($data->parentId === null) {
+            if (!$this->reviewRepository->canReview($userId, $data->productId)) {
+                throw new RuntimeException('Вы можете оставлять отзывы только на купленные товары.');
             }
 
-            $exists = Review::query()->where('user_id', $userId)
-                ->where('product_id', $productId)
-                ->whereNull('parent_id')
-                ->exists();
-
-            if ($exists) {
-                throw new Exception('Вы уже оставили отзыв на этот товар.');
+            if ($this->reviewRepository->hasTopLevelReview($userId, $data->productId)) {
+                throw new RuntimeException('Вы уже оставили отзыв на этот товар.');
             }
         }
 
-        $rawProductId = $data['product_id'] ?? 0;
-        $rawComment = $data['comment'] ?? '';
-
-        /** @var Review $review */
-        $review = Review::query()->create([
-            'user_id' => $userId,
-            'product_id' => (int) (is_scalar($rawProductId) ? $rawProductId : 0),
-            'parent_id' => isset($data['parent_id']) && is_scalar($data['parent_id']) ? (int) $data['parent_id'] : null,
-            'rating' => isset($data['rating']) && is_scalar($data['rating']) ? (int) $data['rating'] : null,
-            'comment' => (string) (is_scalar($rawComment) ? $rawComment : ''),
-        ]);
-
-        return $review;
+        return $this->reviewRepository->create(new ReviewDto(
+            userId: $userId,
+            productId: $data->productId,
+            parentId: $data->parentId,
+            rating: $data->rating,
+            comment: $data->comment,
+        ));
     }
 
     public function toggleLike(int $userId, int $reviewId): bool
     {
-        $like = ReviewLike::query()->where('user_id', $userId)->where('review_id', $reviewId)->first();
+        if ($this->reviewRepository->hasLike($userId, $reviewId)) {
+            $this->reviewRepository->deleteLike($userId, $reviewId);
 
-        if ($like) {
-            $like->delete();
             return false;
-        } else {
-            ReviewLike::query()->create(['user_id' => $userId, 'review_id' => $reviewId]);
-            return true;
         }
+
+        $this->reviewRepository->createLike($userId, $reviewId);
+
+        return true;
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, Review>
+     * @return array<int, ReviewDto>
      */
-    public function getProductReviews(int $productId)
+    public function getProductReviews(int $productId, ?int $viewerUserId = null): array
     {
-        /** @var \Illuminate\Database\Eloquent\Collection<int, Review> $reviews */
-        $reviews = Review::query()
-            ->withCount('likes')
-            ->with(['user', 'replies.user', 'replies.likes'])
-            ->where('product_id', $productId)
-            ->whereNull('parent_id')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return $reviews->map(function ($review) {
-                /** @var Review $review */
-                $review->is_liked = (bool) $review->isLiked;
-                $review->replies->each(function($reply) {
-                    /** @var Review $reply */
-                    $reply->likes_count = (int) $reply->likes()->count();
-                    $reply->is_liked = (bool) $reply->isLiked;
-                });
-                return $review;
-            });
+        return $this->reviewRepository->getProductReviews($productId, $viewerUserId);
     }
 }

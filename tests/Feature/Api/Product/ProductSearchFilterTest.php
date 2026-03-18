@@ -5,9 +5,12 @@ namespace Tests\Feature\Api\Product;
 use App\Models\Product;
 use App\Models\Category;
 use Elastic\Elasticsearch\Client;
+use Elastic\Elasticsearch\ClientBuilder;
+use GuzzleHttp\Client as GuzzleClient;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use Mockery;
 
 class ProductSearchFilterTest extends TestCase
 {
@@ -16,10 +19,10 @@ class ProductSearchFilterTest extends TestCase
     public function test_search_can_filter_by_price_range()
     {
         $target = Product::factory()->create(['name' => 'Cheap', 'price' => 50]);
-        $other = Product::factory()->create(['name' => 'Expensive', 'price' => 500]);
+        Product::factory()->create(['name' => 'Expensive', 'price' => 500]);
 
-        $mockHandler = new \GuzzleHttp\Handler\MockHandler([
-            new \GuzzleHttp\Psr7\Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([
+        $mockHandler = new MockHandler([
+            new Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([
                 'hits' => [
                     'total' => ['value' => 1],
                     'hits' => [['_id' => (string) $target->id]]
@@ -31,8 +34,8 @@ class ProductSearchFilterTest extends TestCase
                 ]
             ]))
         ]);
-        $client = \Elastic\Elasticsearch\ClientBuilder::create()
-            ->setHttpClient(new \GuzzleHttp\Client(['handler' => $mockHandler]))
+        $client = ClientBuilder::create()
+            ->setHttpClient(new GuzzleClient(['handler' => $mockHandler]))
             ->build();
         $this->app->instance(Client::class, $client);
 
@@ -49,8 +52,8 @@ class ProductSearchFilterTest extends TestCase
         $product = Product::factory()->create(['category_id' => $cat->id, 'name' => 'Target']);
         $other = Product::factory()->create(['name' => 'Target']);
 
-        $mockHandler = new \GuzzleHttp\Handler\MockHandler([
-            new \GuzzleHttp\Psr7\Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([
+        $mockHandler = new MockHandler([
+            new Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([
                 'hits' => [
                     'total' => ['value' => 1],
                     'hits' => [['_id' => (string) $product->id]]
@@ -62,8 +65,8 @@ class ProductSearchFilterTest extends TestCase
                 ]
             ]))
         ]);
-        $client = \Elastic\Elasticsearch\ClientBuilder::create()
-            ->setHttpClient(new \GuzzleHttp\Client(['handler' => $mockHandler]))
+        $client = ClientBuilder::create()
+            ->setHttpClient(new GuzzleClient(['handler' => $mockHandler]))
             ->build();
         $this->app->instance(Client::class, $client);
 

@@ -2,28 +2,44 @@
 
 namespace App\Repositories\Interfaces;
 
-use App\Models\Product;
-use Illuminate\Support\Collection;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use App\Dto\PaginatedResultDto;
+use App\Dto\ProductFiltersDto;
+use App\Dto\ProductIdsQueryDto;
+use App\Dto\ProductDto;
+use App\Dto\RandomProductsQueryDto;
 
 interface ProductRepositoryInterface
 {
-    /** 
-     * @param array<string, mixed> $filters
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator<(int|string), Product> 
-     */
-    public function getAll(array $filters = [], int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator;
+    public function getAll(ProductFiltersDto $filters, int $perPage = 15): PaginatedResultDto;
 
-    /** @return Collection<int, Product> */
-    public function getByCategory(int $categoryId): Collection;
+    /** @return array<int, ProductDto> */
+    public function getByCategory(int $categoryId): array;
 
-    public function getById(int $id): ?Product;
+    public function findById(int $id): ?ProductDto;
 
-    /** @param array<string, mixed> $data */
-    public function create(array $data): Product;
+    public function create(ProductDto $data): ProductDto;
 
-    /** @param array<string, mixed> $data */
-    public function update(Product $product, array $data): bool;
+    public function update(int $id, ProductDto $data): bool;
 
-    public function delete(Product $product): bool;
+    public function delete(int $id): bool;
+
+    public function incrementViewCount(int $id): void;
+
+    public function saveImage(int $productId, string $imagePath): void;
+
+    public function deleteImages(int $productId): void;
+
+    /** @return array<int, ProductDto> */
+    public function getByIds(ProductIdsQueryDto $query): array;
+
+    /** @return array<int, int> */
+    public function getAlsoBoughtProductIds(int $productId, int $limit): array;
+
+    /** @return array<int, int> */
+    public function getSimilarFallbackIds(int $categoryId, int $excludedProductId, int $limit): array;
+
+    /** @return array<int, int> */
+    public function getRandomActiveProductIds(RandomProductsQueryDto $query): array;
+
+    public function decrementStock(int $productId, int $quantity): bool;
 }

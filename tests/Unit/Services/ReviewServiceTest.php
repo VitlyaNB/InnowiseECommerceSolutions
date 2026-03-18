@@ -2,48 +2,30 @@
 
 namespace Tests\Unit\Services;
 
-use App\Models\Review;
-use App\Models\Order;
-use App\Models\OrderItem;
+use App\Dto\ReviewDto;
+use App\Repositories\Interfaces\ReviewRepositoryInterface;
 use App\Services\ReviewService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Mockery;
 use Tests\TestCase;
 
 class ReviewServiceTest extends TestCase
 {
-    use RefreshDatabase;
-
-    public function test_it_creates_review()
+    public function test_it_creates_review(): void
     {
-        $user = \App\Models\User::factory()->create();
-        $product = \App\Models\Product::factory()->create();
-        
-        // Mock that user bought the product
-        $order = Order::factory()->create(['user_id' => $user->id, 'status' => 'paid']);
-        OrderItem::factory()->create([
-            'order_id' => $order->id,
-            'product_id' => $product->id,
-            'quantity' => 1,
-            'price' => $product->price
-        ]);
+        $reviewRepository = Mockery::mock(ReviewRepositoryInterface::class);
+        $reviewService = new ReviewService($reviewRepository);
+        $dto = new ReviewDto(productId: 12, rating: 5, comment: 'Excellent');
 
-        $service = new ReviewService();
+        $reviewRepository->shouldReceive('canReview')->once()->with(9, 12)->andReturnTrue();
+        $reviewRepository->shouldReceive('hasTopLevelReview')->once()->with(9, 12)->andReturnFalse();
+        $reviewRepository->shouldReceive('create')
+            ->once()
+            ->with(Mockery::type(ReviewDto::class))
+            ->andReturn(new ReviewDto(id: 1, userId: 9, productId: 12, rating: 5, comment: 'Excellent'));
 
-        $data = [
-            'product_id' => $product->id,
-            'rating' => 5,
-            'comment' => 'Excellent!'
-        ];
+        $result = $reviewService->createReview(9, $dto);
 
-        $result = $service->createReview($user->id, $data);
-
-        $this->assertInstanceOf(Review::class, $result);
-        $this->assertEquals(5, $result->rating);
-        $this->assertEquals('Excellent!', $result->comment);
-        $this->assertDatabaseHas('reviews', [
-            'product_id' => $product->id,
-            'user_id' => $user->id,
-            'rating' => 5
-        ]);
+        $this->assertSame(1, $result->id);
+        $this->assertSame(5, $result->rating);
     }
 }

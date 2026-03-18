@@ -3,7 +3,8 @@
 namespace App\Jobs;
 
 use App\Mail\OrderPaidMail;
-use App\Models\Order;
+use App\Repositories\Interfaces\OrderRepositoryInterface;
+use App\Repositories\Interfaces\UserRepositoryInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -11,20 +12,31 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
 
-class SendOrderConfirmationJob implements ShouldQueue
+final class SendOrderConfirmationJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     public function __construct(
-        public readonly Order $order
+        public readonly int $orderId
     ) {}
 
-    public function handle(): void
+    public function handle(OrderRepositoryInterface $orderRepository, UserRepositoryInterface $userRepository): void
     {
-        if (!$this->order->user) {
+        $order = $orderRepository->findByIdWithItems($this->orderId);
+
+        if (!$order) {
             return;
         }
 
-        Mail::to($this->order->user->email)->send(new OrderPaidMail($this->order));
+        $user = $userRepository->findById($order->userId);
+
+        if (!$user) {
+            return;
+        }
+
+        Mail::to($user->email)->send(new OrderPaidMail($order));
     }
 }

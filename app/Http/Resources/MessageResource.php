@@ -2,7 +2,10 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Message;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -11,10 +14,9 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * @property int $user_id
  * @property string $message
  * @property bool $is_read
- * @property \Illuminate\Support\Carbon $created_at
- * @property \App\Models\User $user
- * 
- * @mixin \App\Models\Message
+ * @property Carbon $created_at
+ * @property User $user
+ * @mixin Message
  */
 class MessageResource extends JsonResource
 {

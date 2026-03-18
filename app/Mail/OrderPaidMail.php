@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\Order;
+use App\Dto\OrderDetailsDto;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -14,7 +14,7 @@ class OrderPaidMail extends Mailable
     use Queueable, SerializesModels;
 
     public function __construct(
-        public readonly Order $order
+        public readonly OrderDetailsDto $order
     ) {}
 
     public function envelope(): Envelope

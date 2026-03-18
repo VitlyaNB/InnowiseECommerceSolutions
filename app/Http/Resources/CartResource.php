@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Dto\CartItemDto;
 use App\Models\CartItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -27,6 +28,15 @@ class CartResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        if ($this->resource instanceof CartItemDto) {
+            return [
+                'id' => $this->resource->id,
+                'product_id' => $this->resource->productId,
+                'quantity' => $this->resource->quantity,
+                'product' => $this->resource->product?->toArray(),
+            ];
+        }
+
         return [
             'id'         => $this->id,
             'product_id' => $this->product_id,

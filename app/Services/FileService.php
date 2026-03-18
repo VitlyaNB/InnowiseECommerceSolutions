@@ -2,18 +2,19 @@
 
 namespace App\Services;
 
-use App\DTO\UploadImageDTO;
+use App\Dto\UploadImageDto;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
-class FileService
+final readonly class FileService
 {
-    public function upload(UploadImageDTO $dto): string
+    public function upload(UploadImageDto $dto): string
     {
         /** @var string|false $path */
         $path = Storage::disk($dto->disk)->putFile($dto->folder, $dto->file, 'public');
         
         if ($path === false) {
-            throw new \RuntimeException("Failed to upload file to disk {$dto->disk}");
+            throw new RuntimeException("Failed to upload file to disk {$dto->disk}");
         }
         
         return $path;
@@ -40,12 +41,7 @@ class FileService
         
         if ($this->isAbsoluteUrl($pathOrUrl)) return $pathOrUrl;
         
-        /** @var \Illuminate\Contracts\Filesystem\Filesystem $storageDisk */
-        $storageDisk = Storage::disk($actualDisk);
-        
-        // Storage::disk() implementation usually has url() method
-        /** @phpstan-ignore-next-line */
-        return $storageDisk->url($pathOrUrl);
+        return Storage::disk($actualDisk)->url($pathOrUrl);
     }
 
     private function isAbsoluteUrl(string $value): bool

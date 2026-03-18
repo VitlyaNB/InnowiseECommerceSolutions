@@ -2,17 +2,15 @@
 
 namespace App\Http\Requests;
 
-use App\Models\User;
+use App\Dto\ProductDto;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\UploadedFile;
 
 class StoreProductRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        /** @var User|null $user */
-        $user = Auth::user();
-        return Auth::check() && $user !== null && $user->role === 'admin';
+        return true;
     }
 
     /**
@@ -30,5 +28,23 @@ class StoreProductRequest extends FormRequest
             'images' => ['nullable', 'array'],
             'images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
         ];
+    }
+
+    public function toDto(): ProductDto
+    {
+        /** @var array<string, mixed> $images */
+        $images = $this->file('images') ?? [];
+        $validImages = array_filter($images, fn($img) => $img instanceof UploadedFile);
+
+        return new ProductDto(
+            name: $this->validated('name'),
+            description: $this->validated('description'),
+            price: (float) $this->validated('price'),
+            oldPrice: $this->has('old_price') ? (float) $this->validated('old_price') : null,
+            quantity: (int) $this->validated('quantity', 0),
+            categoryId: (int) $this->validated('category_id'),
+            isActive: true,
+            images: array_values($validImages),
+        );
     }
 }

@@ -2,49 +2,82 @@
 
 namespace App\Repositories;
 
+use App\Dto\CategoryDto;
 use App\Models\Category;
 use App\Repositories\Interfaces\CategoryRepositoryInterface;
-use Illuminate\Support\Collection;
 
 class CategoryRepository implements CategoryRepositoryInterface
 {
-    /** @return Collection<int, Category> */
-    public function getAll(): Collection
+    /** @return array<int, CategoryDto> */
+    public function getAll(): array
     {
-        /** @var Collection<int, Category> $categories */
-        $categories = Category::query()->get();
-        return $categories;
+        return Category::query()
+            ->get()
+            ->map(fn(Category $category) => $this->mapToDto($category))
+            ->toArray();
     }
 
-    public function findById(int $id): ?Category
+    public function findById(int $id): ?CategoryDto
     {
         /** @var Category|null $category */
         $category = Category::query()->find($id);
-        return $category;
+
+        return $category ? $this->mapToDto($category) : null;
     }
 
-    /** @param array<string, mixed> $data */
-    public function create(array $data): Category
-    {
-        return Category::create($data);
-    }
-
-    /** @param array<string, mixed> $data */
-    public function update(int $id, array $data): Category
+    public function create(CategoryDto $data): CategoryDto
     {
         /** @var Category $category */
-        $category = Category::query()->findOrFail($id);
-        $category->update($data);
-        return $category;
+        $category = Category::create([
+            'name' => $data->name,
+            'image_path' => $data->imagePath,
+        ]);
+
+        return $this->mapToDto($category);
+    }
+
+    public function update(int $id, CategoryDto $data): bool
+    {
+        /** @var Category|null $category */
+        $category = Category::query()->find($id);
+
+        if (!$category) {
+            return false;
+        }
+
+        $updateData = array_filter([
+            'name' => $data->name,
+            'image_path' => $data->imagePath,
+        ], fn($value) => !is_null($value));
+
+        return $category->update($updateData);
     }
 
     public function delete(int $id): bool
     {
         /** @var Category|null $category */
         $category = Category::query()->find($id);
+
         if (!$category) {
             return false;
         }
+
         return (bool) $category->delete();
+    }
+
+    public function existsByName(string $name): bool
+    {
+        return Category::query()
+            ->where('name', $name)
+            ->exists();
+    }
+
+    private function mapToDto(Category $category): CategoryDto
+    {
+        return new CategoryDto(
+            id: $category->id,
+            name: $category->name,
+            imagePath: $category->image_path,
+        );
     }
 }

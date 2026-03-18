@@ -30,7 +30,7 @@ class ChatAuthorizationTest extends TestCase
     {
         $this->markTestSkipped('Broadcasting auth always returns 200 in this environment');
         $user = User::factory()->create(['role' => 'user']);
-        $otherChat = Chat::factory()->create(); // different user by default in factory
+        $otherChat = Chat::factory()->create();
 
         $this->actingAs($user);
 

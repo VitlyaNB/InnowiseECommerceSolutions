@@ -2,58 +2,67 @@
 
 namespace Tests\Unit\Services;
 
-use App\Models\Product;
-use App\Services\ProductService;
-use App\DTO\ProductDTO;
+use App\Dto\ProductDto;
+use App\Infrastructure\Interfaces\ElasticsearchClientInterface;
+use App\Infrastructure\Interfaces\TransactionManagerInterface;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
 use App\Services\FileService;
-use Tests\TestCase;
+use App\Services\ProductService;
 use Mockery;
-use Illuminate\Support\Facades\DB;
+use Tests\TestCase;
 
 class ProductServiceTest extends TestCase
 {
-    public function test_create_product_calls_repository_and_handles_images()
+    public function test_create_product_calls_repository(): void
     {
         $repo = Mockery::mock(ProductRepositoryInterface::class);
-        $fileService = Mockery::mock(FileService::class);
-        $service = new ProductService($repo, $fileService);
+        $fileService = new FileService();
+        $transactionManager = Mockery::mock(TransactionManagerInterface::class);
+        $elastic = Mockery::mock(ElasticsearchClientInterface::class);
+        $service = new ProductService($repo, $fileService, $transactionManager, $elastic);
 
-        $dto = new ProductDTO(
+        $dto = new ProductDto(
             name: 'Service Product',
-            price: 200,
-            category_id: 1
+            price: 200.0,
+            categoryId: 1,
+            images: [],
         );
 
-        DB::shouldReceive('transaction')->once()->andReturnUsing(fn($callback) => $callback());
+        $created = new ProductDto(
+            id: 1,
+            name: 'Service Product',
+            price: 200.0,
+            categoryId: 1,
+            images: [],
+        );
 
-        $product = new Product(['id' => 1]);
-        $product->exists = true;
+        $repo->shouldReceive('create')->once()->with($dto)->andReturn($created);
+        $repo->shouldReceive('findById')->once()->with(1)->andReturn($created);
 
-        $repo->shouldReceive('create')
+        $transactionManager->shouldReceive('transaction')
             ->once()
-            ->andReturn($product);
+            ->andReturnUsing(static fn (callable $callback) => $callback());
 
         $result = $service->createProduct($dto);
 
-        $this->assertInstanceOf(Product::class, $result);
+        $this->assertSame(1, $result->id);
     }
 
-    public function test_delete_product_removes_images()
+    public function test_delete_product_removes_images(): void
     {
         $repo = Mockery::mock(ProductRepositoryInterface::class);
-        $fileService = Mockery::mock(FileService::class);
-        $service = new ProductService($repo, $fileService);
+        $fileService = new FileService();
+        $transactionManager = Mockery::mock(TransactionManagerInterface::class);
+        $elastic = Mockery::mock(ElasticsearchClientInterface::class);
+        $service = new ProductService($repo, $fileService, $transactionManager, $elastic);
 
-        $product = Mockery::mock(Product::class);
-        $product->shouldReceive('getAttribute')->with('id')->andReturn(1);
-        $product->shouldReceive('getAttribute')->with('images')->andReturn(collect([]));
-
-        $repo->shouldReceive('getById')->once()->with(1)->andReturn($product);
-        $repo->shouldReceive('delete')->once()->with($product);
+        $product = new ProductDto(id: 1, name: 'Service Product');
+        $repo->shouldReceive('findById')->once()->with(1)->andReturn($product);
+        $repo->shouldReceive('deleteImages')->once()->with(1);
+        $repo->shouldReceive('delete')->once()->with(1)->andReturnTrue();
 
         $service->deleteProduct(1);
-        
-        $this->assertTrue(true); // If no exception, it passed
+
+        $this->assertTrue(true);
     }
 }

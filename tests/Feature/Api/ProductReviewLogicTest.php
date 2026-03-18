@@ -20,7 +20,6 @@ class ProductReviewLogicTest extends TestCase
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
 
-        // Mock that users bought the product
         foreach ([$user1, $user2] as $user) {
             $order = Order::factory()->create(['user_id' => $user->id, 'status' => 'paid']);
             OrderItem::factory()->create([

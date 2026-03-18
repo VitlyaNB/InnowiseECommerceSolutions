@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Models\ProductImage;
 use App\Services\FileService;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class ProductImageObserver
 {
@@ -20,7 +21,7 @@ class ProductImageObserver
 
         try {
             $this->fileService->delete($productImage->image_path, $disk);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('Failed to delete image from storage: ' . $e->getMessage(), [
                 'path' => $productImage->image_path,
             ]);

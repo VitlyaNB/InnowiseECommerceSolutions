@@ -2,21 +2,69 @@
 
 namespace App\Repositories;
 
+use App\Dto\OrderDetailsDto;
+use App\Dto\OrderItemDto;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Repositories\Interfaces\OrderRepositoryInterface;
 
-class OrderRepository implements OrderRepositoryInterface
+final class OrderRepository implements OrderRepositoryInterface
 {
-    /** @param array<string, mixed> $orderData */
-    public function create(array $orderData): Order
+    public function create(int $userId, float $totalAmount, string $shippingAddress, string $status = 'paid'): OrderDetailsDto
     {
-        return Order::create($orderData);
+        /** @var Order $order */
+        $order = Order::query()->create([
+            'user_id' => $userId,
+            'total_amount' => $totalAmount,
+            'status' => $status,
+            'shipping_address' => $shippingAddress,
+        ]);
+
+        return $this->mapToDetailsDto($order);
     }
 
-    /** @param array<string, mixed> $itemData */
-    public function createItem(array $itemData): OrderItem
+    public function createItem(int $orderId, OrderItemDto $item): void
     {
-        return OrderItem::create($itemData);
+        OrderItem::query()->create([
+            'order_id' => $orderId,
+            'product_id' => $item->productId,
+            'quantity' => $item->quantity,
+            'price' => $item->price,
+        ]);
+    }
+
+    public function findByIdWithItems(int $orderId): ?OrderDetailsDto
+    {
+        /** @var Order|null $order */
+        $order = Order::query()->with('items')->find($orderId);
+
+        if (!$order) {
+            return null;
+        }
+
+        return $this->mapToDetailsDto($order);
+    }
+
+    private function mapToDetailsDto(Order $order): OrderDetailsDto
+    {
+        $items = $order->relationLoaded('items')
+            ? $order->items
+                ->map(fn (OrderItem $item): OrderItemDto => new OrderItemDto(
+                    productId: (int) $item->product_id,
+                    quantity: (int) $item->quantity,
+                    price: (float) $item->price,
+                ))
+                ->all()
+            : [];
+
+        return new OrderDetailsDto(
+            id: (int) $order->id,
+            userId: (int) $order->user_id,
+            totalAmount: (float) $order->total_amount,
+            status: (string) $order->status,
+            shippingAddress: (string) $order->shipping_address,
+            createdAt: $order->created_at?->toDateTimeString(),
+            items: $items,
+        );
     }
 }

@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\Product;
 use App\Services\FileService;
+use Illuminate\Support\Facades\Log;
 
 class ProductObserver
 {
@@ -13,7 +14,7 @@ class ProductObserver
 
     public function created(Product $product): void
     {
-        \Illuminate\Support\Facades\Log::info("Product created: {$product->name}");
+        Log::info("Product created: {$product->name}");
     }
 
     public function deleted(Product $product): void
@@ -21,11 +22,5 @@ class ProductObserver
         foreach ($product->images as $image) {
             $this->fileService->delete($image->image_path);
         }
-    }
-
-
-    public function updated(Product $product): void
-    {
-
     }
 }

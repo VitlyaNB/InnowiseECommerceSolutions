@@ -2,16 +2,20 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Chat;
+use App\Models\Message;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * @property int $id
- * @property \App\Models\User $user
- * @property \Illuminate\Support\Carbon $last_message_at
- * @property \Illuminate\Database\Eloquent\Collection<int, \App\Models\Message> $messages
- * 
- * @mixin \App\Models\Chat
+ * @property User $user
+ * @property Carbon $last_message_at
+ * @property Collection<int, Message> $messages
+ * @mixin Chat
  */
 class ChatResource extends JsonResource
 {

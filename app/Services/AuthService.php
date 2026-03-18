@@ -2,60 +2,54 @@
 
 namespace App\Services;
 
-use App\DTO\RegisterDTO;
-use App\DTO\LoginDTO;
-use App\DTO\UpdateUserDTO;
-use App\Models\User;
+use App\Dto\LoginDto;
+use App\Dto\LoginResultDto;
+use App\Dto\RegisterDto;
+use App\Dto\UpdateUserDto;
+use App\Dto\UserDto;
 use App\Repositories\Interfaces\UserRepositoryInterface;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
-class AuthService
+final readonly class AuthService
 {
     public function __construct(
-        private readonly UserRepositoryInterface $userRepository
+        private UserRepositoryInterface $userRepository
     ) {}
 
-    /**
-     * @return array{user: User, token: string}
-     */
-    public function register(RegisterDTO $data): array
+    public function register(RegisterDto $data): LoginResultDto
     {
-        $user = $this->userRepository->create($data);
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $userDto = $this->userRepository->create($data);
+        $token = $this->userRepository->createToken($userDto->id, 'auth_token');
 
-        return ['user' => $user, 'token' => $token];
+        return new LoginResultDto(user: $userDto, token: $token);
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Collection<int, User>
+     * @return array<int, UserDto>
      */
-    public function getAllUsers()
+    public function getAllUsers(): array
     {
         return $this->userRepository->getAll();
     }
 
-    /**
-     * @return array{user: User, token: string}
-     */
-    public function login(LoginDTO $data): array
+    public function login(LoginDto $data): LoginResultDto
     {
-        $user = $this->userRepository->findByEmail($data->email);
+        $userDto = $this->userRepository->verifyCredentials($data->email, $data->password);
 
-        if (!$user || !Hash::check($data->password, $user->password)) {
+        if (!$userDto) {
             throw ValidationException::withMessages([
                 'email' => ['Неверные учетные данные.'],
             ]);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $this->userRepository->createToken($userDto->id, 'auth_token');
 
-        return ['user' => $user, 'token' => $token];
+        return new LoginResultDto(user: $userDto, token: $token);
     }
 
-    public function updateUser(int $id, UpdateUserDTO $dto): bool
+    public function updateUser(int $id, UpdateUserDto $dto): bool
     {
-        return $this->userRepository->update($id, $dto->toArray());
+        return $this->userRepository->update($id, $dto);
     }
 
     public function deleteUser(int $userIdToDelete, int $currentUserId): bool
@@ -69,16 +63,13 @@ class AuthService
         return $this->userRepository->delete($userIdToDelete);
     }
 
-    public function logout(User $user): void
+    public function logout(int $userId): void
     {
-        $user->tokens()->delete();
+        $this->userRepository->deleteTokens($userId);
     }
 
-    public function topUp(User $user, float $amount): User
+    public function topUp(int $userId, float $amount): UserDto
     {
-        $user->balance += $amount;
-        $user->save();
-
-        return $user;
+        return $this->userRepository->topUp($userId, $amount);
     }
 }

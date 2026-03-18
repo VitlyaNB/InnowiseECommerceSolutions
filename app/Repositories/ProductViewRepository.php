@@ -7,43 +7,47 @@ use App\Repositories\Interfaces\ProductViewRepositoryInterface;
 
 class ProductViewRepository implements ProductViewRepositoryInterface
 {
-    public function recordView(?int $userId, string $sessionId, int $productId): void
+    public function recordViewByUser(int $userId, int $productId, string $sessionId): void
     {
-        $identifier = $userId 
-            ? ['user_id' => $userId, 'product_id' => $productId] 
-            : ['session_id' => $sessionId, 'product_id' => $productId];
-
         ProductView::query()->updateOrCreate(
-            $identifier,
+            ['user_id' => $userId, 'product_id' => $productId],
             ['viewed_at' => now(), 'session_id' => $sessionId]
         );
     }
 
-    /** @return array<int, int> */
-    public function getRecentlyViewedProductIds(?int $userId, string $sessionId, int $limit = 12): array
+    public function recordViewBySession(string $sessionId, int $productId): void
     {
-        if ($userId) {
-            /** @var array<int, int> $ids */
-            $ids = ProductView::query()
-                ->where('user_id', $userId)
-                ->orderByDesc('viewed_at')
-                ->limit($limit)
-                ->pluck('product_id')
-                ->all();
-            return $ids;
-        }
+        ProductView::query()->updateOrCreate(
+            ['session_id' => $sessionId, 'product_id' => $productId],
+            ['viewed_at' => now()]
+        );
+    }
 
-        if (!empty($sessionId)) {
-            /** @var array<int, int> $ids */
-            $ids = ProductView::query()
-                ->where('session_id', $sessionId)
-                ->orderByDesc('viewed_at')
-                ->limit($limit)
-                ->pluck('product_id')
-                ->all();
-            return $ids;
-        }
+    /** @return array<int, int> */
+    public function getRecentlyViewedProductIdsByUser(int $userId, int $limit = 12): array
+    {
+        /** @var array<int, int> $ids */
+        $ids = ProductView::query()
+            ->where('user_id', $userId)
+            ->orderByDesc('viewed_at')
+            ->limit($limit)
+            ->pluck('product_id')
+            ->all();
 
-        return [];
+        return $ids;
+    }
+
+    /** @return array<int, int> */
+    public function getRecentlyViewedProductIdsBySession(string $sessionId, int $limit = 12): array
+    {
+        /** @var array<int, int> $ids */
+        $ids = ProductView::query()
+            ->where('session_id', $sessionId)
+            ->orderByDesc('viewed_at')
+            ->limit($limit)
+            ->pluck('product_id')
+            ->all();
+
+        return $ids;
     }
 }

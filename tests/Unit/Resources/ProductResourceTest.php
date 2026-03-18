@@ -3,10 +3,11 @@
 namespace Tests\Unit\Resources;
 
 use App\Http\Resources\ProductResource;
-use App\Models\Product;
 use App\Models\Category;
-use Tests\TestCase;
+use App\Models\Product;
+use App\Services\FileService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class ProductResourceTest extends TestCase
 {
@@ -14,8 +15,8 @@ class ProductResourceTest extends TestCase
 
     public function test_product_resource_has_required_fields()
     {
-        $mockFileService = $this->createMock(\App\Services\FileService::class);
-        $this->app->instance(\App\Services\FileService::class, $mockFileService);
+        $mockFileService = $this->createMock(FileService::class);
+        $this->app->instance(FileService::class, $mockFileService);
 
         $category = Category::factory()->create(['name' => 'Electronics']);
         $product = Product::factory()->create([

@@ -2,81 +2,63 @@
 
 namespace App\Services;
 
-use App\DTO\CartItemDTO;
-use App\Models\CartItem;
-use App\Models\User;
+use App\Dto\CartDto;
+use App\Dto\CartItemDto;
+use App\Dto\TotalsDto;
 use App\Repositories\Interfaces\CartItemRepositoryInterface;
-use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cookie;
-use Illuminate\Support\Str;
 
-class CartService
+final readonly class CartService
 {
-    private const CART_SESSION_COOKIE = 'cart_session';
-
     public function __construct(
-        private readonly CartItemRepositoryInterface $cartRepository
+        private CartItemRepositoryInterface $cartRepository
     ) {}
 
-    public function resolveSessionId(Request $request): string
+    public function addToCart(CartItemDto $dto, ?int $userId, ?string $sessionId): CartItemDto
     {
-        $sessionId = $request->header('X-Session-Id') ?? $request->cookie(self::CART_SESSION_COOKIE);
+        $existing = null;
 
-        if (!is_string($sessionId) || empty($sessionId)) {
-            $sessionId = Str::uuid()->toString();
-            Cookie::queue(self::CART_SESSION_COOKIE, $sessionId, 60 * 24 * 30, '/', null, false, true, false, 'Lax');
+        if ($userId !== null) {
+            $existing = $this->cartRepository->findByUserAndProduct($userId, $dto->productId);
+        } elseif ($sessionId !== null) {
+            $existing = $this->cartRepository->findBySessionAndProduct($sessionId, $dto->productId);
         }
-
-        return $sessionId;
-    }
-
-    /** @return array<string, mixed> */
-    private function getIdentifier(): array
-    {
-        if (auth('sanctum')->check()) {
-            return ['user_id' => auth('sanctum')->id()];
-        }
-        /** @var \Illuminate\Http\Request $request */
-        $request = app('request');
-        return ['session_id' => $this->resolveSessionId($request)];
-    }
-
-    public function addToCart(CartItemDTO $dto): CartItem
-    {
-        $identifier = $this->getIdentifier();
-        $existing = $this->cartRepository->findItem($identifier, $dto->product_id);
 
         if ($existing) {
             $this->cartRepository->updateQuantity($existing->id, $existing->quantity + $dto->quantity);
-            /** @var CartItem $fresh */
-            $fresh = $existing->fresh('product.images');
-            return $fresh;
+
+            return $this->cartRepository->findById($existing->id);
         }
 
-        $newItem = $this->cartRepository->create(array_merge($identifier, [
-            'product_id' => $dto->product_id,
-            'quantity' => $dto->quantity,
-        ]));
-
-        return $newItem->load('product.images');
+        return $this->cartRepository->create(new CartItemDto(
+            id: 0,
+            productId: $dto->productId,
+            quantity: $dto->quantity,
+            userId: $userId,
+            sessionId: $sessionId,
+        ));
     }
 
-    /** @return array{items: Collection<int, CartItem>, totals: array<string, float>} */
-    public function getCart(): array
+    public function getCart(?int $userId, ?string $sessionId): CartDto
     {
-        $items = $this->cartRepository->getCartItems($this->getIdentifier());
-        return [
-            'items' => $items,
-            'totals' => $this->calculateTotals($items),
-        ];
+        $items = [];
+
+        if ($userId !== null) {
+            $items = $this->cartRepository->getByUser($userId);
+        } elseif ($sessionId !== null) {
+            $items = $this->cartRepository->getBySession($sessionId);
+        }
+
+        return new CartDto(
+            items: $items,
+            totals: $this->calculateTotals($items),
+        );
     }
 
-    public function updateQuantity(int $id, int $quantity): ?CartItem
+    public function updateQuantity(int $id, int $quantity, ?int $userId, ?string $sessionId): ?CartItemDto
     {
         $item = $this->cartRepository->findById($id);
 
-        if (!$item || !$this->itemBelongsToIdentifier($item, $this->getIdentifier())) {
+        if (!$item || !$this->itemBelongsTo($item, $userId, $sessionId)) {
             return null;
         }
 
@@ -86,60 +68,53 @@ class CartService
         }
 
         $this->cartRepository->updateQuantity($id, $quantity);
-        /** @var CartItem|null $fresh */
-        $fresh = $item->fresh('product.images');
-        return $fresh;
+        return $this->cartRepository->findById($id);
     }
 
-    public function removeItem(int $id): bool
+    public function removeItem(int $id, ?int $userId, ?string $sessionId): bool
     {
         $item = $this->cartRepository->findById($id);
-        if (!$item || !$this->itemBelongsToIdentifier($item, $this->getIdentifier())) {
+        if (!$item || !$this->itemBelongsTo($item, $userId, $sessionId)) {
             return false;
         }
         return $this->cartRepository->delete($id);
     }
 
-    public function clearCart(): bool
+    public function clearCart(?int $userId, ?string $sessionId): bool
     {
-        if (auth('sanctum')->check()) {
-            /** @var int $userId */
-            $userId = auth('sanctum')->id();
-            return $this->cartRepository->clearUserCart($userId);
+        if ($userId) {
+            return $this->cartRepository->clearByUser($userId);
         }
-        $sessionId = request()->cookie(self::CART_SESSION_COOKIE);
-        if (is_string($sessionId) && !empty($sessionId)) {
-            return $this->cartRepository->clearSessionCart($sessionId);
+        if ($sessionId) {
+            return $this->cartRepository->clearBySession($sessionId);
         }
         return true;
     }
 
-    /** @param array<string, mixed> $identifier */
-    private function itemBelongsToIdentifier(CartItem $item, array $identifier): bool
+    private function itemBelongsTo(CartItemDto $item, ?int $userId, ?string $sessionId): bool
     {
-        if (isset($identifier['user_id'])) {
-            $idValue = $identifier['user_id'];
-            return (int) $item->user_id === (int) (is_numeric($idValue) ? $idValue : 0);
+        if ($userId) {
+            return $item->userId === $userId;
         }
-        if (isset($identifier['session_id'])) {
-            return $item->session_id === $identifier['session_id'];
+        if ($sessionId) {
+            return $item->sessionId === $sessionId;
         }
         return false;
     }
 
     /**
-     * @param Collection<int, CartItem> $items
-     * @return array<string, float>
+     * @param array<int, CartItemDto> $items
      */
-    public function calculateTotals(Collection $items): array
+    private function calculateTotals(array $items): TotalsDto
     {
-        $subtotal = $items->sum(fn (CartItem $i) => $i->product->price * $i->quantity);
-        $total = $subtotal;
+        $subtotal = array_reduce($items, function (float $carry, CartItemDto $item) {
+            return $carry + ($item->product?->price ?? 0.0) * $item->quantity;
+        }, 0.0);
 
-        return [
-            'subtotal' => round((float) $subtotal, 2),
-            'tax' => 0.0,
-            'total' => round((float) $total, 2),
-        ];
+        return new TotalsDto(
+            subtotal: round($subtotal, 2),
+            tax: 0.0,
+            total: round($subtotal, 2),
+        );
     }
 }

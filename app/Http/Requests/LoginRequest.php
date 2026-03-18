@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Dto\LoginDto;
 use Illuminate\Foundation\Http\FormRequest;
 
 class LoginRequest extends FormRequest
@@ -20,5 +21,13 @@ class LoginRequest extends FormRequest
             'email' => ['required', 'email'],
             'password' => ['required'],
         ];
+    }
+
+    public function toDto(): LoginDto
+    {
+        return new LoginDto(
+            email: $this->validated('email'),
+            password: $this->validated('password'),
+        );
     }
 }

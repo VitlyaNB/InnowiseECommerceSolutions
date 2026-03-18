@@ -2,7 +2,7 @@
 
 namespace App\Events;
 
-use App\Models\Message;
+use App\Dto\ChatMessageDto;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -13,7 +13,7 @@ class MessageSent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public function __construct(public Message $message)
+    public function __construct(public ChatMessageDto $message)
     {
     }
 
@@ -23,7 +23,7 @@ class MessageSent implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('chat.' . $this->message->chat_id),
+            new PrivateChannel('chat.' . $this->message->chatId),
         ];
     }
 
@@ -34,14 +34,14 @@ class MessageSent implements ShouldBroadcast
     {
         return [
             'id' => $this->message->id,
-            'chat_id' => $this->message->chat_id,
-            'user_id' => $this->message->user_id,
+            'chat_id' => $this->message->chatId,
+            'user_id' => $this->message->userId,
             'message' => $this->message->message,
-            'is_read' => $this->message->is_read,
-            'created_at' => $this->message->created_at->toISOString(),
+            'is_read' => $this->message->isRead,
+            'created_at' => $this->message->createdAt,
             'user' => [
-                'id' => $this->message->user->id,
-                'name' => $this->message->user->name,
+                'id' => $this->message->userId,
+                'name' => $this->message->userName,
             ],
         ];
     }
