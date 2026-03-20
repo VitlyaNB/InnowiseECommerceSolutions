@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Api;
 
-use App\Models\User;
 use App\Models\Category;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -27,7 +27,7 @@ class CategoryControllerTest extends TestCase
 
         $response = $this->actingAs($user)
             ->postJson('/api/categories', [
-                'name' => 'New Category'
+                'name' => 'New Category',
             ]);
 
         $response->assertStatus(403);
@@ -39,7 +39,7 @@ class CategoryControllerTest extends TestCase
 
         $response = $this->actingAs($admin)
             ->postJson('/api/categories', [
-                'name' => 'Admin Category'
+                'name' => 'Admin Category',
             ]);
 
         $response->assertStatus(201);

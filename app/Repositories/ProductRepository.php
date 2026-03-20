@@ -3,9 +3,9 @@
 namespace App\Repositories;
 
 use App\Dto\PaginatedResultDto;
+use App\Dto\ProductDto;
 use App\Dto\ProductFiltersDto;
 use App\Dto\ProductIdsQueryDto;
-use App\Dto\ProductDto;
 use App\Dto\RandomProductsQueryDto;
 use App\Models\Product;
 use App\Models\ProductImage;
@@ -40,10 +40,13 @@ class ProductRepository implements ProductRepositoryInterface
 
         $paginator = $query->latest()->paginate($perPage);
 
-        $items = $paginator
-            ->getCollection()
-            ->map(fn (Product $product): ProductDto => $this->mapToDto($product))
-            ->all();
+        $collection = $paginator->getCollection();
+        /** @var array<int, ProductDto> $items */
+        $items = [];
+        foreach ($collection as $product) {
+            /** @var Product $product */
+            $items[] = $this->mapToDto($product);
+        }
 
         return new PaginatedResultDto(
             items: $items,
@@ -57,12 +60,19 @@ class ProductRepository implements ProductRepositoryInterface
     /** @return array<int, ProductDto> */
     public function getByCategory(int $categoryId): array
     {
-        return Product::query()
+        $collection = Product::query()
             ->with(['images', 'category'])
             ->where('category_id', $categoryId)
-            ->get()
-            ->map(fn(Product $product) => $this->mapToDto($product))
-            ->toArray();
+            ->get();
+
+        /** @var array<int, ProductDto> $result */
+        $result = [];
+        foreach ($collection as $product) {
+            /** @var Product $product */
+            $result[] = $this->mapToDto($product);
+        }
+
+        return $result;
     }
 
     public function findById(int $id): ?ProductDto
@@ -76,7 +86,7 @@ class ProductRepository implements ProductRepositoryInterface
     public function create(ProductDto $data): ProductDto
     {
         /** @var Product $product */
-        $product = Product::create($data->toArray());
+        $product = Product::query()->create($data->toArray());
 
         return $this->mapToDto($product->load(['images', 'category']));
     }
@@ -86,7 +96,7 @@ class ProductRepository implements ProductRepositoryInterface
         /** @var Product|null $product */
         $product = Product::query()->find($id);
 
-        if (!$product) {
+        if (! $product) {
             return false;
         }
 
@@ -98,20 +108,16 @@ class ProductRepository implements ProductRepositoryInterface
         /** @var Product|null $product */
         $product = Product::query()->find($id);
 
-        if (!$product) {
+        if (! $product) {
             return false;
         }
 
         return (bool) $product->delete();
     }
 
-    public function incrementViewCount(int $id): void
-    {
-    }
-
     public function saveImage(int $productId, string $imagePath): void
     {
-        ProductImage::create([
+        ProductImage::query()->create([
             'product_id' => $productId,
             'image_path' => $imagePath,
         ]);
@@ -130,22 +136,25 @@ class ProductRepository implements ProductRepositoryInterface
             return [];
         }
 
-        $products = Product::query()
+        $collection = Product::query()
             ->with(['images', 'category'])
             ->whereIn('id', $ids)
             ->where('is_active', true)
-            ->get()
-            ->map(fn (Product $product) => $this->mapToDto($product));
+            ->get();
 
-        /** @var array<int, ProductDto> $productDtos */
-        $productDtos = $products->all();
+        /** @var array<int, ProductDto> $products */
+        $products = [];
+        foreach ($collection as $product) {
+            /** @var Product $product */
+            $products[] = $this->mapToDto($product);
+        }
 
-        if (!$query->keepOrder) {
-            return $productDtos;
+        if (! $query->keepOrder) {
+            return $products;
         }
 
         $mapped = [];
-        foreach ($productDtos as $dto) {
+        foreach ($products as $dto) {
             $mapped[$dto->id] = $dto;
         }
 
@@ -225,16 +234,19 @@ class ProductRepository implements ProductRepositoryInterface
 
     private function mapToDto(Product $product): ProductDto
     {
+        /** @var array<int, string> $imagePaths */
+        $imagePaths = $product->images ? $product->images->pluck('image_path')->all() : [];
+
         return new ProductDto(
             id: $product->id,
             name: $product->name,
             description: $product->description,
             price: (float) $product->price,
-            oldPrice: $product->old_price ? (float) $product->old_price : null,
+            oldPrice: $product->old_price !== null ? (float) $product->old_price : null,
             quantity: (int) $product->quantity,
             categoryId: (int) $product->category_id,
             isActive: (bool) $product->is_active,
-            images: $product->images ? $product->images->pluck('image_path')->toArray() : [],
+            images: $imagePaths,
         );
     }
 }

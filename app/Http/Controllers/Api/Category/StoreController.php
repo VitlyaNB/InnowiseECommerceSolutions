@@ -9,7 +9,7 @@ use App\Services\CategoryService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 
-class StoreController extends Controller
+final class StoreController extends Controller
 {
     public function __construct(
         private readonly CategoryService $categoryService

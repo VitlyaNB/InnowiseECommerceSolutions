@@ -3,13 +3,13 @@
 namespace App\Observers;
 
 use App\Models\Product;
-use App\Services\FileService;
+use App\Services\Interfaces\FileServiceInterface;
 use Illuminate\Support\Facades\Log;
 
 class ProductObserver
 {
     public function __construct(
-        private readonly FileService $fileService
+        private readonly FileServiceInterface $fileService
     ) {}
 
     public function created(Product $product): void

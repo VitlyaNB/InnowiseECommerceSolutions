@@ -8,7 +8,7 @@ use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 
-class IndexController extends Controller
+final class IndexController extends Controller
 {
     public function __construct(
         private readonly AuthService $authService
@@ -36,6 +36,7 @@ class IndexController extends Controller
     public function __invoke(): JsonResponse
     {
         $users = $this->authService->getAllUsers();
+
         return UserResource::collection($users)->response();
     }
 }

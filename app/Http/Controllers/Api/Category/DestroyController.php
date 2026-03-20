@@ -7,7 +7,7 @@ use App\Services\CategoryService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 
-class DestroyController extends Controller
+final class DestroyController extends Controller
 {
     public function __construct(
         private readonly CategoryService $categoryService
@@ -37,6 +37,7 @@ class DestroyController extends Controller
     public function __invoke(int $id): JsonResponse
     {
         $this->categoryService->deleteCategory($id);
+
         return response()->json(['message' => 'Category deleted']);
     }
 }

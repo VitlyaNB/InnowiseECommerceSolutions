@@ -7,9 +7,10 @@ use App\Http\Support\CartSessionResolver;
 use App\Services\CartService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use OpenApi\Attributes as OA;
 
-class ClearController extends Controller
+final class ClearController extends Controller
 {
     public function __construct(
         private readonly CartService $cartService,
@@ -26,8 +27,9 @@ class ClearController extends Controller
     )]
     public function __invoke(Request $request): JsonResponse
     {
-        $userId = $request->user()?->id;
-        $sessionId = $userId ? null : $this->sessionService->resolveSessionId($request);
+        $userIdRaw = Auth::id();
+        $userId = $userIdRaw !== null ? (int) $userIdRaw : null;
+        $sessionId = $userId !== null ? null : $this->sessionService->resolveSessionId($request);
 
         $this->cartService->clearCart($userId, $sessionId);
 

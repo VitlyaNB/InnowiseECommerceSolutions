@@ -26,12 +26,24 @@ class StoreOrderRequest extends FormRequest
 
     public function toDto(): OrderDto
     {
+        /** @var array<string, string|array<int, int|string>|null> $data */
+        $data = $this->validated();
+
+        /** @var string $shippingAddress */
+        $shippingAddress = isset($data['shipping_address']) && is_string($data['shipping_address'])
+            ? $data['shipping_address']
+            : '';
         /** @var array<int, int> $selectedItemIds */
-        $selectedItemIds = $this->validated('selected_item_ids');
+        $selectedItemIds = [];
+        if (isset($data['selected_item_ids']) && is_array($data['selected_item_ids'])) {
+            foreach ($data['selected_item_ids'] as $id) {
+                $selectedItemIds[] = (int) $id;
+            }
+        }
 
         return new OrderDto(
             selectedItemIds: $selectedItemIds,
-            shippingAddress: (string) $this->validated('shipping_address'),
+            shippingAddress: $shippingAddress,
         );
     }
 }

@@ -3,20 +3,21 @@
 namespace App\Services;
 
 use App\Dto\UploadImageDto;
+use App\Services\Interfaces\FileServiceInterface;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
-final readonly class FileService
+final readonly class FileService implements FileServiceInterface
 {
     public function upload(UploadImageDto $dto): string
     {
         /** @var string|false $path */
         $path = Storage::disk($dto->disk)->putFile($dto->folder, $dto->file, 'public');
-        
+
         if ($path === false) {
             throw new RuntimeException("Failed to upload file to disk {$dto->disk}");
         }
-        
+
         return $path;
     }
 
@@ -24,7 +25,7 @@ final readonly class FileService
     {
         /** @var string $actualDisk */
         $actualDisk = $disk ?? config('filesystems.media_disk', 's3');
-        
+
         $path = $this->extractPathFromUrl($pathOrUrl, $actualDisk);
 
         if (Storage::disk($actualDisk)->exists($path)) {
@@ -38,10 +39,20 @@ final readonly class FileService
     {
         /** @var string $actualDisk */
         $actualDisk = $disk ?? config('filesystems.media_disk', 's3');
-        
-        if ($this->isAbsoluteUrl($pathOrUrl)) return $pathOrUrl;
-        
-        return Storage::disk($actualDisk)->url($pathOrUrl);
+
+        if ($this->isAbsoluteUrl($pathOrUrl)) {
+            return $pathOrUrl;
+        }
+
+        /** @var string $baseUrl */
+        $baseUrl = config("filesystems.disks.{$actualDisk}.url", '');
+        $baseUrl = rtrim($baseUrl, '/');
+
+        if ($baseUrl !== '') {
+            return $baseUrl.'/'.$pathOrUrl;
+        }
+
+        return $pathOrUrl;
     }
 
     private function isAbsoluteUrl(string $value): bool
@@ -51,22 +62,26 @@ final readonly class FileService
 
     private function extractPathFromUrl(string $pathOrUrl, string $disk): string
     {
-        if (!$this->isAbsoluteUrl($pathOrUrl)) return $pathOrUrl;
+        if (! $this->isAbsoluteUrl($pathOrUrl)) {
+            return $pathOrUrl;
+        }
 
         /** @var string $rawBaseUrl */
         $rawBaseUrl = config("filesystems.disks.{$disk}.url") ?? '';
         $baseUrl = rtrim($rawBaseUrl, '/');
-        
+
         if ($baseUrl && str_starts_with($pathOrUrl, $baseUrl)) {
             /** @var string|null $path */
             $path = parse_url($pathOrUrl, PHP_URL_PATH);
+
             return ltrim((string) $path, '/');
         }
 
         /** @var string|null $bucket */
         $bucket = config("filesystems.disks.{$disk}.bucket");
-        if (!is_null($bucket) && str_contains($pathOrUrl, "/" . (string) $bucket . "/")) {
-            $parts = explode("/" . (string) $bucket . "/", $pathOrUrl, 2);
+        if (! is_null($bucket) && str_contains($pathOrUrl, '/'.(string) $bucket.'/')) {
+            $parts = explode('/'.(string) $bucket.'/', $pathOrUrl, 2);
+
             return $parts[1] ?? $pathOrUrl;
         }
 

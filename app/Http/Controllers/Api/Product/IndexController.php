@@ -4,11 +4,12 @@ namespace App\Http\Controllers\Api\Product;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductIndexRequest;
+use App\Http\Resources\ProductResource;
 use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 
-class IndexController extends Controller
+final class IndexController extends Controller
 {
     public function __construct(
         private readonly ProductService $productService
@@ -45,7 +46,7 @@ class IndexController extends Controller
         $products = $this->productService->getAllProducts($request->toDto());
 
         return response()->json([
-            'data' => array_map(static fn ($productDto) => $productDto->toArray(), $products->items),
+            'data' => ProductResource::collection($products->items)->resolve(),
             'meta' => [
                 'total' => $products->total,
                 'per_page' => $products->perPage,

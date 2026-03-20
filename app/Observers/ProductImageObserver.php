@@ -22,7 +22,7 @@ class ProductImageObserver
         try {
             $this->fileService->delete($productImage->image_path, $disk);
         } catch (Throwable $e) {
-            Log::warning('Failed to delete image from storage: ' . $e->getMessage(), [
+            Log::warning('Failed to delete image from storage: '.$e->getMessage(), [
                 'path' => $productImage->image_path,
             ]);
         }

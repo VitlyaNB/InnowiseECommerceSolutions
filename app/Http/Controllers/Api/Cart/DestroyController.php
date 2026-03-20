@@ -7,9 +7,10 @@ use App\Http\Support\CartSessionResolver;
 use App\Services\CartService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use OpenApi\Attributes as OA;
 
-class DestroyController extends Controller
+final class DestroyController extends Controller
 {
     public function __construct(
         private readonly CartService $cartService,
@@ -36,12 +37,13 @@ class DestroyController extends Controller
     )]
     public function __invoke(Request $request, int $id): JsonResponse
     {
-        $userId = $request->user()?->id;
-        $sessionId = $userId ? null : $this->sessionService->resolveSessionId($request);
+        $userIdRaw = Auth::id();
+        $userId = $userIdRaw !== null ? (int) $userIdRaw : null;
+        $sessionId = $userId !== null ? null : $this->sessionService->resolveSessionId($request);
 
         $removed = $this->cartService->removeItem($id, $userId, $sessionId);
 
-        if (!$removed) {
+        if (! $removed) {
             return response()->json(['message' => 'Cart item not found'], 404);
         }
 

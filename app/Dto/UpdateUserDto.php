@@ -21,6 +21,6 @@ final readonly class UpdateUserDto extends BaseDto
             'email' => $this->email,
             'role' => $this->role,
             'balance' => $this->balance,
-        ], fn($value) => !is_null($value));
+        ], fn ($value) => ! is_null($value));
     }
 }

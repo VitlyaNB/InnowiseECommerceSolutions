@@ -38,7 +38,7 @@ final class OrderRepository implements OrderRepositoryInterface
         /** @var Order|null $order */
         $order = Order::query()->with('items')->find($orderId);
 
-        if (!$order) {
+        if (! $order) {
             return null;
         }
 
@@ -47,6 +47,7 @@ final class OrderRepository implements OrderRepositoryInterface
 
     private function mapToDetailsDto(Order $order): OrderDetailsDto
     {
+        /** @var array<int, OrderItemDto> $items */
         $items = $order->relationLoaded('items')
             ? $order->items
                 ->map(fn (OrderItem $item): OrderItemDto => new OrderItemDto(
@@ -63,7 +64,7 @@ final class OrderRepository implements OrderRepositoryInterface
             totalAmount: (float) $order->total_amount,
             status: (string) $order->status,
             shippingAddress: (string) $order->shipping_address,
-            createdAt: $order->created_at?->toDateTimeString(),
+            createdAt: $order->created_at !== null ? $order->created_at->toDateTimeString() : null,
             items: $items,
         );
     }

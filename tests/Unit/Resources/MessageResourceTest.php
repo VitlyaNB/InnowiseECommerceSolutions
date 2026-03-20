@@ -3,11 +3,11 @@
 namespace Tests\Unit\Resources;
 
 use App\Http\Resources\MessageResource;
+use App\Models\Chat;
 use App\Models\Message;
 use App\Models\User;
-use App\Models\Chat;
-use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class MessageResourceTest extends TestCase
 {
@@ -20,7 +20,7 @@ class MessageResourceTest extends TestCase
         $message = Message::query()->create([
             'chat_id' => $chat->id,
             'user_id' => $user->id,
-            'message' => 'Test message content'
+            'message' => 'Test message content',
         ]);
 
         $resource = (new MessageResource($message->load('user')))->toArray(request());

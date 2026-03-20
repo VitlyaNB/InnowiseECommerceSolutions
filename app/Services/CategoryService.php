@@ -6,6 +6,7 @@ use App\Dto\CategoryDto;
 use App\Dto\UploadImageDto;
 use App\Repositories\Interfaces\CategoryRepositoryInterface;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
+use App\Services\Interfaces\FileServiceInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 final readonly class CategoryService
@@ -13,7 +14,7 @@ final readonly class CategoryService
     public function __construct(
         private CategoryRepositoryInterface $categoryRepository,
         private ProductRepositoryInterface $productRepository,
-        private FileService $fileService
+        private FileServiceInterface $fileService
     ) {}
 
     /** @return array<int, CategoryDto> */
@@ -26,7 +27,7 @@ final readonly class CategoryService
     {
         $category = $this->categoryRepository->findById($id);
 
-        if (!$category) {
+        if (! $category) {
             throw new ModelNotFoundException("Category with ID {$id} not found.");
         }
 
@@ -54,10 +55,10 @@ final readonly class CategoryService
         return $this->categoryRepository->create($dtoToSave);
     }
 
-    public function updateCategory(int $id, CategoryDto $data): CategoryDto
+    public function updateCategory(int $id, CategoryDto $data): ?CategoryDto
     {
         $category = $this->getCategoryById($id);
-        
+
         $imagePath = $category->imagePath;
 
         if ($data->image) {
@@ -90,7 +91,7 @@ final readonly class CategoryService
 
         $products = $this->productRepository->getByCategory($id);
         foreach ($products as $product) {
-            $this->productRepository->delete($product->id);
+            $this->productRepository->delete((int) $product->id);
         }
 
         if ($category->imagePath) {

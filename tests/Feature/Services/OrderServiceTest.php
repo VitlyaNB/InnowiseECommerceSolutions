@@ -31,7 +31,7 @@ class OrderServiceTest extends TestCase
         $cartItem = CartItem::query()->create([
             'user_id' => $user->id,
             'product_id' => $product->id,
-            'quantity' => 1
+            'quantity' => 1,
         ]);
 
         $this->expectException(RuntimeException::class);
@@ -54,7 +54,7 @@ class OrderServiceTest extends TestCase
         $cartItem = CartItem::query()->create([
             'user_id' => $user->id,
             'product_id' => $product->id,
-            'quantity' => 2
+            'quantity' => 2,
         ]);
 
         $this->orderService->createOrder(

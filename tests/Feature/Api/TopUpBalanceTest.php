@@ -15,7 +15,7 @@ class TopUpBalanceTest extends TestCase
         $user = User::factory()->create(['balance' => 100]);
 
         $response = $this->actingAs($user)->postJson('/api/wallet/top-up', [
-            'amount' => 150
+            'amount' => 150,
         ]);
 
         $response->assertStatus(200);
@@ -27,7 +27,7 @@ class TopUpBalanceTest extends TestCase
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->postJson('/api/wallet/top-up', [
-            'amount' => -50
+            'amount' => -50,
         ]);
 
         $response->assertStatus(422);

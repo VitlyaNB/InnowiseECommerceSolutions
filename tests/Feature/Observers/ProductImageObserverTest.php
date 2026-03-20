@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Observers;
 
-use App\Models\ProductImage;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Services\FileService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -23,7 +23,7 @@ class ProductImageObserverTest extends TestCase
         $product = Product::factory()->create();
         $image = ProductImage::create([
             'product_id' => $product->id,
-            'image_path' => 'products/image.jpg'
+            'image_path' => 'products/image.jpg',
         ]);
 
         $image->delete();

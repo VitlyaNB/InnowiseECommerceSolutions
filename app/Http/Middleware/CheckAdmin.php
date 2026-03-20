@@ -14,7 +14,7 @@ class CheckAdmin
         /** @var User|null $user */
         $user = $request->user();
 
-        if (!$user || $user->role !== 'admin') {
+        if (! $user || $user->role !== 'admin') {
             return response()->json(['message' => 'Доступ запрещен'], 403);
         }
 

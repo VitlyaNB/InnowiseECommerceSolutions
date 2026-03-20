@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Recommendation;
 
+use App\Http\Resources\ProductResource;
 use App\Models\User;
 use App\Services\RecommendationService;
 use Illuminate\Http\JsonResponse;
@@ -24,7 +25,7 @@ final class HomeController
         $items = $this->recommendationService->getHomeRecommendations($user?->id, $this->resolveViewSessionId($request));
 
         return response()->json([
-            'items' => array_map(static fn ($productDto) => $productDto->toArray(), $items),
+            'items' => ProductResource::collection($items)->resolve(),
         ]);
     }
 
@@ -32,7 +33,7 @@ final class HomeController
     {
         $sessionId = $request->cookie(self::VIEW_SESSION_COOKIE);
 
-        if (!is_string($sessionId) || $sessionId === '') {
+        if (! is_string($sessionId) || $sessionId === '') {
             $sessionId = Str::uuid()->toString();
             Cookie::queue(self::VIEW_SESSION_COOKIE, $sessionId, 60 * 24 * 30, '/', null, false, true, false, 'Lax');
         }

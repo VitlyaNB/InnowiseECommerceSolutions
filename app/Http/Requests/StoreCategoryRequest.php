@@ -26,8 +26,11 @@ class StoreCategoryRequest extends FormRequest
 
     public function toDto(): CategoryDto
     {
+        /** @var string $name */
+        $name = $this->input('name', '');
+
         return new CategoryDto(
-            name: $this->validated('name'),
+            name: $name,
             image: $this->file('image') instanceof UploadedFile ? $this->file('image') : null,
         );
     }

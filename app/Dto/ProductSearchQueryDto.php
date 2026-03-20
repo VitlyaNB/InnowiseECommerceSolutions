@@ -5,7 +5,7 @@ namespace App\Dto;
 final readonly class ProductSearchQueryDto extends BaseDto
 {
     /**
-     * @param array<int, int> $categoryIds
+     * @param  array<int, int>  $categoryIds
      */
     public function __construct(
         public string $query = '',

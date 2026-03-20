@@ -21,7 +21,7 @@ class RecommendationApiTest extends TestCase
             ->assertJsonStructure([
                 'also_bought',
                 'similar',
-                'recently_viewed'
+                'recently_viewed',
             ]);
     }
 }

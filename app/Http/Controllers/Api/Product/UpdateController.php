@@ -8,7 +8,7 @@ use App\Http\Resources\ProductResource;
 use App\Services\ProductService;
 use OpenApi\Attributes as OA;
 
-class UpdateController extends Controller
+final class UpdateController extends Controller
 {
     public function __construct(
         private readonly ProductService $productService

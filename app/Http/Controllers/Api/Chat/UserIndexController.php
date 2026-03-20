@@ -21,7 +21,7 @@ final class UserIndexController extends Controller
 
         $chat = $this->chatService->getUserChat($user->id);
 
-        if (!$chat) {
+        if (! $chat) {
             return response()->json(['message' => 'Чат не найден'], 404);
         }
 

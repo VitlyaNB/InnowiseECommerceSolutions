@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Recommendation;
 
+use App\Http\Resources\ProductResource;
 use App\Models\User;
 use App\Services\RecommendationService;
 use Illuminate\Http\JsonResponse;
@@ -24,9 +25,9 @@ final class ProductController
         $recommendations = $this->recommendationService->getProductRecommendations($id, $user?->id, $this->resolveViewSessionId($request));
 
         return response()->json([
-            'also_bought' => array_map(static fn ($productDto) => $productDto->toArray(), $recommendations->alsoBought),
-            'similar' => array_map(static fn ($productDto) => $productDto->toArray(), $recommendations->similar),
-            'recently_viewed' => array_map(static fn ($productDto) => $productDto->toArray(), $recommendations->recentlyViewed),
+            'also_bought' => ProductResource::collection($recommendations->alsoBought)->resolve(),
+            'similar' => ProductResource::collection($recommendations->similar)->resolve(),
+            'recently_viewed' => ProductResource::collection($recommendations->recentlyViewed)->resolve(),
         ]);
     }
 
@@ -34,7 +35,7 @@ final class ProductController
     {
         $sessionId = $request->cookie(self::VIEW_SESSION_COOKIE);
 
-        if (!is_string($sessionId) || $sessionId === '') {
+        if (! is_string($sessionId) || $sessionId === '') {
             $sessionId = Str::uuid()->toString();
             Cookie::queue(self::VIEW_SESSION_COOKIE, $sessionId, 60 * 24 * 30, '/', null, false, true, false, 'Lax');
         }

@@ -5,9 +5,9 @@ namespace App\Dto;
 final readonly class RecommendationResultDto extends BaseDto
 {
     /**
-     * @param array<int, ProductDto> $alsoBought
-     * @param array<int, ProductDto> $similar
-     * @param array<int, ProductDto> $recentlyViewed
+     * @param  array<int, ProductDto>  $alsoBought
+     * @param  array<int, ProductDto>  $similar
+     * @param  array<int, ProductDto>  $recentlyViewed
      */
     public function __construct(
         public array $alsoBought,

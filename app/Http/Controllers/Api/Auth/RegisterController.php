@@ -9,7 +9,7 @@ use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 
-class RegisterController extends Controller
+final class RegisterController extends Controller
 {
     public function __construct(
         private readonly AuthService $authService
@@ -48,10 +48,10 @@ class RegisterController extends Controller
     public function __invoke(RegisterRequest $request): JsonResponse
     {
         $result = $this->authService->register($request->toDto());
-        
+
         return response()->json([
             'user' => new UserResource($result->user),
-            'token' => $result->token
+            'token' => $result->token,
         ], 201);
     }
 }

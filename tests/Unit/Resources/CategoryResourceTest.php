@@ -15,28 +15,28 @@ class CategoryResourceTest extends TestCase
         $mockFileService->method('getAbsoluteUrl')
             ->with('categories/tech.png')
             ->willReturn('http://s3.test/categories/tech.png');
-        
+
         $this->app->instance(FileService::class, $mockFileService);
 
         $category = new Category([
             'id' => 1,
             'name' => 'Tech',
-            'image_path' => 'categories/tech.png'
+            'image_path' => 'categories/tech.png',
         ]);
 
         $resource = (new CategoryResource($category))->toArray(request());
 
-        $this->assertEquals('http://s3.test/categories/tech.png', $resource['image_path']);
+        $this->assertEquals('http://s3.test/categories/tech.png', $resource['image_url']);
     }
 
     public function test_category_resource_handles_null_image()
     {
         $category = new Category([
             'id' => 2,
-            'name' => 'No Image'
+            'name' => 'No Image',
         ]);
         $resource = (new CategoryResource($category))->toArray(request());
 
-        $this->assertNull($resource['image_path']);
+        $this->assertNull($resource['image_url']);
     }
 }

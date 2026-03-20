@@ -24,8 +24,11 @@ class TopUpRequest extends FormRequest
 
     public function toDto(): TopUpDto
     {
+        /** @var array<string, float|int|string> $data */
+        $data = $this->validated();
+
         return new TopUpDto(
-            amount: (float) $this->validated('amount'),
+            amount: (float) ($data['amount'] ?? 0),
         );
     }
 }

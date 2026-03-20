@@ -24,14 +24,14 @@ class ElasticsearchSearchTest extends TestCase
             new Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([
                 'hits' => [
                     'total' => ['value' => 1],
-                    'hits' => [['_id' => (string) $product1->id]]
+                    'hits' => [['_id' => (string) $product1->id]],
                 ],
                 'aggregations' => [
                     'categories' => ['buckets' => []],
                     'min_price' => ['value' => 0],
-                    'max_price' => ['value' => 1000]
-                ]
-            ]))
+                    'max_price' => ['value' => 1000],
+                ],
+            ])),
         ]);
         $client = ClientBuilder::create()
             ->setHttpClient(new GuzzleClient(['handler' => $mockHandler]))
@@ -43,10 +43,10 @@ class ElasticsearchSearchTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonStructure([
                 'data' => [
-                    '*' => ['id', 'name', 'price']
+                    '*' => ['id', 'name', 'price'],
                 ],
                 'meta',
-                'filters'
+                'filters',
             ]);
     }
 
@@ -59,14 +59,14 @@ class ElasticsearchSearchTest extends TestCase
             new Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([
                 'hits' => [
                     'total' => ['value' => 1],
-                    'hits' => [['_id' => (string) $target->id]]
+                    'hits' => [['_id' => (string) $target->id]],
                 ],
                 'aggregations' => [
                     'categories' => ['buckets' => []],
                     'min_price' => ['value' => 0],
-                    'max_price' => ['value' => 1000]
-                ]
-            ]))
+                    'max_price' => ['value' => 1000],
+                ],
+            ])),
         ]);
         $client = ClientBuilder::create()
             ->setHttpClient(new GuzzleClient(['handler' => $mockHandler]))

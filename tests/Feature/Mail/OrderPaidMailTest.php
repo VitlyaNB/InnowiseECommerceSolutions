@@ -1,11 +1,9 @@
 <?php
 
-
 namespace Tests\Feature\Mail;
 
+use App\Dto\OrderDetailsDto;
 use App\Mail\OrderPaidMail;
-use App\Models\Order;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,15 +13,17 @@ class OrderPaidMailTest extends TestCase
 
     public function test_email_contains_order_details()
     {
-        $user = User::factory()->create();
-        $order = Order::factory()->create([
-            'user_id' => $user->id,
-            'total_amount' => 123.45
-        ]);
+        $orderDto = new OrderDetailsDto(
+            id: 1,
+            userId: 1,
+            totalAmount: 123.45,
+            status: 'paid',
+            shippingAddress: 'Test Street 1',
+        );
 
-        $mailable = new OrderPaidMail($order);
+        $mailable = new OrderPaidMail($orderDto);
 
-        $mailable->assertSeeInHtml((string)$order->id);
+        $mailable->assertSeeInHtml('1');
         $mailable->assertSeeInHtml('123.45');
         $this->assertEquals('Order Paid Success', $mailable->envelope()->subject);
     }

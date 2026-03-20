@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Feature\Api;
 
 use App\Models\User;
@@ -20,18 +19,17 @@ class AuthControllerTest extends TestCase
             'password_confirmation' => 'password123',
         ];
 
-
         $response = $this->postJson('/api/register', $userData);
 
         $response->assertStatus(201)
             ->assertJsonStructure([
                 'user' => ['id', 'name', 'email'],
-                'token'
+                'token',
             ]);
 
         $this->assertDatabaseHas('users', [
             'email' => 'ivan@example.com',
-            'name' => 'Ivan Ivanov'
+            'name' => 'Ivan Ivanov',
         ]);
     }
 

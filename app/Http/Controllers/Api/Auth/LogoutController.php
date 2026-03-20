@@ -9,7 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
-class LogoutController extends Controller
+final class LogoutController extends Controller
 {
     public function __construct(
         private readonly AuthService $authService
@@ -30,7 +30,7 @@ class LogoutController extends Controller
         /** @var User $currentUser */
         $currentUser = $request->user();
         $this->authService->logout($currentUser->id);
-        
+
         return response()->json(['message' => 'Successfully logged out']);
     }
 }

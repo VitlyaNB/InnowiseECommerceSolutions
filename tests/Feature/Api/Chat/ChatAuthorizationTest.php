@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Api\Chat;
 
-use App\Models\User;
 use App\Models\Chat;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -20,7 +20,7 @@ class ChatAuthorizationTest extends TestCase
 
         $response = $this->postJson('/broadcasting/auth', [
             'channel_name' => "private-chat.{$chat->id}",
-            'socket_id' => '1234.1234'
+            'socket_id' => '1234.1234',
         ]);
 
         $response->assertStatus(200);
@@ -36,7 +36,7 @@ class ChatAuthorizationTest extends TestCase
 
         $response = $this->postJson('/broadcasting/auth', [
             'channel_name' => "private-chat.{$otherChat->id}",
-            'socket_id' => '1234.1234'
+            'socket_id' => '1234.1234',
         ]);
 
         $response->assertStatus(403);

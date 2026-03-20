@@ -26,10 +26,13 @@ class RegisterRequest extends FormRequest
 
     public function toDto(): RegisterDto
     {
+        /** @var array<string, string> $data */
+        $data = $this->validated();
+
         return new RegisterDto(
-            name: $this->validated('name'),
-            email: $this->validated('email'),
-            password: $this->validated('password'),
+            name: $data['name'],
+            email: $data['email'],
+            password: $data['password'],
         );
     }
 }

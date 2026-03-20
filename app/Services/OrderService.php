@@ -32,7 +32,7 @@ final readonly class OrderService
         try {
             $lockedUser = $this->userRepository->findByIdForUpdate($userId);
 
-            if (!$lockedUser) {
+            if (! $lockedUser) {
                 throw new RuntimeException('Пользователь не найден.');
             }
 
@@ -40,14 +40,14 @@ final readonly class OrderService
             $cartItems = $this->cartItemRepository->getSelectedByUser($userId, $selectedIdsDto);
 
             if ($cartItems === []) {
-                throw new RuntimeException('Выбранные товары не найдены в корзине.');
+                throw new RuntimeException('Выбранные товары (IDs: '.implode(', ', $orderDto->selectedItemIds).") не найдены в корзине пользователя (user_id: {$userId}).");
             }
 
             $totalAmount = 0.0;
             foreach ($cartItems as $item) {
                 $product = $item->product;
 
-                if (!$product || $product->price === null || $product->quantity === null) {
+                if (! $product || $product->price === null || $product->quantity === null) {
                     throw new RuntimeException('Товар в корзине недоступен.');
                 }
 
@@ -63,7 +63,7 @@ final readonly class OrderService
             }
 
             $balanceUpdated = $this->userRepository->decrementBalance($userId, $totalAmount);
-            if (!$balanceUpdated) {
+            if (! $balanceUpdated) {
                 throw new RuntimeException('Не удалось списать средства.');
             }
 
@@ -77,12 +77,12 @@ final readonly class OrderService
             foreach ($cartItems as $item) {
                 $product = $item->product;
 
-                if (!$product || $product->price === null) {
+                if (! $product || $product->price === null) {
                     throw new RuntimeException('Товар в корзине недоступен.');
                 }
 
                 $stockUpdated = $this->productRepository->decrementStock($item->productId, $item->quantity);
-                if (!$stockUpdated) {
+                if (! $stockUpdated) {
                     throw new RuntimeException("Товара {$product->name} недостаточно на складе.");
                 }
 
@@ -104,7 +104,7 @@ final readonly class OrderService
 
             $finalOrder = $this->orderRepository->findByIdWithItems($order->id);
 
-            if (!$finalOrder) {
+            if (! $finalOrder) {
                 throw new RuntimeException('Не удалось загрузить заказ после создания.');
             }
 

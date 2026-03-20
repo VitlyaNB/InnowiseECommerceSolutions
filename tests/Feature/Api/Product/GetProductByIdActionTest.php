@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Tests\Feature\Api\Product;
 
 use App\Models\Product;
@@ -15,7 +14,7 @@ class GetProductByIdActionTest extends TestCase
     {
         $product = Product::factory()->create([
             'name' => 'Specific Gadget',
-            'price' => 299.99
+            'price' => 299.99,
         ]);
 
         $response = $this->getJson("/api/products/{$product->id}");

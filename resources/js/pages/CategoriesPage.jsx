@@ -28,8 +28,8 @@ export default function CategoriesPage() {
                         className="group relative h-48 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800"
                     >
                         {/* Если есть картинка категории - показываем, иначе градиент */}
-                        {cat.image_path ? (
-                            <img src={cat.image_path} alt={cat.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                        {cat.image_url ? (
+                            <img src={cat.image_url} alt={cat.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                         ) : (
                             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 opacity-10 group-hover:opacity-20 transition-opacity"></div>
                         )}

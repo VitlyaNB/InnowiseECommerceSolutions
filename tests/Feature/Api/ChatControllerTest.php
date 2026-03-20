@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Api;
 
-use App\Models\User;
-use App\Models\Chat;
 use App\Events\MessageSent;
-use Illuminate\Support\Facades\Event;
+use App\Models\Chat;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 class ChatControllerTest extends TestCase
@@ -21,7 +21,7 @@ class ChatControllerTest extends TestCase
         $chat = Chat::factory()->create(['user_id' => $user->id]);
 
         $response = $this->actingAs($user)->postJson("/api/chats/{$chat->id}/messages", [
-            'message' => 'Hello, support!'
+            'message' => 'Hello, support!',
         ]);
 
         $response->assertStatus(201);

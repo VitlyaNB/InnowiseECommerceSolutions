@@ -5,7 +5,7 @@ namespace App\Dto;
 final readonly class ChatDto extends BaseDto
 {
     /**
-     * @param array<int, ChatMessageDto> $messages
+     * @param  array<int, ChatMessageDto>  $messages
      */
     public function __construct(
         public int $id,

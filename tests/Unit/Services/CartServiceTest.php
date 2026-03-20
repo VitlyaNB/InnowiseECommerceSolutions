@@ -2,34 +2,51 @@
 
 namespace Tests\Unit\Services;
 
-use App\Models\CartItem;
-use App\Models\Product;
-use App\Services\CartService;
+use App\Dto\CartItemDto;
+use App\Dto\ProductDto;
+use App\Dto\TotalsDto;
 use App\Repositories\Interfaces\CartItemRepositoryInterface;
-use Tests\TestCase;
+use App\Services\CartService;
 use Mockery;
+use Mockery\MockInterface;
+use Tests\TestCase;
 
 class CartServiceTest extends TestCase
 {
-    public function test_calculate_totals_returns_correct_values()
+    private CartItemRepositoryInterface|MockInterface $cartRepo;
+
+    private CartService $service;
+
+    protected function setUp(): void
     {
-        $cartRepo = Mockery::mock(CartItemRepositoryInterface::class);
-        $service = new CartService($cartRepo);
+        parent::setUp();
+        $this->cartRepo = Mockery::mock(CartItemRepositoryInterface::class);
+        $this->service = new CartService($this->cartRepo);
+    }
 
-        $product1 = new Product(['price' => 100]);
-        $item1 = new CartItem(['quantity' => 2]);
-        $item1->setRelation('product', $product1);
+    public function test_calculate_totals_returns_correct_values(): void
+    {
+        $product1 = new ProductDto(price: 100.0);
+        $item1 = new CartItemDto(id: 1, productId: 1, quantity: 2, product: $product1);
 
-        $product2 = new Product(['price' => 50]);
-        $item2 = new CartItem(['quantity' => 1]);
-        $item2->setRelation('product', $product2);
+        $product2 = new ProductDto(price: 50.0);
+        $item2 = new CartItemDto(id: 2, productId: 2, quantity: 1, product: $product2);
 
-        $items = collect([$item1, $item2]);
+        $items = [$item1, $item2];
 
-        $totals = $service->calculateTotals($items);
+        // We need to access the private method via Reflection or just test it via getCart if we want to be strict.
+        // But the original test was calling it directly (which it shouldn't be able to if it's private).
+        // Let's check if calculateTotals is private.
 
-        $this->assertEquals(250, $totals['total']);
-        $this->assertEquals(250, $totals['subtotal']);
-        $this->assertEquals(0, $totals['tax']);
+        $reflection = new \ReflectionClass(CartService::class);
+        $method = $reflection->getMethod('calculateTotals');
+        $method->setAccessible(true);
+
+        /** @var TotalsDto $totals */
+        $totals = $method->invoke($this->service, $items);
+
+        $this->assertEquals(250, $totals->total);
+        $this->assertEquals(250, $totals->subtotal);
+        $this->assertEquals(0, $totals->tax);
     }
 }

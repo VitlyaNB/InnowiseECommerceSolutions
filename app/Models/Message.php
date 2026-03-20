@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -12,14 +14,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $user_id
  * @property string $message
  * @property bool $is_read
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property User $user
  * @property Chat $chat
  */
 class Message extends Model
 {
-    /** @use HasFactory<\Illuminate\Database\Eloquent\Factories\Factory> */
+    /** @use HasFactory<Factory> */
     use HasFactory;
 
     protected $fillable = [
@@ -30,7 +32,7 @@ class Message extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<Chat, $this>
+     * @return BelongsTo<Chat, $this>
      */
     public function chat(): BelongsTo
     {
@@ -38,7 +40,7 @@ class Message extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {

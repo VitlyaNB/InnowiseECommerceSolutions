@@ -9,7 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
-class DeleteController extends Controller
+final class DeleteController extends Controller
 {
     public function __construct(
         private readonly AuthService $authService
@@ -43,7 +43,7 @@ class DeleteController extends Controller
         $currentUser = $request->user();
 
         $this->authService->deleteUser($id, $currentUser->id);
-        
+
         return response()->json(['message' => 'User deleted successfully']);
     }
 }

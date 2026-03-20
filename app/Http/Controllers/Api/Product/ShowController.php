@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Api\Product;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ProductResource;
 use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 
-class ShowController extends Controller
+final class ShowController extends Controller
 {
     public function __construct(
         private readonly ProductService $productService
@@ -40,10 +41,12 @@ class ShowController extends Controller
     {
         $product = $this->productService->getProductById($id);
 
-        if (!$product) {
+        if (! $product) {
             return response()->json(['message' => 'Товар не найден'], 404);
         }
 
-        return response()->json($product->toArray());
+        return (new ProductResource($product))
+            ->response()
+            ->setStatusCode(200);
     }
 }

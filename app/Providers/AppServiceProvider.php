@@ -13,11 +13,11 @@ use App\Observers\CategoryObserver;
 use App\Observers\ProductImageObserver;
 use App\Observers\ProductObserver;
 use App\Repositories\CartItemRepository;
-use App\Repositories\ChatRepository;
 use App\Repositories\CategoryRepository;
+use App\Repositories\ChatRepository;
 use App\Repositories\Interfaces\CartItemRepositoryInterface;
-use App\Repositories\Interfaces\ChatRepositoryInterface;
 use App\Repositories\Interfaces\CategoryRepositoryInterface;
+use App\Repositories\Interfaces\ChatRepositoryInterface;
 use App\Repositories\Interfaces\OrderRepositoryInterface;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
 use App\Repositories\Interfaces\ProductViewRepositoryInterface;
@@ -28,6 +28,8 @@ use App\Repositories\ProductRepository;
 use App\Repositories\ProductViewRepository;
 use App\Repositories\ReviewRepository;
 use App\Repositories\UserRepository;
+use App\Services\FileService;
+use App\Services\Interfaces\FileServiceInterface;
 use Elastic\Elasticsearch\Client;
 use Elastic\Elasticsearch\ClientBuilder;
 use GuzzleHttp\Client as GuzzleClient;
@@ -41,7 +43,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(ClientInterface::class, function () {
-            return new GuzzleClient();
+            return new GuzzleClient;
         });
 
         $this->app->singleton(Client::class, function () {
@@ -55,6 +57,8 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(ElasticsearchClientInterface::class, ElasticsearchClientWrapper::class);
         $this->app->singleton(TransactionManagerInterface::class, EloquentTransactionManager::class);
+
+        $this->app->bind(FileServiceInterface::class, FileService::class);
 
         $this->app->bind(ProductRepositoryInterface::class, ProductRepository::class);
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);

@@ -9,7 +9,7 @@ use App\Services\CategoryService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 
-class UpdateController extends Controller
+final class UpdateController extends Controller
 {
     public function __construct(
         private readonly CategoryService $categoryService
@@ -53,6 +53,7 @@ class UpdateController extends Controller
     public function __invoke(UpdateCategoryRequest $request, int $id): JsonResponse
     {
         $category = $this->categoryService->updateCategory($id, $request->toDto());
+
         return response()->json(new CategoryResource($category));
     }
 }

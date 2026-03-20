@@ -4,11 +4,12 @@ namespace App\Http\Controllers\Api\Product;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductSearchRequest;
+use App\Http\Resources\ProductResource;
 use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 
-class SearchController extends Controller
+final class SearchController extends Controller
 {
     public function __construct(
         private readonly ProductService $productService
@@ -70,7 +71,7 @@ class SearchController extends Controller
         $resultDto = $this->productService->search($request->toDto());
 
         return response()->json([
-            'data' => array_map(static fn ($productDto) => $productDto->toArray(), $resultDto->data),
+            'data' => ProductResource::collection($resultDto->data)->resolve(),
             'meta' => $resultDto->meta,
             'filters' => $resultDto->filters,
         ]);

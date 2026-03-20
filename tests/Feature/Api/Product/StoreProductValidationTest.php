@@ -1,10 +1,9 @@
 <?php
 
-
 namespace Tests\Feature\Api\Product;
 
-use App\Models\User;
 use App\Models\Category;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -30,7 +29,7 @@ class StoreProductValidationTest extends TestCase
         $response = $this->actingAs($admin)->postJson('/api/products', [
             'name' => 'Bad Price',
             'price' => -10,
-            'category_id' => $category->id
+            'category_id' => $category->id,
         ]);
 
         $response->assertStatus(422)

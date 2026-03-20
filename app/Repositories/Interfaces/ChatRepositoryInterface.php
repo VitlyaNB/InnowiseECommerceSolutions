@@ -27,4 +27,6 @@ interface ChatRepositoryInterface
     public function hasAccess(int $chatId, int $userId, bool $isAdmin): bool;
 
     public function existsById(int $chatId): bool;
+
+    public function getChatOwnerId(int $chatId): ?int;
 }

@@ -13,7 +13,7 @@ final readonly class CartService
         private CartItemRepositoryInterface $cartRepository
     ) {}
 
-    public function addToCart(CartItemDto $dto, ?int $userId, ?string $sessionId): CartItemDto
+    public function addToCart(CartItemDto $dto, ?int $userId, ?string $sessionId): ?CartItemDto
     {
         $existing = null;
 
@@ -58,25 +58,28 @@ final readonly class CartService
     {
         $item = $this->cartRepository->findById($id);
 
-        if (!$item || !$this->itemBelongsTo($item, $userId, $sessionId)) {
+        if (! $item || ! $this->itemBelongsTo($item, $userId, $sessionId)) {
             return null;
         }
 
         if ($quantity < 1) {
             $this->cartRepository->delete($id);
+
             return null;
         }
 
         $this->cartRepository->updateQuantity($id, $quantity);
+
         return $this->cartRepository->findById($id);
     }
 
     public function removeItem(int $id, ?int $userId, ?string $sessionId): bool
     {
         $item = $this->cartRepository->findById($id);
-        if (!$item || !$this->itemBelongsTo($item, $userId, $sessionId)) {
+        if (! $item || ! $this->itemBelongsTo($item, $userId, $sessionId)) {
             return false;
         }
+
         return $this->cartRepository->delete($id);
     }
 
@@ -88,6 +91,7 @@ final readonly class CartService
         if ($sessionId) {
             return $this->cartRepository->clearBySession($sessionId);
         }
+
         return true;
     }
 
@@ -99,16 +103,19 @@ final readonly class CartService
         if ($sessionId) {
             return $item->sessionId === $sessionId;
         }
+
         return false;
     }
 
     /**
-     * @param array<int, CartItemDto> $items
+     * @param  array<int, CartItemDto>  $items
      */
     private function calculateTotals(array $items): TotalsDto
     {
         $subtotal = array_reduce($items, function (float $carry, CartItemDto $item) {
-            return $carry + ($item->product?->price ?? 0.0) * $item->quantity;
+            $price = $item->product !== null ? $item->product->price : 0.0;
+
+            return $carry + $price * $item->quantity;
         }, 0.0);
 
         return new TotalsDto(

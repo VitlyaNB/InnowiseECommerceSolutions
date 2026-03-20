@@ -1,10 +1,9 @@
 <?php
 
-
 namespace Tests\Unit\Repositories;
 
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
 use App\Repositories\ProductRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -18,7 +17,7 @@ class ProductRepositoryTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->repository = new ProductRepository(new Product());
+        $this->repository = new ProductRepository(new Product);
     }
 
     public function test_get_by_category_returns_correct_products()
@@ -33,7 +32,7 @@ class ProductRepositoryTest extends TestCase
 
         $this->assertCount(3, $results);
         foreach ($results as $product) {
-            $this->assertEquals($cat1->id, $product->category_id);
+            $this->assertEquals($cat1->id, $product->categoryId);
         }
     }
 }

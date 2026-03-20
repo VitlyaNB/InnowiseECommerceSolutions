@@ -17,8 +17,14 @@ final class StoreController extends Controller
 
     public function __invoke(StoreOrderRequest $request): JsonResponse
     {
-        /** @var User $user */
+        /** @var User|null $user */
         $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                'message' => 'Необходима авторизация',
+            ], 401);
+        }
 
         try {
             $order = $this->orderService->createOrder($user->id, $request->toDto());
@@ -26,6 +32,7 @@ final class StoreController extends Controller
             return response()->json([
                 'message' => 'Заказ успешно оформлен',
                 'order' => $order->toArray(),
+                'new_balance' => $user->fresh()->balance ?? null,
             ], 201);
         } catch (Throwable $exception) {
             return response()->json([

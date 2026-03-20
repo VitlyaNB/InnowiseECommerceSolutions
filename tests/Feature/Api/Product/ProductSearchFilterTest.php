@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Api\Product;
 
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
 use Elastic\Elasticsearch\Client;
 use Elastic\Elasticsearch\ClientBuilder;
 use GuzzleHttp\Client as GuzzleClient;
@@ -25,14 +25,14 @@ class ProductSearchFilterTest extends TestCase
             new Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([
                 'hits' => [
                     'total' => ['value' => 1],
-                    'hits' => [['_id' => (string) $target->id]]
+                    'hits' => [['_id' => (string) $target->id]],
                 ],
                 'aggregations' => [
                     'categories' => ['buckets' => []],
                     'min_price' => ['value' => 0],
-                    'max_price' => ['value' => 1000]
-                ]
-            ]))
+                    'max_price' => ['value' => 1000],
+                ],
+            ])),
         ]);
         $client = ClientBuilder::create()
             ->setHttpClient(new GuzzleClient(['handler' => $mockHandler]))
@@ -56,14 +56,14 @@ class ProductSearchFilterTest extends TestCase
             new Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([
                 'hits' => [
                     'total' => ['value' => 1],
-                    'hits' => [['_id' => (string) $product->id]]
+                    'hits' => [['_id' => (string) $product->id]],
                 ],
                 'aggregations' => [
                     'categories' => ['buckets' => []],
                     'min_price' => ['value' => 0],
-                    'max_price' => ['value' => 1000]
-                ]
-            ]))
+                    'max_price' => ['value' => 1000],
+                ],
+            ])),
         ]);
         $client = ClientBuilder::create()
             ->setHttpClient(new GuzzleClient(['handler' => $mockHandler]))

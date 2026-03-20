@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -12,10 +14,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $session_id
  * @property int $product_id
  * @property int $quantity
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property Product $product
- * 
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<CartItem> query()
  * @method static \Illuminate\Database\Eloquent\Builder<CartItem> where(string|array<string, mixed>|\Closure $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
  * @method static CartItem create(array<string, mixed> $attributes = [])
@@ -23,8 +25,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class CartItem extends Model
 {
-    /** @use HasFactory<\Illuminate\Database\Eloquent\Factories\Factory> */
+    /** @use HasFactory<Factory> */
     use HasFactory;
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -35,7 +38,7 @@ class CartItem extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<Product, $this>
+     * @return BelongsTo<Product, $this>
      */
     public function product(): BelongsTo
     {

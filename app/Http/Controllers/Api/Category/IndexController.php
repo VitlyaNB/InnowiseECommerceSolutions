@@ -8,7 +8,7 @@ use App\Services\CategoryService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 
-class IndexController extends Controller
+final class IndexController extends Controller
 {
     public function __construct(
         private readonly CategoryService $categoryService
@@ -38,6 +38,7 @@ class IndexController extends Controller
     public function __invoke(): JsonResponse
     {
         $categories = $this->categoryService->getAllCategories();
+
         return response()->json(CategoryResource::collection($categories));
     }
 }

@@ -13,12 +13,19 @@ final class ChatRepository implements ChatRepositoryInterface
     /** @return array<int, ChatDto> */
     public function getAllWithMessages(): array
     {
-        return Chat::query()
+        $collection = Chat::query()
             ->with(['user', 'messages.user'])
             ->orderByDesc('last_message_at')
-            ->get()
-            ->map(fn (Chat $chat): ChatDto => $this->mapChatToDto($chat))
-            ->all();
+            ->get();
+
+        /** @var array<int, ChatDto> $result */
+        $result = [];
+        foreach ($collection as $chat) {
+            /** @var Chat $chat */
+            $result[] = $this->mapChatToDto($chat);
+        }
+
+        return $result;
     }
 
     public function findByUserIdWithMessages(int $userId): ?ChatDto
@@ -53,7 +60,7 @@ final class ChatRepository implements ChatRepositoryInterface
         /** @var Chat|null $reloaded */
         $reloaded = Chat::query()->with(['user', 'messages.user'])->find($chat->id);
 
-        if (!$reloaded) {
+        if (! $reloaded) {
             return new ChatDto(id: $chat->id, userId: $chat->user_id);
         }
 
@@ -121,12 +128,23 @@ final class ChatRepository implements ChatRepositoryInterface
             ->exists();
     }
 
+    public function getChatOwnerId(int $chatId): ?int
+    {
+        /** @var Chat|null $chat */
+        $chat = Chat::query()->find($chatId);
+
+        return $chat ? (int) $chat->user_id : null;
+    }
+
     private function mapChatToDto(Chat $chat): ChatDto
     {
+        /** @var array<int, ChatMessageDto> $messages */
         $messages = $chat->relationLoaded('messages')
             ? $chat->messages
                 ->sortBy('created_at')
-                ->map(fn (Message $message): ChatMessageDto => $this->mapMessageToDto($message))
+                ->map(function (Message $message): ChatMessageDto {
+                    return $this->mapMessageToDto($message);
+                })
                 ->values()
                 ->all()
             : [];
@@ -136,9 +154,9 @@ final class ChatRepository implements ChatRepositoryInterface
         return new ChatDto(
             id: (int) $chat->id,
             userId: (int) $chat->user_id,
-            userName: $chat->user?->name,
-            userEmail: $chat->user?->email,
-            lastMessageAt: $chat->last_message_at?->toDateTimeString(),
+            userName: $chat->user->name ?? null,
+            userEmail: $chat->user->email ?? null,
+            lastMessageAt: $chat->last_message_at !== null ? $chat->last_message_at->toDateTimeString() : null,
             messages: $messages,
             lastMessage: $lastMessageDto instanceof ChatMessageDto ? $lastMessageDto : null,
         );
@@ -152,9 +170,9 @@ final class ChatRepository implements ChatRepositoryInterface
             userId: (int) $message->user_id,
             message: (string) $message->message,
             isRead: (bool) $message->is_read,
-            createdAt: $message->created_at?->toDateTimeString(),
-            userName: $message->user?->name,
-            userRole: $message->user?->role,
+            createdAt: $message->created_at !== null ? $message->created_at->toDateTimeString() : null,
+            userName: $message->user->name ?? null,
+            userRole: $message->user->role ?? null,
         );
     }
 }

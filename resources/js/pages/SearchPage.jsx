@@ -19,8 +19,6 @@ export default function SearchPage() {
 
             api.get(`/products/search?${params.toString()}`)
                 .then(res => {
-                    // Laravel Resource + Pagination возвращает данные в res.data.data
-                    // Если пагинации нет, то просто res.data.data
                     setProducts(res.data.data || []);
                 })
                 .catch(err => {
@@ -59,16 +57,20 @@ export default function SearchPage() {
                                     className="group bg-white dark:bg-gray-800 rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-xl transition-all flex flex-col"
                                 >
                                     <div className="aspect-[4/5] bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
-                                        <img
-                                            src={product.images?.[0]?.url || 'https://placehold.co/400x500?text=No+Image'}
-                                            alt={product.name}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                        />
+                                        {product.images && product.images[0]?.url ? (
+                                            <img
+                                                src={product.images[0].url}
+                                                alt={product.name}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold">НЕТ ФОТО</div>
+                                        )}
                                     </div>
                                     <div className="p-6 flex flex-col flex-1">
                                         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{product.name}</h3>
                                         <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
-                                            <span className="text-xl font-black text-gray-900 dark:text-white">{product.price} BYN</span>
+                                            <span className="text-xl font-black text-gray-900 dark:text-white">{parseFloat(product.price).toFixed(2)} BYN</span>
                                         </div>
                                     </div>
                                 </Link>

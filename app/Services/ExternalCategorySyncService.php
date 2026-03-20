@@ -5,11 +5,12 @@ namespace App\Services;
 use App\Dto\CategoryDto;
 use App\Dto\ExternalCategorySyncResultDto;
 use App\Repositories\Interfaces\CategoryRepositoryInterface;
+use App\Services\Interfaces\ExternalCategorySyncServiceInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
-final readonly class ExternalCategorySyncService
+final readonly class ExternalCategorySyncService implements ExternalCategorySyncServiceInterface
 {
     public function __construct(
         private CategoryRepositoryInterface $categoryRepository
@@ -34,12 +35,12 @@ final readonly class ExternalCategorySyncService
 
         try {
             $headers = ['Accept' => 'application/json'];
-            if (!empty($apiKey)) {
-                $headers['Authorization'] = 'Bearer ' . (string) $apiKey;
+            if (! empty($apiKey)) {
+                $headers['Authorization'] = 'Bearer '.(string) $apiKey;
             }
 
             $response = Http::withHeaders($headers)->get((string) $apiUrl);
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 return new ExternalCategorySyncResultDto(
                     ok: false,
                     message: 'Failed to fetch categories from external project',
@@ -53,7 +54,7 @@ final readonly class ExternalCategorySyncService
 
             /** @var mixed $categories */
             $categories = is_array($data) ? ($data['data'] ?? $data['categories'] ?? $data) : [];
-            if (!is_array($categories)) {
+            if (! is_array($categories)) {
                 return new ExternalCategorySyncResultDto(
                     ok: false,
                     message: 'Invalid response format from external project',
@@ -85,11 +86,11 @@ final readonly class ExternalCategorySyncService
                 status: 200,
             );
         } catch (Throwable $exception) {
-            Log::error('External category sync failed: ' . $exception->getMessage());
+            Log::error('External category sync failed: '.$exception->getMessage());
 
             return new ExternalCategorySyncResultDto(
                 ok: false,
-                message: 'Sync failed: ' . $exception->getMessage(),
+                message: 'Sync failed: '.$exception->getMessage(),
                 synced: 0,
                 status: 500,
             );

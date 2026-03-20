@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Tests\Unit\Repositories;
 
 use App\Models\User;
@@ -17,10 +16,10 @@ class UserRepositoryTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->repository = new UserRepository(new User());
+        $this->repository = new UserRepository;
     }
 
-    public function test_findByEmail_returns_user()
+    public function test_find_by_email_returns_user()
     {
         $user = User::factory()->create(['email' => 'find@me.com']);
 
@@ -30,7 +29,7 @@ class UserRepositoryTest extends TestCase
         $this->assertEquals($user->id, $found->id);
     }
 
-    public function test_findByEmail_returns_null_if_not_found()
+    public function test_find_by_email_returns_null_if_not_found()
     {
         $found = $this->repository->findByEmail('nonexistent@me.com');
 

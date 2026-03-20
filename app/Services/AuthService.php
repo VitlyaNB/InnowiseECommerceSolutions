@@ -7,13 +7,15 @@ use App\Dto\LoginResultDto;
 use App\Dto\RegisterDto;
 use App\Dto\UpdateUserDto;
 use App\Dto\UserDto;
+use App\Repositories\Interfaces\CartItemRepositoryInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use Illuminate\Validation\ValidationException;
 
 final readonly class AuthService
 {
     public function __construct(
-        private UserRepositoryInterface $userRepository
+        private UserRepositoryInterface $userRepository,
+        private CartItemRepositoryInterface $cartRepository,
     ) {}
 
     public function register(RegisterDto $data): LoginResultDto
@@ -32,14 +34,18 @@ final readonly class AuthService
         return $this->userRepository->getAll();
     }
 
-    public function login(LoginDto $data): LoginResultDto
+    public function login(LoginDto $data, ?string $sessionId = null): LoginResultDto
     {
         $userDto = $this->userRepository->verifyCredentials($data->email, $data->password);
 
-        if (!$userDto) {
+        if (! $userDto) {
             throw ValidationException::withMessages([
                 'email' => ['Неверные учетные данные.'],
             ]);
+        }
+
+        if ($sessionId !== null) {
+            $this->cartRepository->mergeSessionToUser($sessionId, $userDto->id);
         }
 
         $token = $this->userRepository->createToken($userDto->id, 'auth_token');
@@ -56,7 +62,7 @@ final readonly class AuthService
     {
         if ($userIdToDelete === $currentUserId) {
             throw ValidationException::withMessages([
-                'user' => ['Нельзя удалить самого себя']
+                'user' => ['Нельзя удалить самого себя'],
             ]);
         }
 

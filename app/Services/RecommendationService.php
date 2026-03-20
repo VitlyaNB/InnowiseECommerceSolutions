@@ -36,7 +36,7 @@ final readonly class RecommendationService
     {
         $product = $this->productRepository->findById($productId);
 
-        if (!$product) {
+        if (! $product) {
             throw new RuntimeException('Product not found.');
         }
 
@@ -86,6 +86,7 @@ final readonly class RecommendationService
     private function getSimilarIds(ProductDto $product, int $limit): array
     {
         try {
+            /** @var array<string, mixed> $results */
             $results = $this->elasticsearchClient->search([
                 'index' => 'products_index',
                 'body' => [
@@ -112,15 +113,30 @@ final readonly class RecommendationService
                 ],
             ]);
 
-            /** @var array<int, array{_id: string|int}> $hits */
-            $hits = $results['hits']['hits'] ?? [];
-            $ids = array_map(static fn (array $hit): int => (int) $hit['_id'], $hits);
+            /** @var array<int, array<string, mixed>> $hits */
+            $hits = [];
+            $hitsContainer = $results['hits'] ?? null;
+            if (is_array($hitsContainer) && isset($hitsContainer['hits']) && is_array($hitsContainer['hits'])) {
+                $hits = $hitsContainer['hits'];
+            }
+
+            /** @var array<int, int> $ids */
+            $ids = [];
+            foreach ($hits as $hit) {
+                if (! is_array($hit)) {
+                    continue;
+                }
+                $hitId = $hit['_id'] ?? null;
+                if (is_numeric($hitId)) {
+                    $ids[] = (int) $hitId;
+                }
+            }
 
             if ($ids !== []) {
                 return $ids;
             }
         } catch (Throwable $e) {
-            Log::warning('Recommendation Elasticsearch error: ' . $e->getMessage());
+            Log::warning('Recommendation Elasticsearch error: '.$e->getMessage());
         }
 
         return $this->productRepository->getSimilarFallbackIds((int) $product->categoryId, (int) $product->id, $limit);
@@ -139,7 +155,7 @@ final readonly class RecommendationService
     }
 
     /**
-     * @param array<int, int> $ids
+     * @param  array<int, int>  $ids
      * @return array<int, int>
      */
     private function uniqueIds(array $ids): array

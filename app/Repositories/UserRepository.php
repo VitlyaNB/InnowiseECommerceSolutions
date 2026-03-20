@@ -14,17 +14,25 @@ class UserRepository implements UserRepositoryInterface
     /** @return array<int, UserDto> */
     public function getAll(): array
     {
-        return User::query()
+        $collection = User::query()
             ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(fn(User $user) => $this->mapToDto($user))
-            ->toArray();
+            ->get();
+
+        /** @var array<int, UserDto> $result */
+        $result = [];
+        foreach ($collection as $user) {
+            /** @var User $user */
+            $result[] = $this->mapToDto($user);
+        }
+
+        return $result;
     }
 
     public function findByEmail(string $email): ?UserDto
     {
         /** @var User|null $user */
         $user = User::query()->where('email', $email)->first();
+
         return $user ? $this->mapToDto($user) : null;
     }
 
@@ -32,13 +40,14 @@ class UserRepository implements UserRepositoryInterface
     {
         /** @var User|null $user */
         $user = User::query()->find($id);
+
         return $user ? $this->mapToDto($user) : null;
     }
 
     public function create(RegisterDto $data): UserDto
     {
         /** @var User $user */
-        $user = User::create([
+        $user = User::query()->create([
             'name' => $data->name,
             'email' => $data->email,
             'password' => $data->password,
@@ -53,7 +62,7 @@ class UserRepository implements UserRepositoryInterface
     {
         /** @var User|null $user */
         $user = User::query()->find($id);
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -64,7 +73,7 @@ class UserRepository implements UserRepositoryInterface
     {
         /** @var User|null $user */
         $user = User::query()->find($id);
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -75,7 +84,7 @@ class UserRepository implements UserRepositoryInterface
     {
         /** @var User|null $user */
         $user = User::query()->where('email', $email)->first();
-        if (!$user || !Hash::check($password, $user->password)) {
+        if (! $user || ! Hash::check($password, $user->password)) {
             return null;
         }
 
@@ -94,7 +103,7 @@ class UserRepository implements UserRepositoryInterface
     public function topUp(int $userId, float $amount): UserDto
     {
         /** @var User $user */
-        $user = User::findOrFail($userId);
+        $user = User::query()->findOrFail($userId);
         $user->balance += $amount;
         $user->save();
 
@@ -104,7 +113,8 @@ class UserRepository implements UserRepositoryInterface
     public function createToken(int $userId, string $tokenName): string
     {
         /** @var User $user */
-        $user = User::findOrFail($userId);
+        $user = User::query()->findOrFail($userId);
+
         return $user->createToken($tokenName)->plainTextToken;
     }
 
@@ -121,7 +131,7 @@ class UserRepository implements UserRepositoryInterface
         /** @var User|null $user */
         $user = User::query()->find($userId);
 
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -142,9 +152,9 @@ class UserRepository implements UserRepositoryInterface
             email: $user->email,
             role: $user->role,
             balance: (float) $user->balance,
-            emailVerifiedAt: $user->email_verified_at?->toDateTimeString(),
-            createdAt: $user->created_at?->toDateTimeString(),
-            updatedAt: $user->updated_at?->toDateTimeString(),
+            emailVerifiedAt: $user->email_verified_at !== null ? $user->email_verified_at->toDateTimeString() : null,
+            createdAt: $user->created_at !== null ? $user->created_at->toDateTimeString() : null,
+            updatedAt: $user->updated_at !== null ? $user->updated_at->toDateTimeString() : null,
         );
     }
 }

@@ -31,17 +31,37 @@ class ProductSearchRequest extends FormRequest
 
     public function toDto(): ProductSearchQueryDto
     {
+        /** @var array<string, int|float|string|array<int, int|string>|null> $data */
+        $data = $this->validated();
+
+        /** @var string $query */
+        $query = isset($data['query']) && is_string($data['query']) ? $data['query'] : '';
         /** @var array<int, int> $categoryIds */
-        $categoryIds = $this->validated('categories', []);
+        $categoryIds = [];
+        if (isset($data['categories']) && is_array($data['categories'])) {
+            foreach ($data['categories'] as $catId) {
+                $categoryIds[] = (int) $catId;
+            }
+        }
+        /** @var float|null $minPrice */
+        $minPrice = isset($data['min_price']) ? (float) $data['min_price'] : null;
+        /** @var float|null $maxPrice */
+        $maxPrice = isset($data['max_price']) ? (float) $data['max_price'] : null;
+        /** @var string $sort */
+        $sort = isset($data['sort']) && is_string($data['sort']) ? $data['sort'] : 'created_at_desc';
+        /** @var int $perPage */
+        $perPage = (int) ($data['per_page'] ?? 12);
+        /** @var int $page */
+        $page = (int) ($data['page'] ?? 1);
 
         return new ProductSearchQueryDto(
-            query: (string) $this->validated('query', ''),
+            query: $query,
             categoryIds: $categoryIds,
-            minPrice: $this->has('min_price') ? (float) $this->validated('min_price') : null,
-            maxPrice: $this->has('max_price') ? (float) $this->validated('max_price') : null,
-            sort: (string) $this->validated('sort', 'created_at_desc'),
-            perPage: (int) $this->validated('per_page', 12),
-            page: (int) $this->validated('page', 1),
+            minPrice: $minPrice,
+            maxPrice: $maxPrice,
+            sort: $sort,
+            perPage: $perPage,
+            page: $page,
         );
     }
 }

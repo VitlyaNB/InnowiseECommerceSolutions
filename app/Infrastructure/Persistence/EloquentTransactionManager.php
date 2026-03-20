@@ -3,6 +3,7 @@
 namespace App\Infrastructure\Persistence;
 
 use App\Infrastructure\Interfaces\TransactionManagerInterface;
+use Closure;
 use Illuminate\Support\Facades\DB;
 
 final readonly class EloquentTransactionManager implements TransactionManagerInterface
@@ -24,6 +25,6 @@ final readonly class EloquentTransactionManager implements TransactionManagerInt
 
     public function transaction(callable $callback): mixed
     {
-        return DB::transaction($callback);
+        return DB::transaction(Closure::fromCallable($callback));
     }
 }

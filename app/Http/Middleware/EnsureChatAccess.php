@@ -15,24 +15,29 @@ class EnsureChatAccess
     ) {}
 
     /**
-     * @param Closure(Request): Response $next
+     * @param  Closure(Request): Response  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
         /** @var User|null $user */
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             abort(401);
         }
 
-        $chatId = (int) $request->route('chat');
-        if (!$this->chatService->exists($chatId)) {
+        $routeChat = $request->route('chat');
+        $chatId = is_numeric($routeChat) ? (int) $routeChat : 0;
+        if ($chatId === 0) {
+            abort(404);
+        }
+
+        if (! $this->chatService->exists($chatId)) {
             abort(404);
         }
 
         $isAdmin = $user->role === 'admin';
         $hasAccess = $this->chatService->hasAccess($chatId, $user->id, $isAdmin);
-        if (!$hasAccess) {
+        if (! $hasAccess) {
             abort(403);
         }
 

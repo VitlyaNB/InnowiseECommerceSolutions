@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Api;
 
-use App\Models\User;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -20,7 +20,7 @@ class ProductViewTrackingTest extends TestCase
 
         $this->assertDatabaseHas('product_views', [
             'user_id' => $user->id,
-            'product_id' => $product->id
+            'product_id' => $product->id,
         ]);
     }
 
@@ -32,7 +32,7 @@ class ProductViewTrackingTest extends TestCase
 
         $this->assertDatabaseHas('product_views', [
             'product_id' => $product->id,
-            'user_id' => null
+            'user_id' => null,
         ]);
     }
 }

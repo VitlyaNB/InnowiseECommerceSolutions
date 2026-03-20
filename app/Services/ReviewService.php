@@ -20,7 +20,7 @@ final readonly class ReviewService
     public function createReview(int $userId, ReviewDto $data): ReviewDto
     {
         if ($data->parentId === null) {
-            if (!$this->reviewRepository->canReview($userId, $data->productId)) {
+            if (! $this->reviewRepository->canReview($userId, $data->productId)) {
                 throw new RuntimeException('Вы можете оставлять отзывы только на купленные товары.');
             }
 

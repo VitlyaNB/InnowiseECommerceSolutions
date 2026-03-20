@@ -19,8 +19,11 @@ final class StoreMessageController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
+        /** @var array<string, string> $data */
+        $data = $request->validated();
 
-        $message = $this->chatService->sendMessage($chat, $user->id, (string) $request->validated('message'));
+        $message = $this->chatService->sendMessage($chat, $user->id, $data['message']);
+
         broadcast(new MessageSent($message))->toOthers();
 
         return response()->json($message->toArray(), 201);

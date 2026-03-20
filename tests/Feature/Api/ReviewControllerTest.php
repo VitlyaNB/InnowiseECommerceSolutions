@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Api;
 
-use App\Models\User;
-use App\Models\Product;
-use App\Models\Review;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Product;
+use App\Models\Review;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -24,20 +24,20 @@ class ReviewControllerTest extends TestCase
             'order_id' => $order->id,
             'product_id' => $product->id,
             'quantity' => 1,
-            'price' => $product->price
+            'price' => $product->price,
         ]);
 
-        $response = $this->actingAs($user)->postJson("/api/reviews", [
+        $response = $this->actingAs($user)->postJson('/api/reviews', [
             'product_id' => $product->id,
             'rating' => 5,
-            'comment' => 'Отличный товар!'
+            'comment' => 'Отличный товар!',
         ]);
 
         $response->assertStatus(201);
         $this->assertDatabaseHas('reviews', [
             'product_id' => $product->id,
             'user_id' => $user->id,
-            'rating' => 5
+            'rating' => 5,
         ]);
     }
 
@@ -50,7 +50,7 @@ class ReviewControllerTest extends TestCase
             'user_id' => User::factory()->create()->id,
             'product_id' => $product->id,
             'rating' => 4,
-            'comment' => 'Test Review'
+            'comment' => 'Test Review',
         ]);
 
         $response = $this->actingAs($user)->postJson("/api/reviews/{$review->id}/like");

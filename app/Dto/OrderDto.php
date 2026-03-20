@@ -5,7 +5,7 @@ namespace App\Dto;
 final readonly class OrderDto extends BaseDto
 {
     /**
-     * @param array<int, int> $selectedItemIds
+     * @param  array<int, int>  $selectedItemIds
      */
     public function __construct(
         public array $selectedItemIds = [],

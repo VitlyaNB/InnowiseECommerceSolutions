@@ -25,9 +25,12 @@ class LoginRequest extends FormRequest
 
     public function toDto(): LoginDto
     {
+        /** @var array<string, string> $data */
+        $data = $this->validated();
+
         return new LoginDto(
-            email: $this->validated('email'),
-            password: $this->validated('password'),
+            email: $data['email'],
+            password: $data['password'],
         );
     }
 }

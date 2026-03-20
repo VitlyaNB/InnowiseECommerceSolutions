@@ -4,18 +4,31 @@ namespace Tests\Unit\Services;
 
 use App\Dto\RegisterDto;
 use App\Dto\UserDto;
+use App\Repositories\Interfaces\CartItemRepositoryInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Services\AuthService;
 use Mockery;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 class AuthServiceTest extends TestCase
 {
+    private UserRepositoryInterface|MockInterface $userRepository;
+
+    private CartItemRepositoryInterface|MockInterface $cartRepository;
+
+    private AuthService $authService;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->userRepository = Mockery::mock(UserRepositoryInterface::class);
+        $this->cartRepository = Mockery::mock(CartItemRepositoryInterface::class);
+        $this->authService = new AuthService($this->userRepository, $this->cartRepository);
+    }
+
     public function test_it_registers_a_new_user(): void
     {
-        $userRepository = Mockery::mock(UserRepositoryInterface::class);
-        $authService = new AuthService($userRepository);
-
         $dto = new RegisterDto(
             name: 'Test User',
             email: 'test@example.com',
@@ -30,17 +43,17 @@ class AuthServiceTest extends TestCase
             balance: 0.0,
         );
 
-        $userRepository->shouldReceive('create')
+        $this->userRepository->shouldReceive('create')
             ->once()
             ->with($dto)
             ->andReturn($userDto);
 
-        $userRepository->shouldReceive('createToken')
+        $this->userRepository->shouldReceive('createToken')
             ->once()
             ->with(1, 'auth_token')
             ->andReturn('test-token');
 
-        $result = $authService->register($dto);
+        $result = $this->authService->register($dto);
 
         $this->assertSame(1, $result->user->id);
         $this->assertSame('test-token', $result->token);

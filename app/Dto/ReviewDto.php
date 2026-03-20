@@ -5,7 +5,7 @@ namespace App\Dto;
 final readonly class ReviewDto extends BaseDto
 {
     /**
-     * @param array<int, ReviewDto> $replies
+     * @param  array<int, ReviewDto>  $replies
      */
     public function __construct(
         public int $id = 0,

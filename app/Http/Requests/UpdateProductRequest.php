@@ -32,18 +32,36 @@ class UpdateProductRequest extends FormRequest
 
     public function toDto(): ProductDto
     {
-        /** @var array<string, mixed> $images */
+        /** @var array<string, int|float|string|null> $data */
+        $data = $this->validated();
+
+        /** @var string|null $name */
+        $name = $data['name'] ?? null;
+        /** @var string|null $description */
+        $description = $data['description'] ?? null;
+        /** @var float|null $price */
+        $price = isset($data['price']) ? (float) $data['price'] : null;
+        /** @var float|null $oldPrice */
+        $oldPrice = isset($data['old_price']) ? (float) $data['old_price'] : null;
+        /** @var int|null $quantity */
+        $quantity = isset($data['quantity']) ? (int) $data['quantity'] : null;
+        /** @var int|null $categoryId */
+        $categoryId = isset($data['category_id']) ? (int) $data['category_id'] : null;
+        /** @var array<int|string, mixed> $images */
         $images = $this->file('images') ?? [];
-        $validImages = array_filter($images, fn($img) => $img instanceof UploadedFile);
+        $validImages = array_filter($images, static fn ($img) => $img instanceof UploadedFile);
+
+        /** @var array<int, UploadedFile> $typedImages */
+        $typedImages = array_values($validImages);
 
         return new ProductDto(
-            name: $this->validated('name'),
-            description: $this->validated('description'),
-            price: $this->has('price') ? (float) $this->validated('price') : null,
-            oldPrice: $this->has('old_price') ? (float) $this->validated('old_price') : null,
-            quantity: $this->has('quantity') ? (int) $this->validated('quantity') : null,
-            categoryId: $this->has('category_id') ? (int) $this->validated('category_id') : null,
-            images: array_values($validImages),
+            name: $name ?? '',
+            description: $description,
+            price: $price,
+            oldPrice: $oldPrice,
+            quantity: $quantity,
+            categoryId: $categoryId ?? 0,
+            images: $typedImages,
         );
     }
 }

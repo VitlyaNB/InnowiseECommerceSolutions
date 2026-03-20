@@ -8,9 +8,10 @@ use App\Http\Support\CartSessionResolver;
 use App\Services\CartService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use OpenApi\Attributes as OA;
 
-class IndexController extends Controller
+final class IndexController extends Controller
 {
     public function __construct(
         private readonly CartService $cartService,
@@ -56,13 +57,14 @@ class IndexController extends Controller
     )]
     public function __invoke(Request $request): JsonResponse
     {
-        $userId = $request->user()?->id;
-        $sessionId = $userId ? null : $this->sessionService->resolveSessionId($request);
+        $userIdRaw = Auth::id();
+        $userId = $userIdRaw !== null ? (int) $userIdRaw : null;
+        $sessionId = $userId !== null ? null : $this->sessionService->resolveSessionId($request);
 
         $cartDto = $this->cartService->getCart($userId, $sessionId);
 
         return response()->json([
-            'items'  => CartResource::collection($cartDto->items)->resolve(),
+            'items' => CartResource::collection($cartDto->items)->resolve(),
             'totals' => $cartDto->totals->toArray(),
         ]);
     }

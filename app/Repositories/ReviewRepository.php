@@ -33,7 +33,7 @@ final class ReviewRepository implements ReviewRepositoryInterface
     /** @return array<int, ReviewDto> */
     public function getProductReviews(int $productId, ?int $viewerUserId = null): array
     {
-        $reviews = Review::query()
+        $collection = Review::query()
             ->withCount('likes')
             ->with(['replies' => function ($query) {
                 $query->withCount('likes')->with('user');
@@ -43,9 +43,14 @@ final class ReviewRepository implements ReviewRepositoryInterface
             ->orderByDesc('created_at')
             ->get();
 
-        return $reviews
-            ->map(fn (Review $review): ReviewDto => $this->mapToDto($review, $viewerUserId))
-            ->all();
+        /** @var array<int, ReviewDto> $result */
+        $result = [];
+        foreach ($collection as $review) {
+            /** @var Review $review */
+            $result[] = $this->mapToDto($review, $viewerUserId);
+        }
+
+        return $result;
     }
 
     public function hasLike(int $userId, int $reviewId): bool
@@ -89,18 +94,20 @@ final class ReviewRepository implements ReviewRepositoryInterface
     private function mapToDto(Review $review, ?int $viewerUserId = null): ReviewDto
     {
         $replies = $review->relationLoaded('replies')
-            ? $review->replies->map(fn (Review $reply): ReviewDto => new ReviewDto(
-                id: $reply->id,
-                userId: $reply->user_id,
-                productId: $reply->product_id,
-                parentId: $reply->parent_id,
-                rating: $reply->rating,
-                comment: $reply->comment,
-                likesCount: (int) ($reply->likes_count ?? $reply->likes()->count()),
-                isLiked: $viewerUserId !== null
-                    ? $reply->likes()->where('user_id', $viewerUserId)->exists()
-                    : false,
-            ))->all()
+            ? $review->replies->map(function (Review $reply) use ($viewerUserId): ReviewDto {
+                return new ReviewDto(
+                    id: $reply->id,
+                    userId: $reply->user_id,
+                    productId: $reply->product_id,
+                    parentId: $reply->parent_id,
+                    rating: $reply->rating,
+                    comment: $reply->comment,
+                    likesCount: (int) ($reply->likes_count ?? $reply->likes()->count()),
+                    isLiked: $viewerUserId !== null
+                        ? $reply->likes()->where('user_id', $viewerUserId)->exists()
+                        : false,
+                );
+            })->all()
             : [];
 
         return new ReviewDto(

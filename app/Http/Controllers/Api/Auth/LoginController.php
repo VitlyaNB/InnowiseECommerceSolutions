@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Resources\UserResource;
+use App\Http\Support\CartSessionResolver;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
@@ -12,7 +13,8 @@ use OpenApi\Attributes as OA;
 class LoginController extends Controller
 {
     public function __construct(
-        private readonly AuthService $authService
+        private readonly AuthService $authService,
+        private readonly CartSessionResolver $sessionResolver
     ) {}
 
     #[OA\Post(
@@ -45,11 +47,12 @@ class LoginController extends Controller
     )]
     public function __invoke(LoginRequest $request): JsonResponse
     {
-        $result = $this->authService->login($request->toDto());
-        
+        $sessionId = $this->sessionResolver->resolveSessionId($request);
+        $result = $this->authService->login($request->toDto(), $sessionId);
+
         return response()->json([
             'user' => new UserResource($result->user),
-            'token' => $result->token
+            'token' => $result->token,
         ]);
     }
 }

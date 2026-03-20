@@ -3,9 +3,9 @@
 namespace App\Repositories\Interfaces;
 
 use App\Dto\PaginatedResultDto;
+use App\Dto\ProductDto;
 use App\Dto\ProductFiltersDto;
 use App\Dto\ProductIdsQueryDto;
-use App\Dto\ProductDto;
 use App\Dto\RandomProductsQueryDto;
 
 interface ProductRepositoryInterface
@@ -22,8 +22,6 @@ interface ProductRepositoryInterface
     public function update(int $id, ProductDto $data): bool;
 
     public function delete(int $id): bool;
-
-    public function incrementViewCount(int $id): void;
 
     public function saveImage(int $productId, string $imagePath): void;
 

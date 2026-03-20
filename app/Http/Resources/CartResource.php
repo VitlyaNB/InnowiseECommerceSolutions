@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Dto\CartItemDto;
 use App\Models\CartItem;
+use App\Services\Interfaces\FileServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use OpenApi\Attributes as OA;
@@ -29,19 +30,31 @@ class CartResource extends JsonResource
     public function toArray(Request $request): array
     {
         if ($this->resource instanceof CartItemDto) {
+            $productData = $this->resource->product?->toArray() ?? [];
+            if ($this->resource->product !== null && ! empty($this->resource->product->images)) {
+                $fileService = app(FileServiceInterface::class);
+                $imageUrls = [];
+                foreach ($this->resource->product->images as $path) {
+                    if (is_string($path)) {
+                        $imageUrls[] = ['id' => null, 'url' => $fileService->getAbsoluteUrl($path)];
+                    }
+                }
+                $productData['images'] = $imageUrls;
+            }
+
             return [
                 'id' => $this->resource->id,
                 'product_id' => $this->resource->productId,
                 'quantity' => $this->resource->quantity,
-                'product' => $this->resource->product?->toArray(),
+                'product' => $productData,
             ];
         }
 
         return [
-            'id'         => $this->id,
+            'id' => $this->id,
             'product_id' => $this->product_id,
-            'quantity'   => $this->quantity,
-            'product'    => new ProductResource($this->whenLoaded('product')),
+            'quantity' => $this->quantity,
+            'product' => new ProductResource($this->whenLoaded('product')),
         ];
     }
 }

@@ -13,41 +13,58 @@ class CartItemRepository implements CartItemRepositoryInterface
     /** @return array<int, CartItemDto> */
     public function getByUser(int $userId): array
     {
-        return CartItem::query()
+        $collection = CartItem::query()
             ->with(['product.images'])
             ->where('user_id', $userId)
-            ->get()
-            ->map(fn(CartItem $item) => $this->mapToDto($item))
-            ->toArray();
+            ->get();
+
+        /** @var array<int, CartItemDto> $result */
+        $result = [];
+        foreach ($collection as $item) {
+            /** @var CartItem $item */
+            $result[] = $this->mapToDto($item);
+        }
+
+        return $result;
     }
 
     /** @return array<int, CartItemDto> */
     public function getBySession(string $sessionId): array
     {
-        return CartItem::query()
+        $collection = CartItem::query()
             ->with(['product.images'])
             ->where('session_id', $sessionId)
-            ->get()
-            ->map(fn(CartItem $item) => $this->mapToDto($item))
-            ->toArray();
+            ->get();
+
+        /** @var array<int, CartItemDto> $result */
+        $result = [];
+        foreach ($collection as $item) {
+            /** @var CartItem $item */
+            $result[] = $this->mapToDto($item);
+        }
+
+        return $result;
     }
 
-    /** 
-     * @return array<int, CartItemDto> 
-     */
+    /** @return array<int, CartItemDto> */
     public function getSelectedByUser(int $userId, SelectedIdsDto $ids): array
     {
-        return CartItem::query()
+        $collection = CartItem::query()
             ->with(['product.images'])
             ->where('user_id', $userId)
             ->whereIn('id', $ids->ids)
-            ->get()
-            ->map(fn(CartItem $item) => $this->mapToDto($item))
-            ->toArray();
+            ->get();
+
+        /** @var array<int, CartItemDto> $result */
+        $result = [];
+        foreach ($collection as $item) {
+            /** @var CartItem $item */
+            $result[] = $this->mapToDto($item);
+        }
+
+        return $result;
     }
 
-    /** 
-     */
     public function deleteSelectedByUser(int $userId, SelectedIdsDto $ids): bool
     {
         return (bool) CartItem::query()
@@ -60,6 +77,7 @@ class CartItemRepository implements CartItemRepositoryInterface
     {
         /** @var CartItem|null $item */
         $item = CartItem::query()->with('product.images')->find($id);
+
         return $item ? $this->mapToDto($item) : null;
     }
 
@@ -70,6 +88,7 @@ class CartItemRepository implements CartItemRepositoryInterface
             ->where('user_id', $userId)
             ->where('product_id', $productId)
             ->first();
+
         return $item ? $this->mapToDto($item) : null;
     }
 
@@ -80,6 +99,7 @@ class CartItemRepository implements CartItemRepositoryInterface
             ->where('session_id', $sessionId)
             ->where('product_id', $productId)
             ->first();
+
         return $item ? $this->mapToDto($item) : null;
     }
 
@@ -100,7 +120,7 @@ class CartItemRepository implements CartItemRepositoryInterface
     {
         /** @var CartItem|null $cartItem */
         $cartItem = CartItem::query()->find($id);
-        if (!$cartItem) {
+        if (! $cartItem) {
             return false;
         }
 
@@ -111,7 +131,7 @@ class CartItemRepository implements CartItemRepositoryInterface
     {
         /** @var CartItem|null $cartItem */
         $cartItem = CartItem::query()->find($id);
-        if (!$cartItem) {
+        if (! $cartItem) {
             return false;
         }
 
@@ -142,11 +162,14 @@ class CartItemRepository implements CartItemRepositoryInterface
     {
         $productDto = null;
         if ($item->product) {
+            /** @var array<int, string> $imagePaths */
+            $imagePaths = $item->product->images ? $item->product->images->pluck('image_path')->all() : [];
             $productDto = new ProductDto(
                 id: $item->product->id,
                 name: $item->product->name,
                 price: (float) $item->product->price,
                 quantity: (int) $item->product->quantity,
+                images: $imagePaths,
             );
         }
 

@@ -3,12 +3,12 @@
 namespace App\Observers;
 
 use App\Models\Category;
-use App\Services\FileService;
+use App\Services\Interfaces\FileServiceInterface;
 
 class CategoryObserver
 {
     public function __construct(
-        private readonly FileService $fileService
+        private readonly FileServiceInterface $fileService
     ) {}
 
     public function deleted(Category $category): void

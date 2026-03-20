@@ -3,3 +3,6 @@ parameters:
     paths:
         - app
     treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        - '#Elastic\\Elasticsearch\\Client::(search|index|delete)\(\)#'

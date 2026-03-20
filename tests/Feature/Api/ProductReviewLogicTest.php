@@ -2,11 +2,10 @@
 
 namespace Tests\Feature\Api;
 
-use App\Models\User;
-use App\Models\Product;
-use App\Models\Review;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Product;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -26,20 +25,20 @@ class ProductReviewLogicTest extends TestCase
                 'order_id' => $order->id,
                 'product_id' => $product->id,
                 'quantity' => 1,
-                'price' => $product->price
+                'price' => $product->price,
             ]);
         }
 
-        $this->actingAs($user1)->postJson("/api/reviews", [
+        $this->actingAs($user1)->postJson('/api/reviews', [
             'product_id' => $product->id,
             'rating' => 5,
-            'comment' => 'First'
+            'comment' => 'First',
         ])->assertStatus(201);
 
-        $this->actingAs($user2)->postJson("/api/reviews", [
+        $this->actingAs($user2)->postJson('/api/reviews', [
             'product_id' => $product->id,
             'rating' => 1,
-            'comment' => 'Second'
+            'comment' => 'Second',
         ])->assertStatus(201);
 
         $avgRating = $product->reviews()->avg('rating');

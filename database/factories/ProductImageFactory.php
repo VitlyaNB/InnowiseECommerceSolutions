@@ -11,7 +11,7 @@ class ProductImageFactory extends Factory
     {
         return [
             'product_id' => Product::factory(),
-            'image_path' => 'products/' . $this->faker->word() . '.jpg',
+            'image_path' => 'products/'.$this->faker->word().'.jpg',
         ];
     }
 }

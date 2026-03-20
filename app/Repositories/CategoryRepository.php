@@ -11,10 +11,11 @@ class CategoryRepository implements CategoryRepositoryInterface
     /** @return array<int, CategoryDto> */
     public function getAll(): array
     {
+        /** @var array<int, CategoryDto> */
         return Category::query()
             ->get()
-            ->map(fn(Category $category) => $this->mapToDto($category))
-            ->toArray();
+            ->map(fn (Category $category): CategoryDto => $this->mapToDto($category))
+            ->all();
     }
 
     public function findById(int $id): ?CategoryDto
@@ -28,7 +29,7 @@ class CategoryRepository implements CategoryRepositoryInterface
     public function create(CategoryDto $data): CategoryDto
     {
         /** @var Category $category */
-        $category = Category::create([
+        $category = Category::query()->create([
             'name' => $data->name,
             'image_path' => $data->imagePath,
         ]);
@@ -41,14 +42,14 @@ class CategoryRepository implements CategoryRepositoryInterface
         /** @var Category|null $category */
         $category = Category::query()->find($id);
 
-        if (!$category) {
+        if (! $category) {
             return false;
         }
 
         $updateData = array_filter([
             'name' => $data->name,
             'image_path' => $data->imagePath,
-        ], fn($value) => !is_null($value));
+        ], fn ($value) => ! is_null($value));
 
         return $category->update($updateData);
     }
@@ -58,7 +59,7 @@ class CategoryRepository implements CategoryRepositoryInterface
         /** @var Category|null $category */
         $category = Category::query()->find($id);
 
-        if (!$category) {
+        if (! $category) {
             return false;
         }
 

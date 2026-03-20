@@ -20,20 +20,22 @@ final class SendOrderConfirmationJob implements ShouldQueue
     use SerializesModels;
 
     public function __construct(
-        public readonly int $orderId
+        public readonly int $orderId,
     ) {}
 
-    public function handle(OrderRepositoryInterface $orderRepository, UserRepositoryInterface $userRepository): void
-    {
+    public function handle(
+        OrderRepositoryInterface $orderRepository,
+        UserRepositoryInterface $userRepository,
+    ): void {
         $order = $orderRepository->findByIdWithItems($this->orderId);
 
-        if (!$order) {
+        if (! $order) {
             return;
         }
 
         $user = $userRepository->findById($order->userId);
 
-        if (!$user) {
+        if (! $user) {
             return;
         }
 

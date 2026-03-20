@@ -7,7 +7,7 @@ use Illuminate\Http\UploadedFile;
 final readonly class ProductDto extends BaseDto
 {
     /**
-     * @param array<int, UploadedFile> $images
+     * @param  array<int, string>|array<int, UploadedFile>  $images
      */
     public function __construct(
         public ?int $id = null,
@@ -26,7 +26,7 @@ final readonly class ProductDto extends BaseDto
      */
     public function toArray(): array
     {
-        return array_filter([
+        $data = [
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
@@ -35,6 +35,12 @@ final readonly class ProductDto extends BaseDto
             'quantity' => $this->quantity,
             'category_id' => $this->categoryId,
             'is_active' => $this->isActive,
-        ], fn($value) => !is_null($value));
+        ];
+
+        if ($this->images !== [] && $this->id !== null) {
+            $data['images'] = $this->images;
+        }
+
+        return array_filter($data, fn ($value) => ! is_null($value));
     }
 }

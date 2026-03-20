@@ -8,7 +8,7 @@ use App\Services\ProductService;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use OpenApi\Attributes as OA;
 
-class CategoryProductsController extends Controller
+final class CategoryProductsController extends Controller
 {
     public function __construct(
         private readonly ProductService $productService
@@ -42,6 +42,7 @@ class CategoryProductsController extends Controller
     public function __invoke(int $categoryId): AnonymousResourceCollection
     {
         $products = $this->productService->getProductsByCategory($categoryId);
+
         return ProductResource::collection($products);
     }
 }

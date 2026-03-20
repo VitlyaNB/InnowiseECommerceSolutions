@@ -2,18 +2,21 @@
 
 namespace App\Jobs;
 
-use App\Services\ExternalCategorySyncService;
+use App\Services\Interfaces\ExternalCategorySyncServiceInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class SyncExternalCategoriesJob implements ShouldQueue
+final class SyncExternalCategoriesJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
-    public function handle(ExternalCategorySyncService $service): void
+    public function handle(ExternalCategorySyncServiceInterface $service): void
     {
         $service->sync();
     }

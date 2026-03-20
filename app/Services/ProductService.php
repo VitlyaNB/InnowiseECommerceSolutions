@@ -3,25 +3,26 @@
 namespace App\Services;
 
 use App\Dto\PaginatedResultDto;
+use App\Dto\ProductDto;
 use App\Dto\ProductFiltersDto;
 use App\Dto\ProductListQueryDto;
-use App\Dto\ProductDto;
 use App\Dto\ProductSearchQueryDto;
 use App\Dto\ProductSearchResultDto;
 use App\Dto\UploadImageDto;
 use App\Infrastructure\Interfaces\ElasticsearchClientInterface;
 use App\Infrastructure\Interfaces\TransactionManagerInterface;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
+use App\Services\Interfaces\FileServiceInterface;
+use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 final readonly class ProductService
 {
     public function __construct(
         private ProductRepositoryInterface $productRepository,
-        private FileService $fileService,
+        private FileServiceInterface $fileService,
         private TransactionManagerInterface $transactionManager,
         private ElasticsearchClientInterface $elasticsearch
     ) {}
@@ -42,42 +43,52 @@ final readonly class ProductService
         return $this->productRepository->findById($id);
     }
 
-    public function createProduct(ProductDto $dto): ProductDto
+    public function createProduct(ProductDto $dto): ?ProductDto
     {
-        return $this->transactionManager->transaction(function () use ($dto) {
+        /** @var ProductDto|null $result */
+        $result = $this->transactionManager->transaction(function () use ($dto): ProductDto|null {
             $productDto = $this->productRepository->create($dto);
+
+            if ($productDto->id === null) {
+                return null;
+            }
 
             $this->handleImages($productDto->id, $dto->images);
 
             return $this->productRepository->findById($productDto->id);
         });
+
+        return $result;
     }
 
-    public function updateProduct(int $id, ProductDto $dto): ProductDto
+    public function updateProduct(int $id, ProductDto $dto): ?ProductDto
     {
-        return $this->transactionManager->transaction(function () use ($id, $dto) {
+        /** @var ProductDto|null $result */
+        $result = $this->transactionManager->transaction(function () use ($id, $dto): ProductDto|null {
             $product = $this->productRepository->findById($id);
 
-            if (!$product) {
+            if (! $product) {
                 throw new ModelNotFoundException("Product with ID {$id} not found.");
             }
 
             $this->productRepository->update($id, $dto);
 
-            if (!empty($dto->images)) {
+            if (! empty($dto->images)) {
                 $this->productRepository->deleteImages($id);
                 $this->handleImages($id, $dto->images);
             }
 
             return $this->productRepository->findById($id);
         });
+
+        return $result;
     }
 
     public function deleteProduct(int $id): void
     {
         $product = $this->productRepository->findById($id);
 
-        if (!$product) {
+        if (! $product) {
             throw new ModelNotFoundException("Product with ID {$id} not found.");
         }
 
@@ -97,47 +108,51 @@ final readonly class ProductService
 
         $params = [
             'index' => 'products_index',
-            'body'  => [
-                'from'  => ($page - 1) * $perPage,
-                'size'  => $perPage,
+            'body' => [
+                'from' => ($page - 1) * $perPage,
+                'size' => $perPage,
                 'query' => [
                     'bool' => [
-                        'must'   => [],
+                        'must' => [],
                         'filter' => [
-                            ['term' => ['is_active' => true]]
-                        ]
-                    ]
-                ],
-                'aggs'  => [
-                    'categories' => [
-                        'terms' => ['field' => 'category_id', 'size' => 50]
+                            ['term' => ['is_active' => true]],
+                        ],
                     ],
-                    'min_price'  => ['min' => ['field' => 'price']],
-                    'max_price'  => ['max' => ['field' => 'price']]
-                ]
-            ]
+                ],
+                'aggs' => [
+                    'categories' => [
+                        'terms' => ['field' => 'category_id', 'size' => 50],
+                    ],
+                    'min_price' => ['min' => ['field' => 'price']],
+                    'max_price' => ['max' => ['field' => 'price']],
+                ],
+            ],
         ];
 
-        if (!empty($query)) {
+        if (! empty($query)) {
             $params['body']['query']['bool']['must'][] = [
                 'multi_match' => [
-                    'query'     => $query,
-                    'fields'    => ['name^3', 'description', 'category_name'],
-                    'fuzziness' => 'AUTO'
-                ]
+                    'query' => $query,
+                    'fields' => ['name^3', 'description', 'category_name'],
+                    'fuzziness' => 'AUTO',
+                ],
             ];
         }
 
-        if (!empty($categoryIds)) {
+        if (! empty($categoryIds)) {
             $params['body']['query']['bool']['filter'][] = [
-                'terms' => ['category_id' => $categoryIds]
+                'terms' => ['category_id' => $categoryIds],
             ];
         }
 
         if ($minPrice !== null || $maxPrice !== null) {
             $range = ['price' => []];
-            if ($minPrice !== null) $range['price']['gte'] = $minPrice;
-            if ($maxPrice !== null) $range['price']['lte'] = $maxPrice;
+            if ($minPrice !== null) {
+                $range['price']['gte'] = $minPrice;
+            }
+            if ($maxPrice !== null) {
+                $range['price']['lte'] = $maxPrice;
+            }
             $params['body']['query']['bool']['filter'][] = ['range' => $range];
         }
 
@@ -156,46 +171,88 @@ final readonly class ProductService
         }
 
         try {
+            /** @var array<string, mixed> $results */
             $results = $this->elasticsearch->search($params);
-            
-            $hits = $results['hits'];
-            $hitItems = $hits['hits'];
-            $ids = array_map(fn ($hit) => (int) $hit['_id'], $hitItems);
-            
-            $products = [];
-            if (!empty($ids)) {
-                $fetchedProducts = [];
-                foreach ($ids as $id) {
-                    $p = $this->productRepository->findById($id);
-                    if ($p) $fetchedProducts[] = $p;
-                }
-                $products = $fetchedProducts;
+
+            /** @var array<string, mixed> $hits */
+            $hits = $results['hits'] ?? [];
+            /** @var array<int, array<string, mixed>> $hitItems */
+            $hitItems = $hits['hits'] ?? [];
+            /** @var array<int, int> $ids */
+            $ids = [];
+            foreach ($hitItems as $hit) {
+                $id = $hit['_id'] ?? null;
+                $ids[] = is_numeric($id) ? (int) $id : 0;
             }
 
+            /** @var array<int, ProductDto> $products */
+            $products = [];
+            if (! empty($ids)) {
+                foreach ($ids as $id) {
+                    $p = $this->productRepository->findById($id);
+                    if ($p) {
+                        $products[] = $p;
+                    }
+                }
+            }
+
+            /** @var array<string, mixed> $aggregations */
             $aggregations = $results['aggregations'] ?? [];
-            $total = $hits['total']['value'];
+            /** @var int $total */
+            $total = 0;
+            $hitsTotal = $hits['total'] ?? null;
+            if (is_array($hitsTotal) && isset($hitsTotal['value']) && is_numeric($hitsTotal['value'])) {
+                $total = (int) $hitsTotal['value'];
+            }
+
+            /** @var array<int, array<string, int>> $categoryBuckets */
+            $categoryBuckets = [];
+            $categoriesAgg = $aggregations['categories'] ?? null;
+            if (is_array($categoriesAgg) && isset($categoriesAgg['buckets']) && is_array($categoriesAgg['buckets'])) {
+                foreach ($categoriesAgg['buckets'] as $bucket) {
+                    if (is_array($bucket)) {
+                        $bucketKey = $bucket['key'] ?? null;
+                        $bucketDocCount = $bucket['doc_count'] ?? null;
+                        $categoryBuckets[] = [
+                            'id' => is_numeric($bucketKey) ? (int) $bucketKey : 0,
+                            'count' => is_numeric($bucketDocCount) ? (int) $bucketDocCount : 0,
+                        ];
+                    }
+                }
+            }
+
+            /** @var float $minPrice */
+            $minPrice = 0.0;
+            $minPriceAgg = $aggregations['min_price'] ?? null;
+            if (is_array($minPriceAgg) && isset($minPriceAgg['value']) && is_numeric($minPriceAgg['value'])) {
+                $minPrice = (float) $minPriceAgg['value'];
+            }
+
+            /** @var float $maxPrice */
+            $maxPrice = 0.0;
+            $maxPriceAgg = $aggregations['max_price'] ?? null;
+            if (is_array($maxPriceAgg) && isset($maxPriceAgg['value']) && is_numeric($maxPriceAgg['value'])) {
+                $maxPrice = (float) $maxPriceAgg['value'];
+            }
 
             return new ProductSearchResultDto(
                 data: $products,
                 meta: [
-                    'total'        => $total,
-                    'per_page'     => $perPage,
+                    'total' => $total,
+                    'per_page' => $perPage,
                     'current_page' => $page,
-                    'last_page'    => ceil($total / $perPage),
+                    'last_page' => $total > 0 ? (int) ceil($total / $perPage) : 1,
                 ],
                 filters: [
-                    'categories' => collect($aggregations['categories']['buckets'] ?? [])
-                        ->map(fn ($b) => [
-                            'id'    => (int) $b['key'],
-                            'count' => (int) $b['doc_count']
-                        ])->toArray(),
-                    'min_price'  => $aggregations['min_price']['value'],
-                    'max_price'  => $aggregations['max_price']['value'],
+                    'categories' => $categoryBuckets,
+                    'min_price' => $minPrice,
+                    'max_price' => $maxPrice,
                 ]
             );
 
         } catch (Exception $e) {
-            Log::warning("Elasticsearch search failed: " . $e->getMessage());
+            Log::warning('Elasticsearch search failed: '.$e->getMessage());
+
             return $this->fallbackSearch($queryDto);
         }
     }
@@ -209,8 +266,11 @@ final readonly class ProductService
 
         $paginator = $this->productRepository->getAll($filters, $queryDto->perPage);
 
+        /** @var array<int, ProductDto> $productData */
+        $productData = $paginator->items;
+
         return new ProductSearchResultDto(
-            data: $paginator->items,
+            data: $productData,
             meta: [
                 'total' => $paginator->total,
                 'per_page' => $paginator->perPage,
@@ -219,19 +279,24 @@ final readonly class ProductService
             ],
             filters: [
                 'categories' => [],
-                'min_price'  => 0,
-                'max_price'  => 0,
+                'min_price' => 0,
+                'max_price' => 0,
             ]
         );
     }
 
-    /** @param array<int, UploadedFile> $images */
+    /**
+     * @param  array<int, string|UploadedFile>  $images
+     */
     private function handleImages(int $productId, array $images): void
     {
         /** @var string $disk */
         $disk = config('filesystems.media_disk', 's3');
 
         foreach ($images as $file) {
+            if (! $file instanceof UploadedFile) {
+                continue;
+            }
             $dto = new UploadImageDto($file, 'products', $disk);
             $pathOrUrl = $this->fileService->upload($dto);
             $this->productRepository->saveImage($productId, $pathOrUrl);

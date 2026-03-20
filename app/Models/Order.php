@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -13,17 +16,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property float $total_amount
  * @property string $status
  * @property string $shipping_address
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property User $user
- * @property \Illuminate\Database\Eloquent\Collection<int, OrderItem> $items
- * 
+ * @property Collection<int, OrderItem> $items
+ *
  * @method static Order|null find(mixed $id, array<int, string> $columns = ['*'])
  * @method static Order create(array<string, mixed> $attributes = [])
  */
 class Order extends Model
 {
-    /** @use HasFactory<\Illuminate\Database\Eloquent\Factories\Factory> */
+    /** @use HasFactory<Factory> */
     use HasFactory;
 
     protected $fillable = [
@@ -34,7 +37,7 @@ class Order extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -42,7 +45,7 @@ class Order extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<OrderItem, $this>
+     * @return HasMany<OrderItem, $this>
      */
     public function items(): HasMany
     {

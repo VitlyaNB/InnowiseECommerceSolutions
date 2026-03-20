@@ -30,7 +30,7 @@ final class ViewController
     {
         $sessionId = $request->cookie(self::VIEW_SESSION_COOKIE);
 
-        if (!is_string($sessionId) || $sessionId === '') {
+        if (! is_string($sessionId) || $sessionId === '') {
             $sessionId = Str::uuid()->toString();
             Cookie::queue(self::VIEW_SESSION_COOKIE, $sessionId, 60 * 24 * 30, '/', null, false, true, false, 'Lax');
         }

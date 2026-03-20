@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Search, Zap, Sun, Moon, Wallet, Plus, Filter } from 'lucide-react';
+import { ShoppingCart, Search, Zap, Sun, Moon, Wallet, Plus, Filter, X } from 'lucide-react';
+import Fuse from 'fuse.js';
+import api from '../api';
 import UserDropdown from '../contexts/UserDropdown';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,17 +11,67 @@ export default function Navbar() {
     const { theme, toggleTheme } = useTheme();
     const { user } = useAuth();
     const [searchQuery, setSearchQuery] = useState('');
+    const [products, setProducts] = useState([]);
+    const [suggestions, setSuggestions] = useState([]);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [loadingProducts, setLoadingProducts] = useState(false);
     const navigate = useNavigate();
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        setLoadingProducts(true);
+        api.get('/products?per_page=100')
+            .then(res => {
+                const items = res.data.data || res.data || [];
+                setProducts(items);
+            })
+            .catch(() => setProducts([]))
+            .finally(() => setLoadingProducts(false));
+    }, []);
+
+    const fuse = useMemo(() => new Fuse(products, {
+        keys: ['name', 'description'],
+        threshold: 0.4,
+        includeScore: true,
+        minMatchCharLength: 2,
+    }), [products]);
+
+    useEffect(() => {
+        if (searchQuery.trim().length >= 2) {
+            const results = fuse.search(searchQuery).slice(0, 6);
+            setSuggestions(results.map(r => r.item));
+            setShowDropdown(true);
+        } else {
+            setSuggestions([]);
+            setShowDropdown(false);
+        }
+    }, [searchQuery, fuse]);
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setShowDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleSearch = (e) => {
         if (e.key === 'Enter' && searchQuery.trim()) {
             navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
             setSearchQuery('');
+            setShowDropdown(false);
         }
     };
 
+    const handleSuggestionClick = (productId) => {
+        navigate(`/product/${productId}`);
+        setSearchQuery('');
+        setShowDropdown(false);
+    };
+
     return (
-        // ИЗМЕНЕНИЕ: Фон сделан темнее (slate-100 для светлой, slate-950 для темной) и добавлен сильный блюр
         <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-100/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 h-20 flex items-center transition-colors duration-300">
             <div className="max-w-7xl mx-auto px-4 w-full flex justify-between items-center gap-4">
 
@@ -33,8 +85,8 @@ export default function Navbar() {
                     </span>
                 </Link>
 
-                {/* Поиск */}
-                <div className="flex-1 max-w-lg relative mx-4 hidden md:block">
+                {/* Поиск с Fuse.js */}
+                <div className="flex-1 max-w-xl relative mx-4 hidden md:block" ref={dropdownRef}>
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <input
                         type="text"
@@ -43,7 +95,16 @@ export default function Navbar() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyDown={handleSearch}
+                        onFocus={() => searchQuery.length >= 2 && setShowDropdown(true)}
                     />
+                    {searchQuery && (
+                        <button
+                            onClick={() => { setSearchQuery(''); setShowDropdown(false); }}
+                            className="absolute right-24 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full"
+                        >
+                            <X className="w-4 h-4 text-gray-400" />
+                        </button>
+                    )}
                     <button
                         onClick={() => window.dispatchEvent(new CustomEvent('open-filters'))}
                         className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold text-xs hover:scale-105 transition-transform shadow-lg"
@@ -52,6 +113,35 @@ export default function Navbar() {
                         <Filter className="w-4 h-4" />
                         Фильтры
                     </button>
+
+                    {/* Выпадающий список результатов */}
+                    {showDropdown && suggestions.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50">
+                            {suggestions.map(product => (
+                                <button
+                                    key={product.id}
+                                    onClick={() => handleSuggestionClick(product.id)}
+                                    className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
+                                >
+                                    {product.images && product.images[0]?.url ? (
+                                        <img src={product.images[0].url} className="w-10 h-10 rounded-lg object-cover" alt="" />
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-lg bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-xs text-slate-400">IMG</div>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-bold text-sm text-slate-900 dark:text-white truncate">{product.name}</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">{parseFloat(product.price).toFixed(2)} BYN</p>
+                                    </div>
+                                </button>
+                            ))}
+                            <button
+                                onClick={() => { navigate(`/search?q=${encodeURIComponent(searchQuery)}`); setShowDropdown(false); }}
+                                className="w-full p-3 text-center text-sm font-bold text-indigo-600 hover:bg-slate-50 dark:hover:bg-slate-700 border-t border-slate-100 dark:border-slate-700"
+                            >
+                                Все результаты для "{searchQuery}"
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-3 sm:gap-5 flex-shrink-0">

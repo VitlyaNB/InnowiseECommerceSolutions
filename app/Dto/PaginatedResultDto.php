@@ -5,7 +5,7 @@ namespace App\Dto;
 final readonly class PaginatedResultDto extends BaseDto
 {
     /**
-     * @param array<int, mixed> $items
+     * @param  array<int, mixed>  $items
      */
     public function __construct(
         public array $items,

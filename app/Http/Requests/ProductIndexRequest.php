@@ -29,14 +29,28 @@ class ProductIndexRequest extends FormRequest
 
     public function toDto(): ProductListQueryDto
     {
+        /** @var array<string, int|float|bool|null> $data */
+        $data = $this->validated();
+
+        /** @var int|null $categoryId */
+        $categoryId = isset($data['category_id']) ? (int) $data['category_id'] : null;
+        /** @var float|null $priceMin */
+        $priceMin = isset($data['price_min']) ? (float) $data['price_min'] : null;
+        /** @var float|null $priceMax */
+        $priceMax = isset($data['price_max']) ? (float) $data['price_max'] : null;
+        /** @var bool|null $inStock */
+        $inStock = isset($data['in_stock']) ? (bool) $data['in_stock'] : null;
+        /** @var int $perPage */
+        $perPage = (int) ($data['per_page'] ?? 15);
+
         return new ProductListQueryDto(
             filters: new ProductFiltersDto(
-                categoryId: $this->has('category_id') ? (int) $this->validated('category_id') : null,
-                priceMin: $this->has('price_min') ? (float) $this->validated('price_min') : null,
-                priceMax: $this->has('price_max') ? (float) $this->validated('price_max') : null,
-                inStock: $this->has('in_stock') ? (bool) $this->validated('in_stock') : null,
+                categoryId: $categoryId,
+                priceMin: $priceMin,
+                priceMax: $priceMax,
+                inStock: $inStock,
             ),
-            perPage: (int) $this->validated('per_page', 15),
+            perPage: $perPage,
         );
     }
 }

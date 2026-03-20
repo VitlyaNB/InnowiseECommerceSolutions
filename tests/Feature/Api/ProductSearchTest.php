@@ -24,14 +24,14 @@ class ProductSearchTest extends TestCase
             new Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([
                 'hits' => [
                     'total' => ['value' => 1],
-                    'hits' => [['_id' => (string) $product->id]]
+                    'hits' => [['_id' => (string) $product->id]],
                 ],
                 'aggregations' => [
                     'categories' => ['buckets' => []],
                     'min_price' => ['value' => 0],
-                    'max_price' => ['value' => 1000]
-                ]
-            ]))
+                    'max_price' => ['value' => 1000],
+                ],
+            ])),
         ]);
         $client = ClientBuilder::create()
             ->setHttpClient(new GuzzleClient(['handler' => $mockHandler]))
@@ -51,14 +51,14 @@ class ProductSearchTest extends TestCase
             new Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([
                 'hits' => [
                     'total' => ['value' => 0],
-                    'hits' => []
+                    'hits' => [],
                 ],
                 'aggregations' => [
                     'categories' => ['buckets' => []],
                     'min_price' => ['value' => 0],
-                    'max_price' => ['value' => 1000]
-                ]
-            ]))
+                    'max_price' => ['value' => 1000],
+                ],
+            ])),
         ]);
         $client = ClientBuilder::create()
             ->setHttpClient(new GuzzleClient(['handler' => $mockHandler]))

@@ -8,7 +8,7 @@ use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 
-class UpdateController extends Controller
+final class UpdateController extends Controller
 {
     public function __construct(
         private readonly AuthService $authService
@@ -49,6 +49,7 @@ class UpdateController extends Controller
     public function __invoke(UpdateUserRequest $request, int $id): JsonResponse
     {
         $this->authService->updateUser($id, $request->toDto());
+
         return response()->json(['message' => 'User updated successfully']);
     }
 }

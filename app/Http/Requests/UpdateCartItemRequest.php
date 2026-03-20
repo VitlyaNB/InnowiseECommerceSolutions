@@ -24,8 +24,11 @@ class UpdateCartItemRequest extends FormRequest
 
     public function toDto(): UpdateCartItemDto
     {
+        /** @var array<string, int|string> $data */
+        $data = $this->validated();
+
         return new UpdateCartItemDto(
-            quantity: (int) $this->validated('quantity'),
+            quantity: (int) ($data['quantity'] ?? 0),
         );
     }
 }

@@ -23,7 +23,7 @@ class ProductResourceTest extends TestCase
             'name' => 'Test Product',
             'price' => 100.50,
             'category_id' => $category->id,
-            'quantity' => 10
+            'quantity' => 10,
         ]);
 
         $resource = (new ProductResource($product->fresh()))->toArray(request());

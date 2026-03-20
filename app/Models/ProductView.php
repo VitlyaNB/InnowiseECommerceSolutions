@@ -2,23 +2,25 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property int|null $user_id
  * @property string|null $session_id
  * @property int $product_id
- * @property \Illuminate\Support\Carbon $viewed_at
- * 
+ * @property Carbon $viewed_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<ProductView> query()
  * @method static ProductView updateOrCreate(array<string, mixed> $attributes, array<string, mixed> $values = [])
  * @method static \Illuminate\Database\Eloquent\Builder<ProductView> where(string|array<string, mixed>|\Closure $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
  */
 class ProductView extends Model
 {
-    /** @use HasFactory<\Illuminate\Database\Eloquent\Factories\Factory> */
+    /** @use HasFactory<Factory> */
     use HasFactory;
 
     protected $fillable = [

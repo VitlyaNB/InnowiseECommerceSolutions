@@ -20,7 +20,7 @@ final class ShowController extends Controller
         $user = $request->user();
 
         $chatDto = $this->chatService->getChat($chat, $user->id);
-        if (!$chatDto) {
+        if (! $chatDto) {
             return response()->json(['message' => 'Чат не найден'], 404);
         }
 

@@ -8,9 +8,10 @@ use App\Http\Resources\CartResource;
 use App\Http\Support\CartSessionResolver;
 use App\Services\CartService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use OpenApi\Attributes as OA;
 
-class UpdateController extends Controller
+final class UpdateController extends Controller
 {
     public function __construct(
         private readonly CartService $cartService,
@@ -48,13 +49,14 @@ class UpdateController extends Controller
     )]
     public function __invoke(UpdateCartItemRequest $request, int $id): JsonResponse
     {
-        $userId = $request->user()?->id;
-        $sessionId = $userId ? null : $this->sessionService->resolveSessionId($request);
+        $userIdRaw = Auth::id();
+        $userId = $userIdRaw !== null ? (int) $userIdRaw : null;
+        $sessionId = $userId !== null ? null : $this->sessionService->resolveSessionId($request);
 
         $quantity = $request->toDto()->quantity;
         $item = $this->cartService->updateQuantity($id, $quantity, $userId, $sessionId);
 
-        if (!$item) {
+        if (! $item) {
             return response()->json([
                 'message' => $quantity < 1
                     ? 'Item removed from cart'

@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Database\Factories\ProductFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Laravel\Scout\Searchable;
 
 /**
@@ -17,21 +20,14 @@ use Laravel\Scout\Searchable;
  * @property float|null $old_price
  * @property int $quantity
  * @property bool $is_active
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property Category $category
- * @property \Illuminate\Database\Eloquent\Collection<int, ProductImage> $images
- * 
- * @method static \Illuminate\Database\Eloquent\Builder<Product> query()
- * @method static \Illuminate\Database\Eloquent\Builder<Product> where(string|array<string, mixed>|\Closure $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
- * @method static Product create(array<string, mixed> $attributes = [])
- * @method static Product findOrFail(mixed $id, array<int, string> $columns = ['*'])
- * @method static Product find(mixed $id, array<int, string> $columns = ['*'])
- * @method static \Illuminate\Database\Eloquent\Builder<Product> whereIn(string $column, mixed $values, string $boolean = 'and', bool $not = false)
+ * @property Collection<int, ProductImage> $images
  */
 class Product extends Model
 {
-    /** @use HasFactory<\Database\Factories\ProductFactory> */
+    /** @use HasFactory<ProductFactory> */
     use HasFactory, Searchable;
 
     protected $fillable = [
@@ -44,9 +40,6 @@ class Product extends Model
         'is_active',
     ];
 
-    /**
-     * @return string
-     */
     public function searchableAs(): string
     {
         return 'products_index';
@@ -71,7 +64,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<Category, $this>
+     * @return BelongsTo<Category, $this>
      */
     public function category(): BelongsTo
     {
@@ -79,7 +72,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<ProductImage, $this>
+     * @return HasMany<ProductImage, $this>
      */
     public function images(): HasMany
     {
@@ -87,7 +80,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<Review, $this>
+     * @return HasMany<Review, $this>
      */
     public function reviews(): HasMany
     {
@@ -95,7 +88,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<CartItem, $this>
+     * @return HasMany<CartItem, $this>
      */
     public function cartItems(): HasMany
     {
@@ -103,7 +96,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<OrderItem, $this>
+     * @return HasMany<OrderItem, $this>
      */
     public function orderItems(): HasMany
     {

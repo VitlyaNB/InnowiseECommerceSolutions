@@ -25,10 +25,13 @@ class AddToCartRequest extends FormRequest
 
     public function toDto(): CartItemDto
     {
+        /** @var array<string, int|string> $data */
+        $data = $this->validated();
+
         return new CartItemDto(
             id: 0,
-            productId: (int) $this->validated('product_id'),
-            quantity: (int) $this->validated('quantity', 1),
+            productId: (int) $data['product_id'],
+            quantity: (int) ($data['quantity'] ?? 1),
         );
     }
 }

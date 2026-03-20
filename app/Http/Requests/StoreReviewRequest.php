@@ -21,17 +21,29 @@ class StoreReviewRequest extends FormRequest
             'product_id' => 'required|exists:products,id',
             'rating' => 'nullable|integer|min:1|max:5',
             'comment' => 'required|string|max:1000',
-            'parent_id' => 'nullable|exists:reviews,id'
+            'parent_id' => 'nullable|exists:reviews,id',
         ];
     }
 
     public function toDto(): ReviewDto
     {
+        /** @var array<string, int|string|null> $data */
+        $data = $this->validated();
+
+        /** @var int $productId */
+        $productId = (int) ($data['product_id'] ?? 0);
+        /** @var int|null $parentId */
+        $parentId = isset($data['parent_id']) ? (int) $data['parent_id'] : null;
+        /** @var int|null $rating */
+        $rating = isset($data['rating']) ? (int) $data['rating'] : null;
+        /** @var string $comment */
+        $comment = (string) ($data['comment'] ?? '');
+
         return new ReviewDto(
-            productId: (int) $this->validated('product_id'),
-            parentId: $this->has('parent_id') ? (int) $this->validated('parent_id') : null,
-            rating: $this->has('rating') ? (int) $this->validated('rating') : null,
-            comment: (string) $this->validated('comment'),
+            productId: $productId,
+            parentId: $parentId,
+            rating: $rating,
+            comment: $comment,
         );
     }
 }

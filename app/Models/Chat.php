@@ -2,24 +2,27 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property int $user_id
- * @property \Illuminate\Support\Carbon $last_message_at
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
+ * @property Carbon $last_message_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property User $user
- * @property \Illuminate\Database\Eloquent\Collection<int, Message> $messages
+ * @property Collection<int, Message> $messages
  * @property Message|null $last_message
  */
 class Chat extends Model
 {
-    /** @use HasFactory<\Illuminate\Database\Eloquent\Factories\Factory> */
+    /** @use HasFactory<Factory> */
     use HasFactory;
 
     protected $fillable = [
@@ -28,7 +31,7 @@ class Chat extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -36,7 +39,7 @@ class Chat extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<Message, $this>
+     * @return HasMany<Message, $this>
      */
     public function messages(): HasMany
     {

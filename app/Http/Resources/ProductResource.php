@@ -2,8 +2,9 @@
 
 namespace App\Http\Resources;
 
+use App\Dto\ProductDto;
 use App\Models\Product;
-use App\Services\FileService;
+use App\Services\Interfaces\FileServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use OpenApi\Attributes as OA;
@@ -43,20 +44,44 @@ class ProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        if ($this->resource instanceof ProductDto) {
+            $fileService = app(FileServiceInterface::class);
+
+            $imageUrls = [];
+            foreach ($this->resource->images as $image) {
+                if (is_string($image)) {
+                    $imageUrls[] = ['id' => null, 'url' => $fileService->getAbsoluteUrl($image)];
+                }
+            }
+
+            return [
+                'id' => $this->resource->id,
+                'category_id' => $this->resource->categoryId,
+                'category_name' => '',
+                'name' => $this->resource->name,
+                'description' => $this->resource->description,
+                'price' => $this->resource->price,
+                'old_price' => $this->resource->oldPrice,
+                'quantity' => $this->resource->quantity,
+                'images' => $imageUrls,
+                'created_at' => null,
+            ];
+        }
+
         return [
-            'id'            => $this->id,
-            'category_id'   => $this->category_id,
+            'id' => $this->id,
+            'category_id' => $this->category_id,
             'category_name' => $this->category !== null ? $this->category->name : '',
-            'name'          => $this->name,
-            'description'   => $this->description,
-            'price'         => (float) $this->price,
-            'old_price'     => $this->old_price ? (float) $this->old_price : null,
-            'quantity'      => (int) $this->quantity,
-            'images'        => $this->images->map(fn ($img) => [
-                'id'  => $img->id,
-                'url' => app(FileService::class)->getAbsoluteUrl($img->image_path)
-            ]),
-            'created_at'    => $this->created_at,
+            'name' => $this->name,
+            'description' => $this->description,
+            'price' => (float) $this->price,
+            'old_price' => $this->old_price ? (float) $this->old_price : null,
+            'quantity' => (int) $this->quantity,
+            'images' => $this->whenLoaded('images', fn () => $this->images->map(fn ($img) => [
+                'id' => $img->id,
+                'url' => app(FileServiceInterface::class)->getAbsoluteUrl($img->image_path),
+            ])),
+            'created_at' => $this->created_at,
         ];
     }
 }

@@ -10,7 +10,7 @@ use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 
-class TopUpController extends Controller
+final class TopUpController extends Controller
 {
     public function __construct(
         private readonly AuthService $authService
@@ -49,12 +49,12 @@ class TopUpController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
-        
+
         $updatedUserDto = $this->authService->topUp($user->id, $request->toDto()->amount);
 
         return response()->json([
             'message' => 'Баланс пополнен',
-            'user'    => new UserResource($updatedUserDto)
+            'user' => new UserResource($updatedUserDto),
         ]);
     }
 }
