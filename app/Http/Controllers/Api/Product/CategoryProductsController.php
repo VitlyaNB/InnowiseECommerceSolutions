@@ -4,14 +4,14 @@ namespace App\Http\Controllers\Api\Product;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
-use App\Services\ProductService;
+use App\Repositories\ProductRepository;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use OpenApi\Attributes as OA;
 
 final class CategoryProductsController extends Controller
 {
     public function __construct(
-        private readonly ProductService $productService
+        private readonly ProductRepository $productRepository
     ) {}
 
     #[OA\Get(
@@ -41,7 +41,7 @@ final class CategoryProductsController extends Controller
     )]
     public function __invoke(int $categoryId): AnonymousResourceCollection
     {
-        $products = $this->productService->getProductsByCategory($categoryId);
+        $products = $this->productRepository->getByCategory($categoryId);
 
         return ProductResource::collection($products);
     }

@@ -5,15 +5,14 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TopUpRequest;
 use App\Http\Resources\UserResource;
-use App\Models\User;
-use App\Services\AuthService;
+use App\Repositories\UserRepository;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 
 final class TopUpController extends Controller
 {
     public function __construct(
-        private readonly AuthService $authService
+        private readonly UserRepository $userRepository
     ) {}
 
     #[OA\Post(
@@ -47,10 +46,8 @@ final class TopUpController extends Controller
     )]
     public function __invoke(TopUpRequest $request): JsonResponse
     {
-        /** @var User $user */
         $user = $request->user();
-
-        $updatedUserDto = $this->authService->topUp($user->id, $request->toDto()->amount);
+        $updatedUserDto = $this->userRepository->topUp($user->id, $request->toDto()->amount);
 
         return response()->json([
             'message' => 'Баланс пополнен',

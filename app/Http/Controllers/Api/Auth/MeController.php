@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
 final class MeController extends Controller
@@ -28,10 +27,10 @@ final class MeController extends Controller
             new OA\Response(response: 401, description: 'Unauthorized'),
         ]
     )]
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(): JsonResponse
     {
         return response()->json([
-            'user' => new UserResource($request->user()),
+            'user' => new UserResource(auth()->user()),
         ]);
     }
 }

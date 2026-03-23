@@ -45,6 +45,27 @@ final class OrderRepository implements OrderRepositoryInterface
         return $this->mapToDetailsDto($order);
     }
 
+    /**
+     * @return array<int, OrderDetailsDto>
+     */
+    public function getByUserId(int $userId): array
+    {
+        $collection = Order::query()
+            ->with(['items.product.images'])
+            ->where('user_id', $userId)
+            ->latest()
+            ->get();
+
+        /** @var array<int, OrderDetailsDto> $result */
+        $result = [];
+        foreach ($collection as $order) {
+            /** @var Order $order */
+            $result[] = $this->mapToDetailsDto($order);
+        }
+
+        return $result;
+    }
+
     private function mapToDetailsDto(Order $order): OrderDetailsDto
     {
         /** @var array<int, OrderItemDto> $items */

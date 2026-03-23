@@ -13,6 +13,8 @@ interface UserRepositoryInterface
 
     public function findByEmail(string $email): ?UserDto;
 
+    public function findByEmailWithPassword(string $email): ?UserDto;
+
     public function findById(int $id): ?UserDto;
 
     public function create(RegisterDto $data): UserDto;
@@ -20,8 +22,6 @@ interface UserRepositoryInterface
     public function update(int $id, UpdateUserDto $data): bool;
 
     public function delete(int $id): bool;
-
-    public function verifyCredentials(string $email, string $password): ?UserDto;
 
     public function deleteTokens(int $userId): void;
 

@@ -2,13 +2,14 @@
 
 namespace App\Services;
 
+use App\Dto\AuthDto;
 use App\Dto\LoginDto;
-use App\Dto\LoginResultDto;
 use App\Dto\RegisterDto;
 use App\Dto\UpdateUserDto;
 use App\Dto\UserDto;
 use App\Repositories\Interfaces\CartItemRepositoryInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 final readonly class AuthService
@@ -18,12 +19,12 @@ final readonly class AuthService
         private CartItemRepositoryInterface $cartRepository,
     ) {}
 
-    public function register(RegisterDto $data): LoginResultDto
+    public function register(RegisterDto $dto): AuthDto
     {
-        $userDto = $this->userRepository->create($data);
+        $userDto = $this->userRepository->create($dto);
         $token = $this->userRepository->createToken($userDto->id, 'auth_token');
 
-        return new LoginResultDto(user: $userDto, token: $token);
+        return new AuthDto(user: $userDto, token: $token);
     }
 
     /**
@@ -34,9 +35,9 @@ final readonly class AuthService
         return $this->userRepository->getAll();
     }
 
-    public function login(LoginDto $data, ?string $sessionId = null): LoginResultDto
+    public function login(LoginDto $dto, ?string $sessionId = null): AuthDto
     {
-        $userDto = $this->userRepository->verifyCredentials($data->email, $data->password);
+        $userDto = $this->verifyCredentials($dto->email, $dto->password);
 
         if (! $userDto) {
             throw ValidationException::withMessages([
@@ -45,12 +46,43 @@ final readonly class AuthService
         }
 
         if ($sessionId !== null) {
-            $this->cartRepository->mergeSessionToUser($sessionId, $userDto->id);
+            $this->mergeSessionToUser($sessionId, $userDto->id);
         }
 
         $token = $this->userRepository->createToken($userDto->id, 'auth_token');
 
-        return new LoginResultDto(user: $userDto, token: $token);
+        return new AuthDto(user: $userDto, token: $token);
+    }
+
+    public function verifyCredentials(string $email, string $password): ?UserDto
+    {
+        $userDto = $this->userRepository->findByEmailWithPassword($email);
+
+        if (! $userDto) {
+            return null;
+        }
+
+        if (! Hash::check($password, $userDto->passwordHash ?? '')) {
+            return null;
+        }
+
+        $userDtoWithoutPassword = new UserDto(
+            id: $userDto->id,
+            name: $userDto->name,
+            email: $userDto->email,
+            role: $userDto->role,
+            balance: $userDto->balance,
+            emailVerifiedAt: $userDto->emailVerifiedAt,
+            createdAt: $userDto->createdAt,
+            updatedAt: $userDto->updatedAt,
+        );
+
+        return $userDtoWithoutPassword;
+    }
+
+    private function mergeSessionToUser(string $sessionId, int $userId): void
+    {
+        $this->cartRepository->mergeSessionToUser($sessionId, $userId);
     }
 
     public function updateUser(int $id, UpdateUserDto $dto): bool

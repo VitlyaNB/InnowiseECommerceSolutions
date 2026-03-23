@@ -3,10 +3,8 @@
 namespace App\Http\Controllers\Api\Chat;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Services\ChatService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 final class StartController extends Controller
 {
@@ -14,12 +12,10 @@ final class StartController extends Controller
         private readonly ChatService $chatService
     ) {}
 
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(): JsonResponse
     {
-        /** @var User $user */
-        $user = $request->user();
-
-        $chat = $this->chatService->startChat($user->id);
+        $userId = auth()->id();
+        $chat = $this->chatService->startChat($userId !== false ? (int) $userId : 0);
 
         return response()->json($chat->toArray());
     }

@@ -6,7 +6,7 @@
 </head>
 <body>
 <h1>Спасибо за заказ!</h1>
-<p>Ваш заказ #{{ $order->id }} успешно оплачен.</p>
-<p>Сумма: {{ number_format($order->totalAmount, 2) }} BYN</p>
+<p>Ваш заказ #{{ $orderId }} успешно оплачен.</p>
+<p>Сумма: {{ number_format($totalAmount, 2) }} BYN</p>
 </body>
 </html>

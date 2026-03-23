@@ -39,6 +39,6 @@ final class SendOrderConfirmationJob implements ShouldQueue
             return;
         }
 
-        Mail::to($user->email)->send(new OrderPaidMail($order));
+        Mail::to($user->email)->send(new OrderPaidMail($order->id, $order->totalAmount));
     }
 }

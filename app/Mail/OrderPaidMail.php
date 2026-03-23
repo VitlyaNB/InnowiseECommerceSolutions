@@ -2,7 +2,6 @@
 
 namespace App\Mail;
 
-use App\Dto\OrderDetailsDto;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -14,7 +13,8 @@ class OrderPaidMail extends Mailable
     use Queueable, SerializesModels;
 
     public function __construct(
-        public readonly OrderDetailsDto $order
+        public readonly int $orderId,
+        public readonly float $totalAmount
     ) {}
 
     public function envelope(): Envelope
@@ -29,7 +29,8 @@ class OrderPaidMail extends Mailable
         return new Content(
             view: 'emails.order_paid',
             with: [
-                'order' => $this->order,
+                'orderId' => $this->orderId,
+                'totalAmount' => $this->totalAmount,
             ],
         );
     }

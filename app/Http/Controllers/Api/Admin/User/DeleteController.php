@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
 final class DeleteController extends Controller
@@ -37,12 +36,12 @@ final class DeleteController extends Controller
             new OA\Response(response: 404, description: 'User not found'),
         ]
     )]
-    public function __invoke(Request $request, int $id): JsonResponse
+    public function __invoke(User $user): JsonResponse
     {
-        /** @var User $currentUser */
-        $currentUser = $request->user();
-
-        $this->authService->deleteUser($id, $currentUser->id);
+        $currentUserId = auth()->id();
+        if ($currentUserId !== null && $currentUserId !== false) {
+            $this->authService->deleteUser($user->id, (int) $currentUserId);
+        }
 
         return response()->json(['message' => 'User deleted successfully']);
     }

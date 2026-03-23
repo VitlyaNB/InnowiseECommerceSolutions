@@ -3,10 +3,8 @@
 namespace App\Http\Controllers\Api\Chat;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Services\ChatService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 final class UserIndexController extends Controller
 {
@@ -14,12 +12,10 @@ final class UserIndexController extends Controller
         private readonly ChatService $chatService
     ) {}
 
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(): JsonResponse
     {
-        /** @var User $user */
-        $user = $request->user();
-
-        $chat = $this->chatService->getUserChat($user->id);
+        $userId = auth()->id();
+        $chat = $this->chatService->getUserChat($userId !== false ? (int) $userId : 0);
 
         if (! $chat) {
             return response()->json(['message' => 'Чат не найден'], 404);

@@ -12,4 +12,7 @@ interface OrderRepositoryInterface
     public function createItem(int $orderId, OrderItemDto $item): void;
 
     public function findByIdWithItems(int $orderId): ?OrderDetailsDto;
+
+    /** @return array<int, OrderDetailsDto> */
+    public function getByUserId(int $userId): array;
 }

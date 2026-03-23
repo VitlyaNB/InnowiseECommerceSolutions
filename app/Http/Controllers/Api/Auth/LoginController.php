@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Resources\UserResource;
-use App\Http\Support\CartSessionResolver;
 use App\Services\AuthService;
+use App\Services\CartSessionResolver;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 

@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\Cart;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CartResource;
-use App\Http\Support\CartSessionResolver;
 use App\Services\CartService;
+use App\Services\CartSessionResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

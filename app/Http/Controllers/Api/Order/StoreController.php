@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Order;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
-use App\Models\User;
+use App\Repositories\UserRepository;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
 use Throwable;
@@ -12,27 +12,25 @@ use Throwable;
 final class StoreController extends Controller
 {
     public function __construct(
-        private OrderService $orderService
+        private OrderService $orderService,
+        private UserRepository $userRepository
     ) {}
 
     public function __invoke(StoreOrderRequest $request): JsonResponse
     {
-        /** @var User|null $user */
-        $user = $request->user();
-
-        if (! $user) {
-            return response()->json([
-                'message' => 'Необходима авторизация',
-            ], 401);
-        }
-
         try {
-            $order = $this->orderService->createOrder($user->id, $request->toDto());
+            $userId = $request->user()->id;
+            $userDto = $this->userRepository->findById($userId);
+
+            if (! $userDto) {
+                return response()->json(['message' => 'Пользователь не найден'], 401);
+            }
+
+            $order = $this->orderService->createOrder($userDto, $request->toDto());
 
             return response()->json([
                 'message' => 'Заказ успешно оформлен',
                 'order' => $order->toArray(),
-                'new_balance' => $user->fresh()->balance ?? null,
             ], 201);
         } catch (Throwable $exception) {
             return response()->json([

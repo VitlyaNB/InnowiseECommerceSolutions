@@ -5,63 +5,18 @@ namespace App\Services;
 use App\Dto\CategoryDto;
 use App\Dto\ExternalCategorySyncResultDto;
 use App\Repositories\Interfaces\CategoryRepositoryInterface;
-use App\Services\Interfaces\ExternalCategorySyncServiceInterface;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Throwable;
 
-final readonly class ExternalCategorySyncService implements ExternalCategorySyncServiceInterface
+final class ExternalCategorySyncService
 {
     public function __construct(
-        private CategoryRepositoryInterface $categoryRepository
+        private CategoryRepositoryInterface $categoryRepository,
+        private ExternalCategoryApiClient $apiClient
     ) {}
 
     public function sync(): ExternalCategorySyncResultDto
     {
-        /** @var string|null $apiUrl */
-        $apiUrl = config('services.external_project.api_url');
-
-        /** @var string|null $apiKey */
-        $apiKey = config('services.external_project.api_key');
-
-        if (empty($apiUrl)) {
-            return new ExternalCategorySyncResultDto(
-                ok: false,
-                message: 'External project API URL is not configured. Set EXTERNAL_PROJECT_API_URL in .env',
-                synced: 0,
-                status: 400,
-            );
-        }
-
         try {
-            $headers = ['Accept' => 'application/json'];
-            if (! empty($apiKey)) {
-                $headers['Authorization'] = 'Bearer '.(string) $apiKey;
-            }
-
-            $response = Http::withHeaders($headers)->get((string) $apiUrl);
-            if (! $response->successful()) {
-                return new ExternalCategorySyncResultDto(
-                    ok: false,
-                    message: 'Failed to fetch categories from external project',
-                    synced: 0,
-                    status: 502,
-                );
-            }
-
-            /** @var mixed $data */
-            $data = $response->json();
-
-            /** @var mixed $categories */
-            $categories = is_array($data) ? ($data['data'] ?? $data['categories'] ?? $data) : [];
-            if (! is_array($categories)) {
-                return new ExternalCategorySyncResultDto(
-                    ok: false,
-                    message: 'Invalid response format from external project',
-                    synced: 0,
-                    status: 422,
-                );
-            }
+            $categories = $this->apiClient->fetchCategories();
 
             $synced = 0;
             foreach ($categories as $item) {
@@ -81,16 +36,14 @@ final readonly class ExternalCategorySyncService implements ExternalCategorySync
 
             return new ExternalCategorySyncResultDto(
                 ok: true,
-                message: "Synced {$synced} new categories from external project",
+                message: "Синхронизировано {$synced} новых категорий.",
                 synced: $synced,
                 status: 200,
             );
-        } catch (Throwable $exception) {
-            Log::error('External category sync failed: '.$exception->getMessage());
-
+        } catch (\Throwable $exception) {
             return new ExternalCategorySyncResultDto(
                 ok: false,
-                message: 'Sync failed: '.$exception->getMessage(),
+                message: 'Не удалось синхронизировать категории. Попробуйте позже.',
                 synced: 0,
                 status: 500,
             );

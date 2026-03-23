@@ -4,18 +4,18 @@ namespace App\Http\Controllers\Api\Order;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
-use App\Models\User;
+use App\Repositories\OrderRepository;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 final class IndexController extends Controller
 {
-    public function __invoke(Request $request): JsonResponse
-    {
-        /** @var User $user */
-        $user = $request->user();
+    public function __construct(
+        private readonly OrderRepository $orderRepository
+    ) {}
 
-        $orders = $user->orders()->with('items.product.images')->latest()->get();
+    public function __invoke(): JsonResponse
+    {
+        $orders = $this->orderRepository->getByUserId(auth()->id());
 
         return OrderResource::collection($orders)->response();
     }

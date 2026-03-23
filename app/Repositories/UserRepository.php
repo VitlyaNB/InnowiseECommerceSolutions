@@ -7,7 +7,6 @@ use App\Dto\UpdateUserDto;
 use App\Dto\UserDto;
 use App\Models\User;
 use App\Repositories\Interfaces\UserRepositoryInterface;
-use Illuminate\Support\Facades\Hash;
 
 class UserRepository implements UserRepositoryInterface
 {
@@ -34,6 +33,22 @@ class UserRepository implements UserRepositoryInterface
         $user = User::query()->where('email', $email)->first();
 
         return $user ? $this->mapToDto($user) : null;
+    }
+
+    public function findByEmailWithPassword(string $email): ?UserDto
+    {
+        /** @var User|null $user */
+        $user = User::query()->where('email', $email)->first();
+
+        return $user ? $this->mapToDtoWithPassword($user) : null;
+    }
+
+    public function findByIdWithPassword(int $id): ?UserDto
+    {
+        /** @var User|null $user */
+        $user = User::query()->find($id);
+
+        return $user ? $this->mapToDtoWithPassword($user) : null;
     }
 
     public function findById(int $id): ?UserDto
@@ -78,17 +93,6 @@ class UserRepository implements UserRepositoryInterface
         }
 
         return (bool) $user->delete();
-    }
-
-    public function verifyCredentials(string $email, string $password): ?UserDto
-    {
-        /** @var User|null $user */
-        $user = User::query()->where('email', $email)->first();
-        if (! $user || ! Hash::check($password, $user->password)) {
-            return null;
-        }
-
-        return $this->mapToDto($user);
     }
 
     public function deleteTokens(int $userId): void
@@ -155,6 +159,23 @@ class UserRepository implements UserRepositoryInterface
             emailVerifiedAt: $user->email_verified_at !== null ? $user->email_verified_at->toDateTimeString() : null,
             createdAt: $user->created_at !== null ? $user->created_at->toDateTimeString() : null,
             updatedAt: $user->updated_at !== null ? $user->updated_at->toDateTimeString() : null,
+        );
+    }
+
+    private function mapToDtoWithPassword(User $user): UserDto
+    {
+        $dto = $this->mapToDto($user);
+
+        return new UserDto(
+            id: $dto->id,
+            name: $dto->name,
+            email: $dto->email,
+            role: $dto->role,
+            balance: $dto->balance,
+            emailVerifiedAt: $dto->emailVerifiedAt,
+            createdAt: $dto->createdAt,
+            updatedAt: $dto->updatedAt,
+            passwordHash: $user->password,
         );
     }
 }

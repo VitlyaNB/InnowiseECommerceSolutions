@@ -3,22 +3,20 @@
 namespace App\Http\Controllers\Api\Review;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Services\ReviewService;
+use App\Repositories\ReviewRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 final class CanReviewController extends Controller
 {
     public function __construct(
-        private ReviewService $reviewService
+        private ReviewRepository $reviewRepository
     ) {}
 
     public function __invoke(Request $request, int $productId): JsonResponse
     {
-        /** @var User $user */
-        $user = $request->user();
-        $canReview = $this->reviewService->canReview($user->id, $productId);
+        $userId = $request->user()->id;
+        $canReview = $this->reviewRepository->canReview($userId, $productId);
 
         return response()->json(['can_review' => $canReview]);
     }

@@ -4,14 +4,14 @@ namespace App\Http\Controllers\Api\Product;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
-use App\Services\ProductService;
+use App\Repositories\ProductRepository;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 
 final class ShowController extends Controller
 {
     public function __construct(
-        private readonly ProductService $productService
+        private readonly ProductRepository $productRepository
     ) {}
 
     #[OA\Get(
@@ -39,7 +39,7 @@ final class ShowController extends Controller
     )]
     public function __invoke(int $id): JsonResponse
     {
-        $product = $this->productService->getProductById($id);
+        $product = $this->productRepository->findById($id);
 
         if (! $product) {
             return response()->json(['message' => 'Товар не найден'], 404);

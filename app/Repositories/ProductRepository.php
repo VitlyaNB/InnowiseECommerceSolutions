@@ -203,19 +203,19 @@ class ProductRepository implements ProductRepositoryInterface
     }
 
     /** @return array<int, int> */
-    public function getRandomActiveProductIds(RandomProductsQueryDto $queryDto): array
+    public function getRandomActiveProductIds(RandomProductsQueryDto $query): array
     {
-        $query = Product::query()
+        $builder = Product::query()
             ->where('is_active', true);
 
-        if ($queryDto->excludedIds !== []) {
-            $query->whereNotIn('id', $queryDto->excludedIds);
+        if ($query->excludedIds !== []) {
+            $builder->whereNotIn('id', $query->excludedIds);
         }
 
         /** @var array<int, int> $ids */
-        $ids = $query
+        $ids = $builder
             ->inRandomOrder()
-            ->limit($queryDto->limit)
+            ->limit($query->limit)
             ->pluck('id')
             ->all();
 

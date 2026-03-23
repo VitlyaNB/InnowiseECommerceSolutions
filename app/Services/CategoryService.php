@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Dto\CategoryDto;
 use App\Dto\UploadImageDto;
+use App\Infrastructure\Interfaces\TransactionManagerInterface;
 use App\Repositories\Interfaces\CategoryRepositoryInterface;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
 use App\Services\Interfaces\FileServiceInterface;
@@ -14,7 +15,8 @@ final readonly class CategoryService
     public function __construct(
         private CategoryRepositoryInterface $categoryRepository,
         private ProductRepositoryInterface $productRepository,
-        private FileServiceInterface $fileService
+        private FileServiceInterface $fileService,
+        private TransactionManagerInterface $transactionManager
     ) {}
 
     /** @return array<int, CategoryDto> */
@@ -36,23 +38,25 @@ final readonly class CategoryService
 
     public function createCategory(CategoryDto $data): CategoryDto
     {
-        $imagePath = null;
-        if ($data->image) {
-            /** @var string $disk */
-            $disk = config('filesystems.media_disk', 's3');
-            $imagePath = $this->fileService->upload(new UploadImageDto(
-                file: $data->image,
-                folder: 'categories',
-                disk: $disk
-            ));
-        }
+        return $this->transactionManager->transaction(function () use ($data): CategoryDto {
+            $imagePath = null;
+            if ($data->image) {
+                /** @var string $disk */
+                $disk = config('filesystems.media_disk', 's3');
+                $imagePath = $this->fileService->upload(new UploadImageDto(
+                    file: $data->image,
+                    folder: 'categories',
+                    disk: $disk
+                ));
+            }
 
-        $dtoToSave = new CategoryDto(
-            name: $data->name,
-            imagePath: $imagePath
-        );
+            $dtoToSave = new CategoryDto(
+                name: $data->name,
+                imagePath: $imagePath
+            );
 
-        return $this->categoryRepository->create($dtoToSave);
+            return $this->categoryRepository->create($dtoToSave);
+        });
     }
 
     public function updateCategory(int $id, CategoryDto $data): ?CategoryDto

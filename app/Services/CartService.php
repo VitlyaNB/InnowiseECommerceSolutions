@@ -15,22 +15,22 @@ final readonly class CartService
 
     public function addToCart(CartItemDto $dto, ?int $userId, ?string $sessionId): ?CartItemDto
     {
-        $existing = null;
+        $existingCartItem = null;
 
         if ($userId !== null) {
-            $existing = $this->cartRepository->findByUserAndProduct($userId, $dto->productId);
+            $existingCartItem = $this->cartRepository->findByUserAndProduct($userId, $dto->productId);
         } elseif ($sessionId !== null) {
-            $existing = $this->cartRepository->findBySessionAndProduct($sessionId, $dto->productId);
+            $existingCartItem = $this->cartRepository->findBySessionAndProduct($sessionId, $dto->productId);
         }
 
-        if ($existing) {
-            $this->cartRepository->updateQuantity($existing->id, $existing->quantity + $dto->quantity);
+        if ($existingCartItem) {
+            $this->cartRepository->updateQuantity($existingCartItem->id, $existingCartItem->quantity + $dto->quantity);
 
-            return $this->cartRepository->findById($existing->id);
+            return $this->cartRepository->findById($existingCartItem->id);
         }
 
         return $this->cartRepository->create(new CartItemDto(
-            id: 0,
+            id: null,
             productId: $dto->productId,
             quantity: $dto->quantity,
             userId: $userId,
