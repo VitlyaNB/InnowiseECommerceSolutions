@@ -4,14 +4,14 @@ namespace App\Http\Controllers\Api\Category;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CategoryResource;
-use App\Services\CategoryService;
+use App\Repositories\Interfaces\CategoryRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 
 final class IndexController extends Controller
 {
     public function __construct(
-        private readonly CategoryService $categoryService
+        private readonly CategoryRepositoryInterface $categoryRepository
     ) {}
 
     #[OA\Get(
@@ -37,7 +37,7 @@ final class IndexController extends Controller
     )]
     public function __invoke(): JsonResponse
     {
-        $categories = $this->categoryService->getAllCategories();
+        $categories = $this->categoryRepository->getAll();
 
         return response()->json(CategoryResource::collection($categories));
     }

@@ -114,14 +114,6 @@ class UserRepository implements UserRepositoryInterface
         return $this->mapToDto($user);
     }
 
-    public function createToken(int $userId, string $tokenName): string
-    {
-        /** @var User $user */
-        $user = User::query()->findOrFail($userId);
-
-        return $user->createToken($tokenName)->plainTextToken;
-    }
-
     public function findByIdForUpdate(int $id): ?UserDto
     {
         /** @var User|null $user */

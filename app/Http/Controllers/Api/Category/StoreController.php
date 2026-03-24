@@ -51,10 +51,16 @@ final class StoreController extends Controller
     )]
     public function __invoke(StoreCategoryRequest $request): JsonResponse
     {
-        $category = $this->categoryService->createCategory($request->toDto());
+        try {
+            $category = $this->categoryService->createCategory($request->toDto());
 
-        return (new CategoryResource($category))
-            ->response()
-            ->setStatusCode(201);
+            return (new CategoryResource($category))
+                ->response()
+                ->setStatusCode(201);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Не удалось создать категорию. Попробуйте позже.',
+            ], 500);
+        }
     }
 }

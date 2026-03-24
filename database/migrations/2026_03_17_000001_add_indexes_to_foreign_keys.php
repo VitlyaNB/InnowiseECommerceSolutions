@@ -54,7 +54,8 @@ return new class extends Migration
             Schema::table($table, function (Blueprint $blueprint) use ($column, $indexName) {
                 $blueprint->index($column, $indexName);
             });
-        } catch (Throwable) {
+        } catch (Throwable $e) {
+            report($e);
         }
     }
 
@@ -64,7 +65,8 @@ return new class extends Migration
             Schema::table($table, function (Blueprint $blueprint) use ($indexName) {
                 $blueprint->dropIndex($indexName);
             });
-        } catch (Throwable) {
+        } catch (Throwable $e) {
+            report($e);
         }
     }
 };

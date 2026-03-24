@@ -98,19 +98,31 @@ final readonly class ProductService
 
     public function search(ProductSearchQueryDto $queryDto): ProductSearchResultDto
     {
-        $query = $queryDto->query;
-        $categoryIds = $queryDto->categoryIds;
-        $minPrice = $queryDto->minPrice;
-        $maxPrice = $queryDto->maxPrice;
-        $sort = $queryDto->sort;
-        $perPage = $queryDto->perPage;
-        $page = $queryDto->page;
+        try {
+            $params = $this->buildElasticsearchQuery($queryDto);
+            $results = $this->executeSearch($params);
+            $products = $this->mapHitsToProducts($results);
+            $filters = $this->extractFilters($results, $queryDto->perPage, $queryDto->page);
 
+            return new ProductSearchResultDto(
+                data: $products,
+                meta: $filters['meta'],
+                filters: $filters['filters']
+            );
+        } catch (Exception $e) {
+            Log::warning('Elasticsearch search failed: '.$e->getMessage());
+
+            return $this->fallbackSearch($queryDto);
+        }
+    }
+
+    private function buildElasticsearchQuery(ProductSearchQueryDto $queryDto): array
+    {
         $params = [
             'index' => 'products_index',
             'body' => [
-                'from' => ($page - 1) * $perPage,
-                'size' => $perPage,
+                'from' => ($queryDto->page - 1) * $queryDto->perPage,
+                'size' => $queryDto->perPage,
                 'query' => [
                     'bool' => [
                         'must' => [],
@@ -129,132 +141,133 @@ final readonly class ProductService
             ],
         ];
 
-        if (! empty($query)) {
+        if (! empty($queryDto->query)) {
             $params['body']['query']['bool']['must'][] = [
                 'multi_match' => [
-                    'query' => $query,
+                    'query' => $queryDto->query,
                     'fields' => ['name^3', 'description', 'category_name'],
                     'fuzziness' => 'AUTO',
                 ],
             ];
         }
 
-        if (! empty($categoryIds)) {
+        if (! empty($queryDto->categoryIds)) {
             $params['body']['query']['bool']['filter'][] = [
-                'terms' => ['category_id' => $categoryIds],
+                'terms' => ['category_id' => $queryDto->categoryIds],
             ];
         }
 
-        if ($minPrice !== null || $maxPrice !== null) {
+        if ($queryDto->minPrice !== null || $queryDto->maxPrice !== null) {
             $range = ['price' => []];
-            if ($minPrice !== null) {
-                $range['price']['gte'] = $minPrice;
+            if ($queryDto->minPrice !== null) {
+                $range['price']['gte'] = $queryDto->minPrice;
             }
-            if ($maxPrice !== null) {
-                $range['price']['lte'] = $maxPrice;
+            if ($queryDto->maxPrice !== null) {
+                $range['price']['lte'] = $queryDto->maxPrice;
             }
             $params['body']['query']['bool']['filter'][] = ['range' => $range];
         }
 
-        switch ($sort) {
-            case 'price_asc':
-                $params['body']['sort'] = [['price' => 'asc']];
-                break;
-            case 'price_desc':
-                $params['body']['sort'] = [['price' => 'desc']];
-                break;
-            case 'name_asc':
-                $params['body']['sort'] = [['name.keyword' => 'asc']];
-                break;
-            default:
-                $params['body']['sort'] = [['created_at' => 'desc']];
+        $params['body']['sort'] = match ($queryDto->sort) {
+            'price_asc' => [['price' => 'asc']],
+            'price_desc' => [['price' => 'desc']],
+            'name_asc' => [['name.keyword' => 'asc']],
+            default => [['created_at' => 'desc']],
+        };
+
+        return $params;
+    }
+
+    private function executeSearch(array $params): array
+    {
+        /** @var array<string, mixed> $results */
+        return $this->elasticsearch->search($params);
+    }
+
+    private function mapHitsToProducts(array $results): array
+    {
+        /** @var array<string, mixed> $hits */
+        $hits = $results['hits'] ?? [];
+        /** @var array<int, array<string, mixed>> $hitItems */
+        $hitItems = $hits['hits'] ?? [];
+        /** @var array<int, int> $ids */
+        $ids = [];
+        foreach ($hitItems as $hit) {
+            $id = $hit['_id'] ?? null;
+            $ids[] = is_numeric($id) ? (int) $id : 0;
         }
 
-        try {
-            /** @var array<string, mixed> $results */
-            $results = $this->elasticsearch->search($params);
-
-            /** @var array<string, mixed> $hits */
-            $hits = $results['hits'] ?? [];
-            /** @var array<int, array<string, mixed>> $hitItems */
-            $hitItems = $hits['hits'] ?? [];
-            /** @var array<int, int> $ids */
-            $ids = [];
-            foreach ($hitItems as $hit) {
-                $id = $hit['_id'] ?? null;
-                $ids[] = is_numeric($id) ? (int) $id : 0;
-            }
-
-            /** @var array<int, ProductDto> $products */
-            $products = [];
-            if (! empty($ids)) {
-                foreach ($ids as $id) {
-                    $p = $this->productRepository->findById($id);
-                    if ($p) {
-                        $products[] = $p;
-                    }
+        /** @var array<int, ProductDto> $products */
+        $products = [];
+        if (! empty($ids)) {
+            foreach ($ids as $id) {
+                $p = $this->productRepository->findById($id);
+                if ($p) {
+                    $products[] = $p;
                 }
             }
-
-            /** @var array<string, mixed> $aggregations */
-            $aggregations = $results['aggregations'] ?? [];
-            /** @var int $total */
-            $total = 0;
-            $hitsTotal = $hits['total'] ?? null;
-            if (is_array($hitsTotal) && isset($hitsTotal['value']) && is_numeric($hitsTotal['value'])) {
-                $total = (int) $hitsTotal['value'];
-            }
-
-            /** @var array<int, array<string, int>> $categoryBuckets */
-            $categoryBuckets = [];
-            $categoriesAgg = $aggregations['categories'] ?? null;
-            if (is_array($categoriesAgg) && isset($categoriesAgg['buckets']) && is_array($categoriesAgg['buckets'])) {
-                foreach ($categoriesAgg['buckets'] as $bucket) {
-                    if (is_array($bucket)) {
-                        $bucketKey = $bucket['key'] ?? null;
-                        $bucketDocCount = $bucket['doc_count'] ?? null;
-                        $categoryBuckets[] = [
-                            'id' => is_numeric($bucketKey) ? (int) $bucketKey : 0,
-                            'count' => is_numeric($bucketDocCount) ? (int) $bucketDocCount : 0,
-                        ];
-                    }
-                }
-            }
-
-            /** @var float $minPrice */
-            $minPrice = 0.0;
-            $minPriceAgg = $aggregations['min_price'] ?? null;
-            if (is_array($minPriceAgg) && isset($minPriceAgg['value']) && is_numeric($minPriceAgg['value'])) {
-                $minPrice = (float) $minPriceAgg['value'];
-            }
-
-            /** @var float $maxPrice */
-            $maxPrice = 0.0;
-            $maxPriceAgg = $aggregations['max_price'] ?? null;
-            if (is_array($maxPriceAgg) && isset($maxPriceAgg['value']) && is_numeric($maxPriceAgg['value'])) {
-                $maxPrice = (float) $maxPriceAgg['value'];
-            }
-
-            return new ProductSearchResultDto(
-                data: $products,
-                meta: [
-                    'total' => $total,
-                    'per_page' => $perPage,
-                    'current_page' => $page,
-                    'last_page' => $total > 0 ? (int) ceil($total / $perPage) : 1,
-                ],
-                filters: [
-                    'categories' => $categoryBuckets,
-                    'min_price' => $minPrice,
-                    'max_price' => $maxPrice,
-                ]
-            );
-
-        } catch (Exception $e) {
-            Log::warning('Elasticsearch search failed: '.$e->getMessage());
-
-            return $this->fallbackSearch($queryDto);
         }
+
+        return $products;
+    }
+
+    private function extractFilters(array $results, int $perPage, int $page): array
+    {
+        /** @var array<string, mixed> $hits */
+        $hits = $results['hits'] ?? [];
+        /** @var array<string, mixed> $aggregations */
+        $aggregations = $results['aggregations'] ?? [];
+
+        /** @var int $total */
+        $total = 0;
+        $hitsTotal = $hits['total'] ?? null;
+        if (is_array($hitsTotal) && isset($hitsTotal['value']) && is_numeric($hitsTotal['value'])) {
+            $total = (int) $hitsTotal['value'];
+        }
+
+        /** @var array<int, array<string, int>> $categoryBuckets */
+        $categoryBuckets = [];
+        $categoriesAgg = $aggregations['categories'] ?? null;
+        if (is_array($categoriesAgg) && isset($categoriesAgg['buckets']) && is_array($categoriesAgg['buckets'])) {
+            foreach ($categoriesAgg['buckets'] as $bucket) {
+                if (is_array($bucket)) {
+                    $bucketKey = $bucket['key'] ?? null;
+                    $bucketDocCount = $bucket['doc_count'] ?? null;
+                    $categoryBuckets[] = [
+                        'id' => is_numeric($bucketKey) ? (int) $bucketKey : 0,
+                        'count' => is_numeric($bucketDocCount) ? (int) $bucketDocCount : 0,
+                    ];
+                }
+            }
+        }
+
+        /** @var float $minPrice */
+        $minPrice = 0.0;
+        $minPriceAgg = $aggregations['min_price'] ?? null;
+        if (is_array($minPriceAgg) && isset($minPriceAgg['value']) && is_numeric($minPriceAgg['value'])) {
+            $minPrice = (float) $minPriceAgg['value'];
+        }
+
+        /** @var float $maxPrice */
+        $maxPrice = 0.0;
+        $maxPriceAgg = $aggregations['max_price'] ?? null;
+        if (is_array($maxPriceAgg) && isset($maxPriceAgg['value']) && is_numeric($maxPriceAgg['value'])) {
+            $maxPrice = (float) $maxPriceAgg['value'];
+        }
+
+        return [
+            'meta' => [
+                'total' => $total,
+                'per_page' => $perPage,
+                'current_page' => $page,
+                'last_page' => $total > 0 ? (int) ceil($total / $perPage) : 1,
+            ],
+            'filters' => [
+                'categories' => $categoryBuckets,
+                'min_price' => $minPrice,
+                'max_price' => $maxPrice,
+            ],
+        ];
     }
 
     private function fallbackSearch(ProductSearchQueryDto $queryDto): ProductSearchResultDto

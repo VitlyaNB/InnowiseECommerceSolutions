@@ -27,8 +27,6 @@ interface UserRepositoryInterface
 
     public function topUp(int $userId, float $amount): UserDto;
 
-    public function createToken(int $userId, string $tokenName): string;
-
     public function findByIdForUpdate(int $id): ?UserDto;
 
     public function decrementBalance(int $userId, float $amount): bool;

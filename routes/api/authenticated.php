@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\MeController;
-use App\Http\Controllers\Api\Auth\TopUpController;
 use App\Http\Controllers\Api\Chat\ShowController as ChatShowController;
 use App\Http\Controllers\Api\Chat\StartController as ChatStartController;
 use App\Http\Controllers\Api\Chat\StoreMessageController as ChatStoreMessageController;
@@ -12,6 +11,7 @@ use App\Http\Controllers\Api\Order\StoreController as OrderStoreController;
 use App\Http\Controllers\Api\Review\CanReviewController;
 use App\Http\Controllers\Api\Review\StoreController as ReviewStoreController;
 use App\Http\Controllers\Api\Review\ToggleLikeController;
+use App\Http\Controllers\Api\Wallet\TopUpController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/me', MeController::class);

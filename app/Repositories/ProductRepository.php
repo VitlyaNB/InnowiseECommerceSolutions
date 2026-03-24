@@ -7,6 +7,7 @@ use App\Dto\ProductDto;
 use App\Dto\ProductFiltersDto;
 use App\Dto\ProductIdsQueryDto;
 use App\Dto\RandomProductsQueryDto;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
@@ -172,7 +173,8 @@ class ProductRepository implements ProductRepositoryInterface
     public function getAlsoBoughtProductIds(int $productId, int $limit): array
     {
         /** @var array<int, int> $ids */
-        $ids = DB::table('order_items as oi')
+        $ids = OrderItem::query()
+            ->from('order_items as oi')
             ->join('order_items as oi2', 'oi.order_id', '=', 'oi2.order_id')
             ->where('oi.product_id', $productId)
             ->where('oi2.product_id', '!=', $productId)

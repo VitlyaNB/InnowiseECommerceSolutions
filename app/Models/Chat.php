@@ -30,6 +30,13 @@ class Chat extends Model
         'last_message_at',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'last_message_at' => 'datetime',
+        ];
+    }
+
     /**
      * @return BelongsTo<User, $this>
      */
