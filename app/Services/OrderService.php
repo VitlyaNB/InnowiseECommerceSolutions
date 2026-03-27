@@ -10,6 +10,7 @@ use App\Dto\SelectedIdsDto;
 use App\Dto\UserDto;
 use App\Infrastructure\Interfaces\TransactionManagerInterface;
 use App\Jobs\SendOrderConfirmationJob;
+use App\Models\User;
 use App\Repositories\Interfaces\CartItemRepositoryInterface;
 use App\Repositories\Interfaces\OrderRepositoryInterface;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
@@ -57,6 +58,19 @@ final readonly class OrderService
 
             throw $exception;
         }
+    }
+
+    public function createOrderFromUser(User $user, OrderDto $orderDto): OrderDetailsDto
+    {
+        $userDto = new UserDto(
+            id: $user->id,
+            name: $user->name,
+            email: $user->email,
+            role: $user->role,
+            balance: (float) $user->balance,
+        );
+
+        return $this->createOrder($userDto, $orderDto);
     }
 
     /**

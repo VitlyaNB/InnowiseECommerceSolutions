@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Category;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Services\CategoryService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
@@ -14,13 +15,13 @@ final class DestroyController extends Controller
     ) {}
 
     #[OA\Delete(
-        path: '/api/categories/{id}',
+        path: '/api/categories/{category}',
         summary: 'Delete a category',
         tags: ['Categories'],
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(
-                name: 'id',
+                name: 'category',
                 in: 'path',
                 required: true,
                 description: 'Category ID',
@@ -34,9 +35,9 @@ final class DestroyController extends Controller
             new OA\Response(response: 404, description: 'Category not found'),
         ]
     )]
-    public function __invoke(int $id): JsonResponse
+    public function __invoke(Category $category): JsonResponse
     {
-        $this->categoryService->deleteCategory($id);
+        $this->categoryService->deleteCategory($category->id);
 
         return response()->json(['message' => 'Category deleted']);
     }

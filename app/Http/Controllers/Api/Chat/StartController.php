@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api\Chat;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\ChatService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 final class StartController extends Controller
 {
@@ -13,9 +13,10 @@ final class StartController extends Controller
         private readonly ChatService $chatService
     ) {}
 
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(): JsonResponse
     {
-        $user = $request->user();
+        /** @var User $user */
+        $user = auth()->user();
 
         if (! $user) {
             return response()->json(['message' => 'Требуется авторизация'], 401);

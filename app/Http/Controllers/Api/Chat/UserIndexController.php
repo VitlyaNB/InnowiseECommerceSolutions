@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Chat;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Repositories\Interfaces\ChatRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 
@@ -14,6 +15,7 @@ final class UserIndexController extends Controller
 
     public function __invoke(): JsonResponse
     {
+        /** @var User $user */
         $user = auth()->user();
 
         if (! $user) {
