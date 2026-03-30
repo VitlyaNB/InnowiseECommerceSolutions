@@ -28,7 +28,9 @@ use App\Repositories\ProductRepository;
 use App\Repositories\ProductViewRepository;
 use App\Repositories\ReviewRepository;
 use App\Repositories\UserRepository;
+use App\Services\AuthTokenService;
 use App\Services\FileService;
+use App\Services\Interfaces\AuthTokenServiceInterface;
 use App\Services\Interfaces\FileServiceInterface;
 use Elastic\Elasticsearch\Client;
 use Elastic\Elasticsearch\ClientBuilder;
@@ -59,6 +61,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(TransactionManagerInterface::class, EloquentTransactionManager::class);
 
         $this->app->bind(FileServiceInterface::class, FileService::class);
+        $this->app->bind(AuthTokenServiceInterface::class, AuthTokenService::class);
 
         $this->app->bind(ProductRepositoryInterface::class, ProductRepository::class);
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);

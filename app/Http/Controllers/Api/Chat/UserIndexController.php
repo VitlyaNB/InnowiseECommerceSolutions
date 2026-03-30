@@ -18,10 +18,6 @@ final class UserIndexController extends Controller
         /** @var User $user */
         $user = auth()->user();
 
-        if (! $user) {
-            return response()->json(['message' => 'Требуется авторизация'], 401);
-        }
-
         $chat = $this->chatRepository->findByUserIdWithMessages($user->id);
 
         if (! $chat) {

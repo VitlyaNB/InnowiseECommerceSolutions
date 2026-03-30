@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Order;
 
+use App\Dto\UserDto;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
 use App\Models\User;
@@ -21,11 +22,15 @@ final class StoreController extends Controller
             /** @var User $user */
             $user = auth()->user();
 
-            if (! $user) {
-                return response()->json(['message' => 'Требуется авторизация'], 401);
-            }
+            $userDto = new UserDto(
+                id: $user->id,
+                name: $user->name,
+                email: $user->email,
+                role: $user->role,
+                balance: (float) $user->balance,
+            );
 
-            $order = $this->orderService->createOrderFromUser($user, $request->toDto());
+            $order = $this->orderService->createOrder($userDto, $request->toDto());
 
             return response()->json([
                 'message' => 'Заказ успешно оформлен',

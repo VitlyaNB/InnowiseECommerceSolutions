@@ -7,9 +7,9 @@ use App\Dto\LoginDto;
 use App\Dto\RegisterDto;
 use App\Dto\UpdateUserDto;
 use App\Dto\UserDto;
-use App\Models\User;
 use App\Repositories\Interfaces\CartItemRepositoryInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
+use App\Services\Interfaces\AuthTokenServiceInterface;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -18,13 +18,13 @@ final readonly class AuthService
     public function __construct(
         private UserRepositoryInterface $userRepository,
         private CartItemRepositoryInterface $cartRepository,
+        private AuthTokenServiceInterface $authTokenService,
     ) {}
 
     public function register(RegisterDto $dto): AuthDto
     {
         $userDto = $this->userRepository->create($dto);
-        $user = User::query()->findOrFail($userDto->id);
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $this->authTokenService->createForUserId($userDto->id);
 
         return new AuthDto(user: $userDto, token: $token);
     }
@@ -51,8 +51,7 @@ final readonly class AuthService
             $this->mergeSessionToUser($sessionId, $userDto->id);
         }
 
-        $user = User::query()->findOrFail($userDto->id);
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $this->authTokenService->createForUserId($userDto->id);
 
         return new AuthDto(user: $userDto, token: $token);
     }

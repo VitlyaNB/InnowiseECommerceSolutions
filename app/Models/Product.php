@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Dto\ProductFiltersDto;
 use Database\Factories\ProductFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -101,5 +103,15 @@ class Product extends Model
     public function orderItems(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function scopeFilter(Builder $query, ProductFiltersDto $filters): Builder
+    {
+        return $query
+            ->when($filters->categoryId !== null, fn ($q) => $q->where('category_id', $filters->categoryId))
+            ->when($filters->isActive !== null, fn ($q) => $q->where('is_active', $filters->isActive))
+            ->when($filters->priceMin !== null, fn ($q) => $q->where('price', '>=', $filters->priceMin))
+            ->when($filters->priceMax !== null, fn ($q) => $q->where('price', '<=', $filters->priceMax))
+            ->when($filters->inStock === true, fn ($q) => $q->where('quantity', '>', 0));
     }
 }

@@ -114,14 +114,6 @@ class UserRepository implements UserRepositoryInterface
         return $this->mapToDto($user);
     }
 
-    public function findByIdForUpdate(int $id): ?UserDto
-    {
-        /** @var User|null $user */
-        $user = User::query()->lockForUpdate()->find($id);
-
-        return $user ? $this->mapToDto($user) : null;
-    }
-
     public function decrementBalance(int $userId, float $amount): bool
     {
         /** @var User|null $user */

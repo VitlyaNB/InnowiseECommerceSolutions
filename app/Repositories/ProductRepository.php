@@ -17,37 +17,15 @@ class ProductRepository implements ProductRepositoryInterface
 {
     public function getAll(ProductFiltersDto $filters, int $perPage = 15): PaginatedResultDto
     {
-        $query = Product::query()->with(['images', 'category']);
+        $paginator = Product::query()
+            ->with(['images', 'category'])
+            ->filter($filters)
+            ->latest()
+            ->paginate($perPage);
 
-        if ($filters->categoryId !== null) {
-            $query->where('category_id', $filters->categoryId);
-        }
-
-        if ($filters->isActive !== null) {
-            $query->where('is_active', $filters->isActive);
-        }
-
-        if ($filters->priceMin !== null) {
-            $query->where('price', '>=', $filters->priceMin);
-        }
-
-        if ($filters->priceMax !== null) {
-            $query->where('price', '<=', $filters->priceMax);
-        }
-
-        if ($filters->inStock === true) {
-            $query->where('quantity', '>', 0);
-        }
-
-        $paginator = $query->latest()->paginate($perPage);
-
-        $collection = $paginator->getCollection();
-        /** @var array<int, ProductDto> $items */
-        $items = [];
-        foreach ($collection as $product) {
-            /** @var Product $product */
-            $items[] = $this->mapToDto($product);
-        }
+        $items = $paginator->getCollection()
+            ->map(fn (Product $product) => $this->mapToDto($product))
+            ->all();
 
         return new PaginatedResultDto(
             items: $items,

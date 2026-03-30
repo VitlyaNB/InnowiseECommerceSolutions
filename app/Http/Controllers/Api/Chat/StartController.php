@@ -18,10 +18,6 @@ final class StartController extends Controller
         /** @var User $user */
         $user = auth()->user();
 
-        if (! $user) {
-            return response()->json(['message' => 'Требуется авторизация'], 401);
-        }
-
         $chat = $this->chatService->startChat($user->id);
 
         return response()->json($chat->toArray());
