@@ -103,6 +103,7 @@ final readonly class ProductService
             $params = $this->buildElasticsearchQuery($queryDto);
             $results = $this->executeSearch($params);
             $products = $this->mapHitsToProducts($results);
+            /** @var array{meta: array<string, mixed>, filters: array<string, mixed>} $filters */
             $filters = $this->extractFilters($results, $queryDto->perPage, $queryDto->page);
 
             return new ProductSearchResultDto(
@@ -117,6 +118,9 @@ final readonly class ProductService
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function buildElasticsearchQuery(ProductSearchQueryDto $queryDto): array
     {
         $params = [
@@ -179,12 +183,22 @@ final readonly class ProductService
         return $params;
     }
 
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
     private function executeSearch(array $params): array
     {
+        $results = $this->elasticsearch->search($params);
+
         /** @var array<string, mixed> $results */
-        return $this->elasticsearch->search($params);
+        return $results;
     }
 
+    /**
+     * @param  array<string, mixed>  $results
+     * @return array<int, ProductDto>
+     */
     private function mapHitsToProducts(array $results): array
     {
         /** @var array<string, mixed> $hits */
@@ -214,6 +228,10 @@ final readonly class ProductService
         return $products;
     }
 
+    /**
+     * @param  array<string, mixed>  $results
+     * @return array{meta: array<string, mixed>, filters: array<string, mixed>}
+     */
     private function extractFilters(array $results, int $perPage, int $page): array
     {
         /** @var array<string, mixed> $hits */

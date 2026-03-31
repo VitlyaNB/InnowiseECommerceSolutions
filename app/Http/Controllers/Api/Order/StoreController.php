@@ -25,8 +25,10 @@ final class StoreController extends Controller
     public function __invoke(StoreOrderRequest $request): JsonResponse
     {
         try {
-            /** @var User $user */
-            $user = auth()->user();
+            $user = $request->user();
+            if (! $user instanceof User) {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
 
             $userDto = new UserDto(
                 id: $user->id,
@@ -41,7 +43,7 @@ final class StoreController extends Controller
 
             $order = $this->orderService->createOrder($userDto, $request->toDto(), $sessionId);
             $updatedUser = $this->userRepository->findById($user->id);
-            $newBalance = $updatedUser?->balance ?? (float) $user->balance;
+            $newBalance = $updatedUser !== null ? $updatedUser->balance : (float) $user->balance;
 
             return response()->json([
                 'message' => 'Заказ успешно оформлен',

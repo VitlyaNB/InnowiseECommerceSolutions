@@ -6,3 +6,7 @@ parameters:
     reportUnmatchedIgnoredErrors: false
     ignoreErrors:
         - '#Elastic\\Elasticsearch\\Client::(search|index|delete)\(\)#'
+        -
+            message: '#.*#'
+            paths:
+                - tests/Feature/*

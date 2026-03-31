@@ -78,7 +78,13 @@ final class OrderRepository implements OrderRepositoryInterface
                     price: (float) $item->price,
                     id: (int) $item->id,
                     product: $item->relationLoaded('product') && $item->product !== null
-                        ? new ProductDto(
+                        ? (function () use ($item): ProductDto {
+                            /** @var array<int, string> $imagePaths */
+                            $imagePaths = $item->product->relationLoaded('images')
+                                ? $item->product->images->pluck('image_path')->all()
+                                : [];
+
+                            return new ProductDto(
                             id: (int) $item->product->id,
                             name: (string) $item->product->name,
                             description: (string) ($item->product->description ?? ''),
@@ -86,10 +92,9 @@ final class OrderRepository implements OrderRepositoryInterface
                             quantity: (int) $item->product->quantity,
                             categoryId: (int) $item->product->category_id,
                             categoryName: $item->product->category !== null ? (string) $item->product->category->name : null,
-                            images: $item->product->relationLoaded('images')
-                                ? $item->product->images->pluck('image_path')->all()
-                                : [],
-                        )
+                            images: $imagePaths,
+                        );
+                        })()
                         : null,
                 ))
                 ->all()

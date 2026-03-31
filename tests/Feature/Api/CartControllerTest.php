@@ -12,10 +12,10 @@ class CartControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_can_add_product_to_cart()
+    public function test_user_can_add_product_to_cart(): void
     {
-        $user = User::factory()->create();
-        $product = Product::factory()->create(['quantity' => 10]);
+        $user = User::factory()->createOne();
+        $product = Product::factory()->createOne(['quantity' => 10]);
 
         $response = $this->actingAs($user)->postJson('/api/cart', [
             'product_id' => $product->id,
@@ -30,10 +30,10 @@ class CartControllerTest extends TestCase
         ]);
     }
 
-    public function test_user_can_update_cart_item_quantity()
+    public function test_user_can_update_cart_item_quantity(): void
     {
-        $user = User::factory()->create();
-        $product = Product::factory()->create();
+        $user = User::factory()->createOne();
+        $product = Product::factory()->createOne();
         $cartItem = CartItem::query()->create([
             'user_id' => $user->id,
             'product_id' => $product->id,
@@ -48,10 +48,10 @@ class CartControllerTest extends TestCase
         $this->assertEquals(5, $cartItem->fresh()->quantity);
     }
 
-    public function test_user_can_remove_item_from_cart()
+    public function test_user_can_remove_item_from_cart(): void
     {
-        $user = User::factory()->create();
-        $product = Product::factory()->create();
+        $user = User::factory()->createOne();
+        $product = Product::factory()->createOne();
         $cartItem = CartItem::query()->create([
             'user_id' => $user->id,
             'product_id' => $product->id,

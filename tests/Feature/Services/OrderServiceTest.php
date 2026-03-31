@@ -35,10 +35,10 @@ class OrderServiceTest extends TestCase
         );
     }
 
-    public function test_order_fails_if_insufficient_balance()
+    public function test_order_fails_if_insufficient_balance(): void
     {
-        $user = User::factory()->create(['balance' => 0]);
-        $product = Product::factory()->create(['price' => 1000, 'quantity' => 10]);
+        $user = User::factory()->createOne(['balance' => 0]);
+        $product = Product::factory()->createOne(['price' => 1000, 'quantity' => 10]);
 
         $cartItem = CartItem::query()->create([
             'user_id' => $user->id,
@@ -58,10 +58,10 @@ class OrderServiceTest extends TestCase
         );
     }
 
-    public function test_order_reduces_product_stock()
+    public function test_order_reduces_product_stock(): void
     {
-        $user = User::factory()->create(['balance' => 1000]);
-        $product = Product::factory()->create(['price' => 100, 'quantity' => 5]);
+        $user = User::factory()->createOne(['balance' => 1000]);
+        $product = Product::factory()->createOne(['price' => 100, 'quantity' => 5]);
 
         $cartItem = CartItem::query()->create([
             'user_id' => $user->id,
@@ -80,16 +80,16 @@ class OrderServiceTest extends TestCase
         $this->assertEquals(3, $product->fresh()->quantity);
     }
 
-    public function test_order_fails_when_part_of_selected_items_is_missing_in_user_cart()
+    public function test_order_fails_when_part_of_selected_items_is_missing_in_user_cart(): void
     {
-        $user = User::factory()->create(['balance' => 1000]);
-        $product = Product::factory()->create(['price' => 100, 'quantity' => 5]);
+        $user = User::factory()->createOne(['balance' => 1000]);
+        $product = Product::factory()->createOne(['price' => 100, 'quantity' => 5]);
         $userCartItem = CartItem::query()->create([
             'user_id' => $user->id,
             'product_id' => $product->id,
             'quantity' => 1,
         ]);
-        $otherUser = User::factory()->create();
+        $otherUser = User::factory()->createOne();
         $otherCartItem = CartItem::query()->create([
             'user_id' => $otherUser->id,
             'product_id' => $product->id,

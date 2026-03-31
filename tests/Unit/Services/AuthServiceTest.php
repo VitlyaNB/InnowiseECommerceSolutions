@@ -8,26 +8,25 @@ use App\Repositories\Interfaces\CartItemRepositoryInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Services\AuthService;
 use App\Services\Interfaces\AuthTokenServiceInterface;
-use Mockery;
-use Mockery\MockInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use Tests\TestCase;
 
 class AuthServiceTest extends TestCase
 {
-    private UserRepositoryInterface|MockInterface $userRepository;
+    private UserRepositoryInterface&MockObject $userRepository;
 
-    private CartItemRepositoryInterface|MockInterface $cartRepository;
+    private CartItemRepositoryInterface&MockObject $cartRepository;
 
-    private AuthTokenServiceInterface|MockInterface $authTokenService;
+    private AuthTokenServiceInterface&MockObject $authTokenService;
 
     private AuthService $authService;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->userRepository = Mockery::mock(UserRepositoryInterface::class);
-        $this->cartRepository = Mockery::mock(CartItemRepositoryInterface::class);
-        $this->authTokenService = Mockery::mock(AuthTokenServiceInterface::class);
+        $this->userRepository = $this->createMock(UserRepositoryInterface::class);
+        $this->cartRepository = $this->createMock(CartItemRepositoryInterface::class);
+        $this->authTokenService = $this->createMock(AuthTokenServiceInterface::class);
         $this->authService = new AuthService($this->userRepository, $this->cartRepository, $this->authTokenService);
     }
 
@@ -47,15 +46,17 @@ class AuthServiceTest extends TestCase
             balance: 0.0,
         );
 
-        $this->userRepository->shouldReceive('create')
-            ->once()
+        $this->userRepository
+            ->expects($this->once())
+            ->method('create')
             ->with($dto)
-            ->andReturn($userDto);
+            ->willReturn($userDto);
 
-        $this->authTokenService->shouldReceive('createForUserId')
-            ->once()
+        $this->authTokenService
+            ->expects($this->once())
+            ->method('createForUserId')
             ->with(1)
-            ->andReturn('test-token');
+            ->willReturn('test-token');
 
         $result = $this->authService->register($dto);
 

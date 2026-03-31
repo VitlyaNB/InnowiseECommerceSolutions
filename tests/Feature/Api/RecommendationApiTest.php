@@ -10,9 +10,9 @@ class RecommendationApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_get_recommendations_returns_valid_structure()
+    public function test_get_recommendations_returns_valid_structure(): void
     {
-        $product = Product::factory()->create();
+        $product = Product::factory()->createOne();
         Product::factory()->count(3)->create(['category_id' => $product->category_id]);
 
         $response = $this->getJson("/api/products/{$product->id}/recommendations");

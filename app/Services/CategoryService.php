@@ -38,7 +38,8 @@ final readonly class CategoryService
 
     public function createCategory(CategoryDto $data): CategoryDto
     {
-        return $this->transactionManager->transaction(function () use ($data): CategoryDto {
+        /** @var CategoryDto $createdCategory */
+        $createdCategory = $this->transactionManager->transaction(function () use ($data): CategoryDto {
             $imagePath = null;
             if ($data->image) {
                 /** @var string $disk */
@@ -57,6 +58,8 @@ final readonly class CategoryService
 
             return $this->categoryRepository->create($dtoToSave);
         });
+
+        return $createdCategory;
     }
 
     public function updateCategory(int $id, CategoryDto $data): ?CategoryDto
@@ -91,7 +94,8 @@ final readonly class CategoryService
 
     public function deleteCategory(int $id): bool
     {
-        return $this->transactionManager->transaction(function () use ($id): bool {
+        /** @var bool $deleted */
+        $deleted = $this->transactionManager->transaction(function () use ($id): bool {
             $category = $this->getCategoryById($id);
 
             $products = $this->productRepository->getByCategory($id);
@@ -107,5 +111,7 @@ final readonly class CategoryService
 
             return $this->categoryRepository->delete($id);
         });
+
+        return $deleted;
     }
 }

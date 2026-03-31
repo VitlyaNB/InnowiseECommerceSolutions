@@ -10,7 +10,7 @@ class AuthControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_can_register_with_valid_data()
+    public function test_user_can_register_with_valid_data(): void
     {
         $userData = [
             'name' => 'Ivan Ivanov',
@@ -33,9 +33,9 @@ class AuthControllerTest extends TestCase
         ]);
     }
 
-    public function test_registration_fails_if_email_exists()
+    public function test_registration_fails_if_email_exists(): void
     {
-        User::factory()->create(['email' => 'exists@example.com']);
+        User::factory()->createOne(['email' => 'exists@example.com']);
 
         $userData = [
             'name' => 'New User',

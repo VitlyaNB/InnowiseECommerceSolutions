@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\ChatService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 final class StartController extends Controller
 {
@@ -13,10 +14,13 @@ final class StartController extends Controller
         private readonly ChatService $chatService
     ) {}
 
-    public function __invoke(): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        /** @var User $user */
-        $user = auth()->user();
+        $user = $request->user();
+
+        if (! $user instanceof User) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
 
         $chat = $this->chatService->startChat($user->id);
 

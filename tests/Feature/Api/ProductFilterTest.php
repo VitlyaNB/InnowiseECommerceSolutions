@@ -11,11 +11,11 @@ class ProductFilterTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_can_filter_products_by_category()
+    public function test_can_filter_products_by_category(): void
     {
-        $category = Category::factory()->create();
-        $product1 = Product::factory()->create(['category_id' => $category->id]);
-        $product2 = Product::factory()->create();
+        $category = Category::factory()->createOne();
+        $product1 = Product::factory()->createOne(['category_id' => $category->id]);
+        $product2 = Product::factory()->createOne();
 
         $response = $this->getJson("/api/categories/{$category->id}/products");
 

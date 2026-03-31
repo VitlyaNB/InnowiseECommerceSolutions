@@ -55,7 +55,12 @@ final readonly class OrderService
 
             SendOrderConfirmationJob::dispatch($order->id);
 
-            return $this->orderRepository->findByIdWithItems($order->id);
+            $savedOrder = $this->orderRepository->findByIdWithItems($order->id);
+            if ($savedOrder === null) {
+                throw new RuntimeException('Не удалось получить созданный заказ.');
+            }
+
+            return $savedOrder;
         } catch (Throwable $exception) {
             $this->transactionManager->rollBack();
 
@@ -65,6 +70,7 @@ final readonly class OrderService
 
     /**
      * @param  array<int, CartItemDto>  $cartItems
+     * @param  array<int, int>  $selectedIds
      */
     private function validateCartItems(array $cartItems, array $selectedIds, int $userId): void
     {

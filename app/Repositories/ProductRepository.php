@@ -18,13 +18,20 @@ final class ProductRepository implements ProductRepositoryInterface
     {
         $paginator = Product::query()
             ->with(['images', 'category'])
-            ->filter($filters)
+            ->when($filters->categoryId !== null, fn ($query) => $query->where('category_id', $filters->categoryId))
+            ->when($filters->isActive !== null, fn ($query) => $query->where('is_active', $filters->isActive))
+            ->when($filters->priceMin !== null, fn ($query) => $query->where('price', '>=', $filters->priceMin))
+            ->when($filters->priceMax !== null, fn ($query) => $query->where('price', '<=', $filters->priceMax))
+            ->when($filters->inStock === true, fn ($query) => $query->where('quantity', '>', 0))
             ->latest()
             ->paginate($perPage);
 
-        $items = $paginator->getCollection()
-            ->map(fn (Product $product) => $this->mapToDto($product))
-            ->all();
+        /** @var array<int, ProductDto> $items */
+        $items = [];
+        foreach ($paginator->getCollection() as $product) {
+            /** @var Product $product */
+            $items[] = $this->mapToDto($product);
+        }
 
         return new PaginatedResultDto(
             items: $items,

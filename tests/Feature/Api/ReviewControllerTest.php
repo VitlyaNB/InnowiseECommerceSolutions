@@ -14,13 +14,13 @@ class ReviewControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_can_leave_review_for_product()
+    public function test_user_can_leave_review_for_product(): void
     {
-        $user = User::factory()->create();
-        $product = Product::factory()->create();
+        $user = User::factory()->createOne();
+        $product = Product::factory()->createOne();
 
-        $order = Order::factory()->create(['user_id' => $user->id, 'status' => 'paid']);
-        OrderItem::factory()->create([
+        $order = Order::factory()->createOne(['user_id' => $user->id, 'status' => 'paid']);
+        OrderItem::factory()->createOne([
             'order_id' => $order->id,
             'product_id' => $product->id,
             'quantity' => 1,
@@ -41,13 +41,13 @@ class ReviewControllerTest extends TestCase
         ]);
     }
 
-    public function test_user_can_toggle_like_on_review()
+    public function test_user_can_toggle_like_on_review(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->createOne();
 
-        $product = Product::factory()->create();
+        $product = Product::factory()->createOne();
         $review = Review::query()->create([
-            'user_id' => User::factory()->create()->id,
+            'user_id' => User::factory()->createOne()->id,
             'product_id' => $product->id,
             'rating' => 4,
             'comment' => 'Test Review',

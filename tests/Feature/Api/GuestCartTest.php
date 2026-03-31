@@ -10,9 +10,9 @@ class GuestCartTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_can_add_item_to_cart_via_session()
+    public function test_guest_can_add_item_to_cart_via_session(): void
     {
-        $product = Product::factory()->create();
+        $product = Product::factory()->createOne();
         $sessionId = 'test_session_123';
 
         $response = $this->withHeader('X-Session-Id', $sessionId)

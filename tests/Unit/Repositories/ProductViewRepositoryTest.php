@@ -19,9 +19,9 @@ class ProductViewRepositoryTest extends TestCase
         $this->repository = new ProductViewRepository;
     }
 
-    public function test_it_can_record_a_view()
+    public function test_it_can_record_a_view(): void
     {
-        $product = Product::factory()->create();
+        $product = Product::factory()->createOne();
 
         $this->repository->recordViewBySession('test-session', $product->id);
 

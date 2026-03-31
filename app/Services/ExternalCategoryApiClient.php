@@ -7,6 +7,9 @@ use RuntimeException;
 
 final class ExternalCategoryApiClient
 {
+    /**
+     * @return array<int, array<string, mixed>|string>
+     */
     public function fetchCategories(): array
     {
         /** @var string|null $apiUrl */
@@ -40,6 +43,7 @@ final class ExternalCategoryApiClient
             throw new RuntimeException('Некорректный формат данных от внешнего сервиса.');
         }
 
+        /** @var array<int, array<string, mixed>|string> $categories */
         return $categories;
     }
 }

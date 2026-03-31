@@ -12,15 +12,15 @@ class ProductObserverTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_it_logs_product_creation()
+    public function test_it_logs_product_creation(): void
     {
         Log::shouldReceive('info')
             ->once()
             ->withArgs(fn ($message) => str_contains($message, 'Product created'));
 
-        $category = Category::factory()->create();
+        $category = Category::factory()->createOne();
 
-        Product::create([
+        Product::query()->create([
             'name' => 'Observer Test Product',
             'price' => 100,
             'quantity' => 10,

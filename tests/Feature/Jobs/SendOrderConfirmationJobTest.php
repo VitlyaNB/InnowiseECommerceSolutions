@@ -31,8 +31,8 @@ class SendOrderConfirmationJobTest extends TestCase
 
     public function test_it_sends_email_to_user(): void
     {
-        $user = User::factory()->create(['email' => 'customer@example.com']);
-        $order = Order::factory()->create([
+        $user = User::factory()->createOne(['email' => 'customer@example.com']);
+        $order = Order::factory()->createOne([
             'user_id' => $user->id,
             'total_amount' => 500,
         ]);

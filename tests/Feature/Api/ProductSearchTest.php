@@ -15,10 +15,10 @@ class ProductSearchTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_product_search_returns_correct_results()
+    public function test_product_search_returns_correct_results(): void
     {
-        $product = Product::factory()->create(['name' => 'iPhone 15 Pro']);
-        Product::factory()->create(['name' => 'Samsung Galaxy S23']);
+        $product = Product::factory()->createOne(['name' => 'iPhone 15 Pro']);
+        Product::factory()->createOne(['name' => 'Samsung Galaxy S23']);
 
         $mockHandler = new MockHandler([
             new Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([
@@ -45,7 +45,7 @@ class ProductSearchTest extends TestCase
             ->assertJsonMissing(['name' => 'Samsung Galaxy S23']);
     }
 
-    public function test_search_with_empty_query_returns_all_or_error()
+    public function test_search_with_empty_query_returns_all_or_error(): void
     {
         $mockHandler = new MockHandler([
             new Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([

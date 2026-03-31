@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Repositories\Interfaces\ChatRepositoryInterface;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 final class UserIndexController extends Controller
 {
@@ -13,10 +14,13 @@ final class UserIndexController extends Controller
         private readonly ChatRepositoryInterface $chatRepository
     ) {}
 
-    public function __invoke(): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        /** @var User $user */
-        $user = auth()->user();
+        $user = $request->user();
+
+        if (! $user instanceof User) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
 
         $chat = $this->chatRepository->findByUserIdWithMessages($user->id);
 

@@ -10,9 +10,9 @@ class GetProductByIdActionTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_can_get_product_by_id()
+    public function test_can_get_product_by_id(): void
     {
-        $product = Product::factory()->create([
+        $product = Product::factory()->createOne([
             'name' => 'Specific Gadget',
             'price' => 299.99,
         ]);
@@ -24,7 +24,7 @@ class GetProductByIdActionTest extends TestCase
             ->assertJsonPath('data.price', 299.99);
     }
 
-    public function test_returns_404_for_non_existent_product()
+    public function test_returns_404_for_non_existent_product(): void
     {
         $response = $this->getJson('/api/products/99999');
 

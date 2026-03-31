@@ -11,10 +11,10 @@ class ProductViewTrackingTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_viewing_product_records_interaction()
+    public function test_viewing_product_records_interaction(): void
     {
-        $user = User::factory()->create();
-        $product = Product::factory()->create();
+        $user = User::factory()->createOne();
+        $product = Product::factory()->createOne();
 
         $this->actingAs($user)->postJson("/api/products/{$product->id}/view");
 
@@ -24,9 +24,9 @@ class ProductViewTrackingTest extends TestCase
         ]);
     }
 
-    public function test_guest_viewing_product_records_interaction_without_user_id()
+    public function test_guest_viewing_product_records_interaction_without_user_id(): void
     {
-        $product = Product::factory()->create();
+        $product = Product::factory()->createOne();
 
         $this->postJson("/api/products/{$product->id}/view");
 

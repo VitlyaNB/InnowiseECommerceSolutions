@@ -13,12 +13,12 @@ class ChatControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_sending_message_broadcasts_event()
+    public function test_sending_message_broadcasts_event(): void
     {
         Event::fake();
 
-        $user = User::factory()->create();
-        $chat = Chat::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->createOne();
+        $chat = Chat::factory()->createOne(['user_id' => $user->id]);
 
         $response = $this->actingAs($user)->postJson("/api/chats/{$chat->id}/messages", [
             'message' => 'Hello, support!',
@@ -33,11 +33,11 @@ class ChatControllerTest extends TestCase
         });
     }
 
-    public function test_user_cannot_view_others_chats()
+    public function test_user_cannot_view_others_chats(): void
     {
-        $user1 = User::factory()->create();
-        $user2 = User::factory()->create();
-        $chatOfUser2 = Chat::factory()->create(['user_id' => $user2->id]);
+        $user1 = User::factory()->createOne();
+        $user2 = User::factory()->createOne();
+        $chatOfUser2 = Chat::factory()->createOne(['user_id' => $user2->id]);
 
         $response = $this->actingAs($user1)->getJson("/api/chats/{$chatOfUser2->id}");
 

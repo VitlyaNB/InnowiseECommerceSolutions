@@ -11,11 +11,11 @@ class OrderControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_can_view_their_orders()
+    public function test_user_can_view_their_orders(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->createOne();
         Order::factory()->count(2)->create(['user_id' => $user->id]);
-        Order::factory()->create();
+        Order::factory()->createOne();
 
         $response = $this->actingAs($user)->getJson('/api/orders');
 

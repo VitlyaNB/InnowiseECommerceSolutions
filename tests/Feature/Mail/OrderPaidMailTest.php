@@ -11,7 +11,7 @@ class OrderPaidMailTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_email_contains_order_details()
+    public function test_email_contains_order_details(): void
     {
         $orderDto = new OrderDetailsDto(
             id: 1,

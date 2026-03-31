@@ -12,7 +12,7 @@ class ProductImageObserverTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_it_deletes_file_from_storage_on_model_delete()
+    public function test_it_deletes_file_from_storage_on_model_delete(): void
     {
         $mockFileService = $this->createMock(FileService::class);
         $mockFileService->expects($this->once())
@@ -20,7 +20,7 @@ class ProductImageObserverTest extends TestCase
             ->with('products/image.jpg', 's3');
         $this->app->instance(FileService::class, $mockFileService);
 
-        $product = Product::factory()->create();
+        $product = Product::factory()->createOne();
         $image = ProductImage::create([
             'product_id' => $product->id,
             'image_path' => 'products/image.jpg',

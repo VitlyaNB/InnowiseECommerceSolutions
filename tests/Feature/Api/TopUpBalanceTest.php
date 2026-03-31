@@ -10,9 +10,9 @@ class TopUpBalanceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_can_top_up_balance()
+    public function test_user_can_top_up_balance(): void
     {
-        $user = User::factory()->create(['balance' => 100]);
+        $user = User::factory()->createOne(['balance' => 100]);
 
         $response = $this->actingAs($user)->postJson('/api/wallet/top-up', [
             'amount' => 150,
@@ -22,9 +22,9 @@ class TopUpBalanceTest extends TestCase
         $this->assertEquals(250, $user->fresh()->balance);
     }
 
-    public function test_top_up_requires_positive_amount()
+    public function test_top_up_requires_positive_amount(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->createOne();
 
         $response = $this->actingAs($user)->postJson('/api/wallet/top-up', [
             'amount' => -50,

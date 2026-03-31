@@ -16,10 +16,10 @@ class ProductSearchFilterTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_search_can_filter_by_price_range()
+    public function test_search_can_filter_by_price_range(): void
     {
-        $target = Product::factory()->create(['name' => 'Cheap', 'price' => 50]);
-        Product::factory()->create(['name' => 'Expensive', 'price' => 500]);
+        $target = Product::factory()->createOne(['name' => 'Cheap', 'price' => 50]);
+        Product::factory()->createOne(['name' => 'Expensive', 'price' => 500]);
 
         $mockHandler = new MockHandler([
             new Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([
@@ -46,11 +46,11 @@ class ProductSearchFilterTest extends TestCase
             ->assertJsonMissing(['name' => 'Expensive']);
     }
 
-    public function test_search_can_filter_by_category()
+    public function test_search_can_filter_by_category(): void
     {
-        $cat = Category::factory()->create();
-        $product = Product::factory()->create(['category_id' => $cat->id, 'name' => 'Target']);
-        $other = Product::factory()->create(['name' => 'Target']);
+        $cat = Category::factory()->createOne();
+        $product = Product::factory()->createOne(['category_id' => $cat->id, 'name' => 'Target']);
+        $other = Product::factory()->createOne(['name' => 'Target']);
 
         $mockHandler = new MockHandler([
             new Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([

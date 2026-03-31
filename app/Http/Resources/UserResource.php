@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Dto\UserDto;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -11,11 +12,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class UserResource extends JsonResource
 {
-    public function __construct(mixed $resource)
-    {
-        parent::__construct($resource);
-    }
-
     /**
      * Transform the resource into an array.
      *
@@ -23,13 +19,30 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $resource = $this->resource;
+
+        if ($resource instanceof UserDto) {
+            return [
+                'id' => $resource->id,
+                'name' => $resource->name,
+                'email' => $resource->email,
+                'role' => $resource->role,
+                'balance' => (float) $resource->balance,
+                'created_at' => $resource->createdAt,
+            ];
+        }
+
+        if (! $resource instanceof User) {
+            return [];
+        }
+
         return [
-            'id' => $this->resource->id,
-            'name' => $this->resource->name,
-            'email' => $this->resource->email,
-            'role' => $this->resource->role,
-            'balance' => (float) $this->resource->balance,
-            'created_at' => $this->resource->createdAt ?? $this->resource->created_at?->toDateTimeString(),
+            'id' => $resource->id,
+            'name' => $resource->name,
+            'email' => $resource->email,
+            'role' => $resource->role,
+            'balance' => (float) $resource->balance,
+            'created_at' => $resource->created_at->toDateTimeString(),
         ];
     }
 }

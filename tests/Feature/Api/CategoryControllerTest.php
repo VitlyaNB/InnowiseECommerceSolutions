@@ -11,7 +11,7 @@ class CategoryControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_anyone_can_list_categories()
+    public function test_anyone_can_list_categories(): void
     {
         Category::factory()->count(3)->create();
 
@@ -21,9 +21,9 @@ class CategoryControllerTest extends TestCase
             ->assertJsonCount(3);
     }
 
-    public function test_non_admin_cannot_create_category()
+    public function test_non_admin_cannot_create_category(): void
     {
-        $user = User::factory()->create(['role' => 'user']);
+        $user = User::factory()->createOne(['role' => 'user']);
 
         $response = $this->actingAs($user)
             ->postJson('/api/categories', [
@@ -33,9 +33,9 @@ class CategoryControllerTest extends TestCase
         $response->assertStatus(403);
     }
 
-    public function test_admin_can_create_category()
+    public function test_admin_can_create_category(): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->createOne(['role' => 'admin']);
 
         $response = $this->actingAs($admin)
             ->postJson('/api/categories', [

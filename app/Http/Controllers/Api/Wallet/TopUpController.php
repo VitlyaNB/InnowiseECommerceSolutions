@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Wallet;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TopUpRequest;
 use App\Http\Resources\UserResource;
+use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
@@ -47,6 +48,10 @@ final class TopUpController extends Controller
     public function __invoke(TopUpRequest $request): JsonResponse
     {
         $user = $request->user();
+        if (! $user instanceof User) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         $updatedUserDto = $this->userRepository->topUp($user->id, $request->toDto()->amount);
 
         return response()->json([

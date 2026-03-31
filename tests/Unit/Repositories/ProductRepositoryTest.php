@@ -17,13 +17,13 @@ class ProductRepositoryTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->repository = new ProductRepository(new Product);
+        $this->repository = new ProductRepository;
     }
 
-    public function test_get_by_category_returns_correct_products()
+    public function test_get_by_category_returns_correct_products(): void
     {
-        $cat1 = Category::factory()->create();
-        $cat2 = Category::factory()->create();
+        $cat1 = Category::factory()->createOne();
+        $cat2 = Category::factory()->createOne();
 
         Product::factory()->count(3)->create(['category_id' => $cat1->id]);
         Product::factory()->count(2)->create(['category_id' => $cat2->id]);

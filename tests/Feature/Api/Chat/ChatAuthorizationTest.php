@@ -11,10 +11,10 @@ class ChatAuthorizationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_can_access_their_own_chat_channel()
+    public function test_user_can_access_their_own_chat_channel(): void
     {
-        $user = User::factory()->create(['role' => 'user']);
-        $chat = Chat::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->createOne(['role' => 'user']);
+        $chat = Chat::factory()->createOne(['user_id' => $user->id]);
 
         $this->actingAs($user);
 
@@ -26,11 +26,11 @@ class ChatAuthorizationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_user_cannot_access_others_chat_channel()
+    public function test_user_cannot_access_others_chat_channel(): void
     {
         $this->markTestSkipped('Broadcasting auth always returns 200 in this environment');
-        $user = User::factory()->create(['role' => 'user']);
-        $otherChat = Chat::factory()->create();
+        $user = User::factory()->createOne(['role' => 'user']);
+        $otherChat = Chat::factory()->createOne();
 
         $this->actingAs($user);
 

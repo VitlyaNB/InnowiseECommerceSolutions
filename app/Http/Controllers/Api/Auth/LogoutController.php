@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
 final class LogoutController extends Controller
@@ -23,11 +25,11 @@ final class LogoutController extends Controller
             new OA\Response(response: 401, description: 'Unauthorized'),
         ]
     )]
-    public function __invoke(): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        $userId = auth()->id();
-        if ($userId !== null && $userId !== false) {
-            $this->userRepository->deleteTokens((int) $userId);
+        $user = $request->user();
+        if ($user instanceof User) {
+            $this->userRepository->deleteTokens($user->id);
         }
 
         return response()->json(['message' => 'Successfully logged out']);

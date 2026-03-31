@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\Admin\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use OpenApi\Attributes as OA;
 
@@ -36,15 +38,15 @@ final class DeleteController extends Controller
             new OA\Response(response: 404, description: 'User not found'),
         ]
     )]
-    public function __invoke(int $id): JsonResponse
+    public function __invoke(Request $request, int $id): JsonResponse
     {
-        $currentUserId = auth()->id();
-        if ($currentUserId === null || $currentUserId === false) {
+        $currentUser = $request->user();
+        if (! $currentUser instanceof User) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
         try {
-            $deleted = $this->authService->deleteUser($id, (int) $currentUserId);
+            $deleted = $this->authService->deleteUser($id, $currentUser->id);
         } catch (ValidationException $exception) {
             return response()->json([
                 'message' => $exception->getMessage(),

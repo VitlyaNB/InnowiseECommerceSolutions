@@ -19,9 +19,9 @@ class UserRepositoryTest extends TestCase
         $this->repository = new UserRepository;
     }
 
-    public function test_find_by_email_returns_user()
+    public function test_find_by_email_returns_user(): void
     {
-        $user = User::factory()->create(['email' => 'find@me.com']);
+        $user = User::factory()->createOne(['email' => 'find@me.com']);
 
         $found = $this->repository->findByEmail('find@me.com');
 
@@ -29,7 +29,7 @@ class UserRepositoryTest extends TestCase
         $this->assertEquals($user->id, $found->id);
     }
 
-    public function test_find_by_email_returns_null_if_not_found()
+    public function test_find_by_email_returns_null_if_not_found(): void
     {
         $found = $this->repository->findByEmail('nonexistent@me.com');
 

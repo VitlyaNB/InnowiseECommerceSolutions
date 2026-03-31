@@ -15,10 +15,10 @@ class ElasticsearchSearchTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_search_endpoint_returns_paginated_results()
+    public function test_search_endpoint_returns_paginated_results(): void
     {
-        $product1 = Product::factory()->create(['name' => 'Laravel Framework']);
-        Product::factory()->create(['name' => 'React Library']);
+        $product1 = Product::factory()->createOne(['name' => 'Laravel Framework']);
+        Product::factory()->createOne(['name' => 'React Library']);
 
         $mockHandler = new MockHandler([
             new Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([
@@ -50,10 +50,10 @@ class ElasticsearchSearchTest extends TestCase
             ]);
     }
 
-    public function test_search_results_filtering()
+    public function test_search_results_filtering(): void
     {
-        $target = Product::factory()->create(['name' => 'Special Keyboard']);
-        Product::factory()->create(['name' => 'Mouse']);
+        $target = Product::factory()->createOne(['name' => 'Special Keyboard']);
+        Product::factory()->createOne(['name' => 'Mouse']);
 
         $mockHandler = new MockHandler([
             new Response(200, ['X-Elastic-Product' => 'Elasticsearch', 'Content-Type' => 'application/json'], json_encode([

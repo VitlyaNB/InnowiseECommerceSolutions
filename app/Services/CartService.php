@@ -24,6 +24,10 @@ final readonly class CartService
         }
 
         if ($existingCartItem) {
+            if ($existingCartItem->id === null) {
+                return null;
+            }
+
             $this->cartRepository->updateQuantity($existingCartItem->id, $existingCartItem->quantity + $dto->quantity);
 
             return $this->cartRepository->findById($existingCartItem->id);

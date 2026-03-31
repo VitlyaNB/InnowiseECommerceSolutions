@@ -14,14 +14,16 @@ use Tests\TestCase;
 
 class CartServiceTest extends TestCase
 {
-    private CartItemRepositoryInterface|MockInterface $cartRepo;
+    private CartItemRepositoryInterface $cartRepo;
 
     private CartService $service;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->cartRepo = Mockery::mock(CartItemRepositoryInterface::class);
+        /** @var CartItemRepositoryInterface&MockInterface $cartRepository */
+        $cartRepository = Mockery::mock(CartItemRepositoryInterface::class);
+        $this->cartRepo = $cartRepository;
         $this->service = new CartService($this->cartRepo);
     }
 

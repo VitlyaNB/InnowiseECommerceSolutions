@@ -5,7 +5,7 @@ namespace Tests\Unit\Resources;
 use App\Http\Resources\ProductResource;
 use App\Models\Category;
 use App\Models\Product;
-use App\Services\FileService;
+use App\Services\Interfaces\FileServiceInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -13,13 +13,13 @@ class ProductResourceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_product_resource_has_required_fields()
+    public function test_product_resource_has_required_fields(): void
     {
-        $mockFileService = $this->createMock(FileService::class);
-        $this->app->instance(FileService::class, $mockFileService);
+        $mockFileService = $this->createMock(FileServiceInterface::class);
+        $this->app->instance(FileServiceInterface::class, $mockFileService);
 
-        $category = Category::factory()->create(['name' => 'Electronics']);
-        $product = Product::factory()->create([
+        $category = Category::factory()->createOne(['name' => 'Electronics']);
+        $product = Product::factory()->createOne([
             'name' => 'Test Product',
             'price' => 100.50,
             'category_id' => $category->id,
