@@ -38,7 +38,7 @@ final class StoreController extends Controller
             $sessionId = $this->cartSessionResolver->resolveSessionId($request);
             $this->cartItemRepository->mergeSessionToUser($sessionId, $user->id);
 
-            $order = $this->orderService->createOrder($userDto, $request->toDto());
+            $order = $this->orderService->createOrder($userDto, $request->toDto(), $sessionId);
             $freshUser = $user->fresh();
             $newBalance = $freshUser ? (float) $freshUser->balance : (float) $user->balance;
 

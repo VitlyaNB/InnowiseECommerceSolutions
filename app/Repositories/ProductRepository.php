@@ -107,6 +107,11 @@ class ProductRepository implements ProductRepositoryInterface
         ProductImage::query()->where('product_id', $productId)->delete();
     }
 
+    public function deleteOrderItemsByProductId(int $productId): void
+    {
+        OrderItem::query()->where('product_id', $productId)->delete();
+    }
+
     /** @return array<int, ProductDto> */
     public function getByIds(ProductIdsQueryDto $query): array
     {
@@ -222,9 +227,9 @@ class ProductRepository implements ProductRepositoryInterface
             name: $product->name,
             description: $product->description,
             price: (float) $product->price,
-            oldPrice: $product->old_price !== null ? (float) $product->old_price : null,
             quantity: (int) $product->quantity,
             categoryId: (int) $product->category_id,
+            categoryName: $product->category !== null ? (string) $product->category->name : null,
             isActive: (bool) $product->is_active,
             images: $imagePaths,
         );

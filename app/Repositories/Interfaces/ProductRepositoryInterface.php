@@ -27,6 +27,8 @@ interface ProductRepositoryInterface
 
     public function deleteImages(int $productId): void;
 
+    public function deleteOrderItemsByProductId(int $productId): void;
+
     /** @return array<int, ProductDto> */
     public function getByIds(ProductIdsQueryDto $query): array;
 

@@ -22,7 +22,6 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'name', type: 'string', example: 'iPhone 15 Pro'),
         new OA\Property(property: 'description', type: 'string', example: 'The latest Apple flagship phone.'),
         new OA\Property(property: 'price', type: 'number', format: 'float', example: 999.99),
-        new OA\Property(property: 'old_price', type: 'number', format: 'float', nullable: true, example: 1099.99),
         new OA\Property(property: 'quantity', type: 'integer', example: 50),
         new OA\Property(
             property: 'images',
@@ -57,11 +56,10 @@ class ProductResource extends JsonResource
             return [
                 'id' => $this->resource->id,
                 'category_id' => $this->resource->categoryId,
-                'category_name' => '',
+                'category_name' => $this->resource->categoryName ?? '',
                 'name' => $this->resource->name,
                 'description' => $this->resource->description,
                 'price' => $this->resource->price,
-                'old_price' => $this->resource->oldPrice,
                 'quantity' => $this->resource->quantity,
                 'images' => $imageUrls,
                 'created_at' => null,
@@ -75,7 +73,6 @@ class ProductResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'price' => (float) $this->price,
-            'old_price' => $this->old_price ? (float) $this->old_price : null,
             'quantity' => (int) $this->quantity,
             'images' => $this->whenLoaded('images', fn () => $this->images->map(fn ($img) => [
                 'id' => $img->id,

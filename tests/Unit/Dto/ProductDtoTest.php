@@ -14,7 +14,6 @@ class ProductDtoTest extends TestCase
             name: 'Phone',
             description: 'Smartphone',
             price: 99.99,
-            oldPrice: 120.00,
             quantity: 5,
             categoryId: 3,
             isActive: true
@@ -25,7 +24,6 @@ class ProductDtoTest extends TestCase
             'name' => 'Phone',
             'description' => 'Smartphone',
             'price' => 99.99,
-            'old_price' => 120.0,
             'quantity' => 5,
             'category_id' => 3,
             'is_active' => true,

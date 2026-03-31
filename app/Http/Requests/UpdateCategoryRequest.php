@@ -22,7 +22,7 @@ class UpdateCategoryRequest extends FormRequest
 
         return [
             'name' => ['sometimes', 'string', 'max:255', 'unique:categories,name,'.(is_scalar($id) ? (string) $id : '')],
-            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp,avif', 'max:5120'],
         ];
     }
 

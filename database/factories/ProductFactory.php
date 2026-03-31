@@ -23,7 +23,6 @@ class ProductFactory extends Factory
             'name' => fake()->words(3, true),
             'description' => fake()->sentence(),
             'price' => fake()->randomFloat(2, 100, 10000),
-            'old_price' => fake()->boolean() ? fake()->randomFloat(2, 11000, 20000) : null,
             'quantity' => fake()->numberBetween(0, 50),
             'is_active' => true,
         ];

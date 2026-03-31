@@ -46,7 +46,7 @@ export default function AdminPage() {
     const [editingUser, setEditingUser] = useState(null);
 
     // Form States
-    const [formData, setFormData] = useState({ name: '', description: '', price: '', old_price: '', quantity: '1', category_id: '' });
+    const [formData, setFormData] = useState({ name: '', description: '', price: '', quantity: '1', category_id: '' });
     const [userData, setUserData] = useState({ name: '', email: '', role: 'user', balance: '0' });
     const [productImages, setProductImages] = useState([]);
     const [productPreviews, setProductPreviews] = useState([]);
@@ -107,7 +107,6 @@ export default function AdminPage() {
             name: product.name,
             description: product.description || '',
             price: product.price,
-            old_price: product.old_price || '',
             quantity: product.quantity,
             category_id: product.category_id || (categories[0]?.id || '')
         });
@@ -161,10 +160,6 @@ export default function AdminPage() {
         });
         productImages.forEach(file => form.append('images[]', file));
         
-        if (editingProduct) {
-            form.append('_method', 'PUT');
-        }
-
         try {
             if (editingProduct) {
                 await api.post(`/products/${editingProduct.id}`, form);
@@ -173,7 +168,7 @@ export default function AdminPage() {
                 await api.post('/products', form);
                 setMsg({ text: 'Товар создан!', isError: false });
             }
-            setFormData({ name: '', description: '', price: '', old_price: '', quantity: '1', category_id: categories[0]?.id || '' });
+            setFormData({ name: '', description: '', price: '', quantity: '1', category_id: categories[0]?.id || '' });
             setProductImages([]); setProductPreviews([]);
             setEditingProduct(null);
             fetchAll();
@@ -186,10 +181,6 @@ export default function AdminPage() {
         form.append('name', categoryName);
         if (categoryImage) form.append('image', categoryImage);
         
-        if (editingCategory) {
-            form.append('_method', 'PUT');
-        }
-
         try {
             if (editingCategory) {
                 await api.post(`/categories/${editingCategory.id}`, form);
@@ -202,14 +193,6 @@ export default function AdminPage() {
             setEditingCategory(null);
             fetchAll();
         } catch (err) { setMsg({ text: 'Ошибка сохранения', isError: true }); }
-    };
-
-    const deleteUser = async (id) => {
-        if (!confirm('Вы уверены?')) return;
-        try {
-            await api.delete(`/users/${id}`);
-            fetchAll();
-        } catch (err) { setMsg({ text: err.response?.data?.message || 'Ошибка удаления', isError: true }); }
     };
 
     return (
@@ -439,7 +422,7 @@ export default function AdminPage() {
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead className="bg-slate-50 dark:bg-slate-900/50 text-[10px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-200 dark:border-slate-700">
-                                <tr><th className="p-6 pl-8">Товар</th><th className="p-6">Цена</th><th className="p-6 text-right pr-8">Действие</th></tr>
+                                <tr><th className="p-6 pl-8">Товар</th><th className="p-6">Цена</th><th className="p-6">Склад</th><th className="p-6 text-right pr-8">Действие</th></tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
                                 {products.map(p => (
@@ -450,10 +433,13 @@ export default function AdminPage() {
                                             </div>
                                             <div>
                                                 <div className="line-clamp-1">{p.name}</div>
-                                                <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mt-1">{p.category?.name || 'Без категории'}</div>
+                                                <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mt-1">
+                                                    {p.category_name || categories.find((category) => category.id === p.category_id)?.name || 'Без категории'}
+                                                </div>
                                             </div>
                                         </td>
                                         <td className="p-4 font-mono text-indigo-600 font-black text-lg">{p.price}</td>
+                                        <td className="p-4 font-mono text-slate-700 dark:text-slate-200 font-bold">{p.quantity}</td>
                                         <td className="p-4 text-right pr-8">
                                             <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
                                                 <button onClick={() => handleProductEdit(p)} className="p-2 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl transition-all">
@@ -489,7 +475,7 @@ export default function AdminPage() {
                                 <button 
                                     onClick={() => {
                                         setEditingProduct(null);
-                                        setFormData({ name: '', description: '', price: '', old_price: '', quantity: '1', category_id: categories[0]?.id || '' });
+                                        setFormData({ name: '', description: '', price: '', quantity: '1', category_id: categories[0]?.id || '' });
                                         setProductImages([]); setProductPreviews([]);
                                     }}
                                     className="px-4 py-2 bg-slate-200 dark:bg-slate-700 rounded-xl font-bold text-xs uppercase"
@@ -510,15 +496,11 @@ export default function AdminPage() {
                                         <input type="number" step="0.01" placeholder="0.00" required value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="admin-input font-mono"/>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase text-slate-400 tracking-wider ml-2">Старая цена (BYN)</label>
-                                        <input type="number" step="0.01" placeholder="0.00" value={formData.old_price} onChange={e => setFormData({...formData, old_price: e.target.value})} className="admin-input font-mono"/>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div className="space-y-2">
                                         <label className="text-xs font-bold uppercase text-slate-400 tracking-wider ml-2">Склад</label>
                                         <input type="number" placeholder="1" required value={formData.quantity} onChange={e => setFormData({...formData, quantity: e.target.value})} className="admin-input font-mono"/>
                                     </div>
+                                </div>
+                                <div className="grid grid-cols-1 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold uppercase text-slate-400 tracking-wider ml-2">Категория</label>
                                         <select value={formData.category_id} onChange={e => setFormData({...formData, category_id: e.target.value})} className="admin-input appearance-none cursor-pointer">

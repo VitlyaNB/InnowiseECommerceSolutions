@@ -19,7 +19,6 @@ use Laravel\Scout\Searchable;
  * @property string $name
  * @property string $description
  * @property float $price
- * @property float|null $old_price
  * @property int $quantity
  * @property bool $is_active
  * @property Carbon $created_at
@@ -37,7 +36,6 @@ class Product extends Model
         'name',
         'description',
         'price',
-        'old_price',
         'quantity',
         'is_active',
     ];

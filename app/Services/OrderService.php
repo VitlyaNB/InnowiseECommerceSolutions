@@ -27,13 +27,17 @@ final readonly class OrderService
         private TransactionManagerInterface $transactionManager,
     ) {}
 
-    public function createOrder(UserDto $user, OrderDto $orderDto): OrderDetailsDto
+    public function createOrder(UserDto $user, OrderDto $orderDto, ?string $sessionId = null): OrderDetailsDto
     {
         $this->transactionManager->beginTransaction();
 
         try {
             $selectedIdsDto = new SelectedIdsDto($orderDto->selectedItemIds);
             $cartItems = $this->cartItemRepository->getSelectedByUser($user->id, $selectedIdsDto);
+            if ($cartItems === [] && $sessionId !== null && $sessionId !== '') {
+                $this->cartItemRepository->mergeSessionToUser($sessionId, $user->id);
+                $cartItems = $this->cartItemRepository->getSelectedByUser($user->id, $selectedIdsDto);
+            }
 
             $this->validateCartItems($cartItems, $orderDto->selectedItemIds, $user->id);
 

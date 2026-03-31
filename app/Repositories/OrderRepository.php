@@ -37,7 +37,7 @@ final class OrderRepository implements OrderRepositoryInterface
     public function findByIdWithItems(int $orderId): ?OrderDetailsDto
     {
         /** @var Order|null $order */
-        $order = Order::query()->with('items')->find($orderId);
+        $order = Order::query()->with(['items.product.images', 'items.product.category'])->find($orderId);
 
         if (! $order) {
             return null;
@@ -52,7 +52,7 @@ final class OrderRepository implements OrderRepositoryInterface
     public function getByUserId(int $userId): array
     {
         $collection = Order::query()
-            ->with(['items.product.images'])
+            ->with(['items.product.images', 'items.product.category'])
             ->where('user_id', $userId)
             ->latest()
             ->get();
@@ -83,9 +83,9 @@ final class OrderRepository implements OrderRepositoryInterface
                             name: (string) $item->product->name,
                             description: (string) ($item->product->description ?? ''),
                             price: (float) $item->product->price,
-                            oldPrice: $item->product->old_price !== null ? (float) $item->product->old_price : null,
                             quantity: (int) $item->product->quantity,
                             categoryId: (int) $item->product->category_id,
+                            categoryName: $item->product->category !== null ? (string) $item->product->category->name : null,
                             images: $item->product->relationLoaded('images')
                                 ? $item->product->images->pluck('image_path')->all()
                                 : [],

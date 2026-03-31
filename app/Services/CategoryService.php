@@ -91,17 +91,21 @@ final readonly class CategoryService
 
     public function deleteCategory(int $id): bool
     {
-        $category = $this->getCategoryById($id);
+        return $this->transactionManager->transaction(function () use ($id): bool {
+            $category = $this->getCategoryById($id);
 
-        $products = $this->productRepository->getByCategory($id);
-        foreach ($products as $product) {
-            $this->productRepository->delete((int) $product->id);
-        }
+            $products = $this->productRepository->getByCategory($id);
+            foreach ($products as $product) {
+                $this->productRepository->deleteImages((int) $product->id);
+                $this->productRepository->deleteOrderItemsByProductId((int) $product->id);
+                $this->productRepository->delete((int) $product->id);
+            }
 
-        if ($category->imagePath) {
-            $this->fileService->delete($category->imagePath);
-        }
+            if ($category->imagePath) {
+                $this->fileService->delete($category->imagePath);
+            }
 
-        return $this->categoryRepository->delete($id);
+            return $this->categoryRepository->delete($id);
+        });
     }
 }

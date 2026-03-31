@@ -22,11 +22,10 @@ class StoreProductRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
-            'old_price' => ['nullable', 'numeric', 'min:0'],
             'quantity' => ['nullable', 'integer', 'min:0'],
             'category_id' => ['required', 'exists:categories,id'],
             'images' => ['nullable', 'array'],
-            'images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
+            'images.*' => ['image', 'mimes:jpeg,png,jpg,webp,avif', 'max:20480'],
         ];
     }
 
@@ -41,8 +40,6 @@ class StoreProductRequest extends FormRequest
         $description = $data['description'] ?? null;
         /** @var float|null $price */
         $price = isset($data['price']) ? (float) $data['price'] : null;
-        /** @var float|null $oldPrice */
-        $oldPrice = isset($data['old_price']) ? (float) $data['old_price'] : null;
         /** @var int|null $quantity */
         $quantity = isset($data['quantity']) ? (int) $data['quantity'] : null;
         /** @var int|null $categoryId */
@@ -58,7 +55,6 @@ class StoreProductRequest extends FormRequest
             name: $name ?? '',
             description: $description,
             price: $price ?? 0.0,
-            oldPrice: $oldPrice,
             quantity: $quantity ?? 0,
             categoryId: $categoryId ?? 0,
             isActive: true,

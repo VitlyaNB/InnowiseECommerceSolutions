@@ -14,9 +14,9 @@ final readonly class ProductDto extends BaseDto
         public ?string $name = null,
         public ?string $description = null,
         public ?float $price = null,
-        public ?float $oldPrice = null,
         public ?int $quantity = null,
         public ?int $categoryId = null,
+        public ?string $categoryName = null,
         public ?bool $isActive = null,
         public array $images = [],
     ) {}
@@ -31,7 +31,6 @@ final readonly class ProductDto extends BaseDto
             'name' => $this->name,
             'description' => $this->description,
             'price' => $this->price,
-            'old_price' => $this->oldPrice,
             'quantity' => $this->quantity,
             'category_id' => $this->categoryId,
             'is_active' => $this->isActive,
