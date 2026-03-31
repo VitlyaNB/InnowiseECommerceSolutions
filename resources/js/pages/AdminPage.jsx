@@ -8,6 +8,28 @@ import {
     Package, Upload, Image as ImageIcon, ShieldCheck
 } from 'lucide-react';
 
+const normalizeAdminChat = (chat) => {
+    const userName = chat?.user?.name ?? chat?.userName ?? 'Пользователь';
+    const userEmail = chat?.user?.email ?? chat?.userEmail ?? null;
+    const rawLastMessage = chat?.last_message ?? chat?.lastMessage ?? null;
+    const lastMessage = rawLastMessage ? {
+        ...rawLastMessage,
+        message: rawLastMessage.message ?? '',
+        created_at: rawLastMessage.created_at ?? rawLastMessage.createdAt ?? null
+    } : null;
+
+    return {
+        ...chat,
+        id: chat?.id ?? null,
+        user: {
+            id: chat?.user?.id ?? chat?.userId ?? null,
+            name: userName,
+            email: userEmail
+        },
+        last_message: lastMessage
+    };
+};
+
 export default function AdminPage() {
     const [activeTab, setActiveTab] = useState('addProduct');
     const [chats, setChats] = useState([]);
@@ -47,7 +69,15 @@ export default function AdminPage() {
         } else if (activeTab === 'manageProducts') {
             api.get('/products').then(res => setProducts(res.data.data || res.data)).finally(() => setLoading(false));
         } else if (activeTab === 'chats') {
-            api.get('/chats').then(res => setChats(res.data.data || res.data)).finally(() => setLoading(false));
+            api.get('/admin/chats')
+                .then(res => {
+                    const rawChats = res.data?.data || res.data || [];
+                    const normalizedChats = Array.isArray(rawChats)
+                        ? rawChats.map(normalizeAdminChat).filter(chat => chat.id !== null)
+                        : [];
+                    setChats(normalizedChats);
+                })
+                .finally(() => setLoading(false));
         } else {
             setLoading(false);
         }
@@ -525,7 +555,7 @@ export default function AdminPage() {
                                         className={`w-full p-4 flex items-center gap-4 hover:bg-indigo-50 dark:hover:bg-slate-700/50 transition-colors text-left border-b border-slate-50 dark:border-slate-700/30 ${selectedChat?.id === chat.id ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''}`}
                                     >
                                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-black shrink-0">
-                                            {chat.user.name[0].toUpperCase()}
+                                            {chat.user.name[0]?.toUpperCase() || 'U'}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="font-bold text-slate-900 dark:text-white truncate">{chat.user.name}</div>
@@ -533,7 +563,9 @@ export default function AdminPage() {
                                         </div>
                                         {chat.last_message && (
                                             <div className="text-[10px] text-slate-400 font-bold">
-                                                {new Date(chat.last_message.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                                {chat.last_message.created_at
+                                                    ? new Date(chat.last_message.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                                                    : ''}
                                             </div>
                                         )}
                                     </button>

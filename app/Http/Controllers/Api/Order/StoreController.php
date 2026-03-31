@@ -31,10 +31,13 @@ final class StoreController extends Controller
             );
 
             $order = $this->orderService->createOrder($userDto, $request->toDto());
+            $freshUser = $user->fresh();
+            $newBalance = $freshUser ? (float) $freshUser->balance : (float) $user->balance;
 
             return response()->json([
                 'message' => 'Заказ успешно оформлен',
                 'order' => $order->toArray(),
+                'new_balance' => $newBalance,
             ], 201);
         } catch (Throwable $exception) {
             return response()->json([

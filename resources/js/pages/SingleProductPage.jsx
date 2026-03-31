@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api';
-import { ShoppingCart, ArrowLeft, Check, MessageCircle } from 'lucide-react';
+import { ShoppingCart, ArrowLeft, Check } from 'lucide-react';
 import Reviews from '../components/Reviews';
 import RecommendationGrid from '../components/RecommendationGrid';
-import { useAuth } from '../contexts/AuthContext';
 
 export default function SingleProductPage() {
     const { id } = useParams();
-    const { setChatOpen } = useAuth();
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [mainImage, setMainImage] = useState(null);
@@ -111,13 +109,6 @@ export default function SingleProductPage() {
                             className="flex-1 px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-lg transition-all shadow-lg active:scale-95 flex items-center justify-center gap-3"
                         >
                             <ShoppingCart className="w-6 h-6" /> Добавить в корзину
-                        </button>
-                        <button
-                            onClick={() => setChatOpen(true)}
-                            className="px-6 py-4 bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 rounded-2xl font-black border-2 border-indigo-100 dark:border-slate-700 hover:border-indigo-600 transition-all flex items-center justify-center gap-3"
-                            title="Связаться с продавцом"
-                        >
-                            <MessageCircle className="w-6 h-6" />
                         </button>
                     </div>
 

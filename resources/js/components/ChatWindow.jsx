@@ -3,6 +3,31 @@ import api from '../api';
 import { AuthContext } from '../contexts/AuthContext';
 import { Send, MessageCircle, X } from 'lucide-react';
 
+const normalizeMessage = (message) => {
+    if (!message || typeof message !== 'object') {
+        return null;
+    }
+
+    const userId = message.user_id ?? message.userId ?? message.user?.id ?? null;
+    const userName = message.user?.name ?? message.user_name ?? message.userName ?? null;
+    const userRole = message.user?.role ?? message.user_role ?? message.userRole ?? null;
+    const createdAt = message.created_at ?? message.createdAt ?? new Date().toISOString();
+
+    return {
+        id: message.id,
+        chat_id: message.chat_id ?? message.chatId ?? null,
+        user_id: userId,
+        message: message.message ?? '',
+        is_read: message.is_read ?? message.isRead ?? false,
+        created_at: createdAt,
+        user: {
+            id: userId,
+            name: userName,
+            role: userRole
+        }
+    };
+};
+
 export default function ChatWindow({ chatId, onClose, isAdmin = false }) {
     const { user: currentUser } = useContext(AuthContext);
     const [messages, setMessages] = useState([]);
@@ -25,7 +50,10 @@ export default function ChatWindow({ chatId, onClose, isAdmin = false }) {
         if (!currentChatId && !isAdmin && currentUser) {
             // Start or get user's own chat
             api.post('/chats/start').then(res => {
-                setCurrentChatId(res.data.data.id);
+                const payload = res.data?.data || res.data;
+                if (payload?.id) {
+                    setCurrentChatId(payload.id);
+                }
             });
         }
     }, [currentChatId, isAdmin, currentUser]);
@@ -39,9 +67,13 @@ export default function ChatWindow({ chatId, onClose, isAdmin = false }) {
                     // Check if it's not our own message to avoid duplicates
                     // broadcast(...)->toOthers() already avoids sending to the sender, 
                     // but it's good to be safe.
+                    const incomingMessage = normalizeMessage(e);
+                    if (!incomingMessage) {
+                        return;
+                    }
                     setMessages(prev => {
-                        if (prev.some(m => m.id === e.id)) return prev;
-                        return [...prev, e];
+                        if (prev.some(m => m.id === incomingMessage.id)) return prev;
+                        return [...prev, incomingMessage];
                     });
                 });
 
@@ -57,7 +89,12 @@ export default function ChatWindow({ chatId, onClose, isAdmin = false }) {
         setLoading(true);
         try {
             const res = await api.get(`/chats/${currentChatId}`);
-            setMessages(res.data.data.messages || []);
+            const payload = res.data?.data || res.data;
+            const rawMessages = Array.isArray(payload?.messages) ? payload.messages : [];
+            const normalized = rawMessages
+                .map(normalizeMessage)
+                .filter(Boolean);
+            setMessages(normalized);
         } catch (err) {
             console.error("Failed to fetch messages", err);
         } finally {
@@ -74,7 +111,11 @@ export default function ChatWindow({ chatId, onClose, isAdmin = false }) {
 
         try {
             const res = await api.post(`/chats/${currentChatId}/messages`, { message: tempMessage });
-            setMessages(prev => [...prev, res.data.data]);
+            const payload = res.data?.data || res.data;
+            const normalizedMessage = normalizeMessage(payload);
+            if (normalizedMessage) {
+                setMessages(prev => [...prev, normalizedMessage]);
+            }
         } catch (err) {
             console.error("Failed to send message", err);
         }
@@ -120,12 +161,14 @@ export default function ChatWindow({ chatId, onClose, isAdmin = false }) {
                             }`}>
                                 {!isOwn && isAdmin && (
                                     <div className="text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-1">
-                                        {msg.user.name}
+                                        {msg.user?.name || 'User'}
                                     </div>
                                 )}
                                 <div className="leading-relaxed whitespace-pre-wrap">{msg.message}</div>
                                 <div className={`text-[9px] mt-1 text-right font-bold ${isOwn ? 'text-indigo-200' : 'text-slate-400'}`}>
-                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    {msg.created_at
+                                        ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                        : ''}
                                 </div>
                             </div>
                         </div>

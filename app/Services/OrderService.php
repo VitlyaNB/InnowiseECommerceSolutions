@@ -68,6 +68,18 @@ final readonly class OrderService
             throw new RuntimeException('Выбранные товары (IDs: '.implode(', ', $selectedIds).") не найдены в корзине пользователя (user_id: {$userId}).");
         }
 
+        $selectedUniqueIds = array_values(array_unique(array_map(static fn (int|string $id): int => (int) $id, $selectedIds)));
+        $foundIds = [];
+        foreach ($cartItems as $item) {
+            if ($item->id !== null) {
+                $foundIds[] = (int) $item->id;
+            }
+        }
+        $missingIds = array_values(array_diff($selectedUniqueIds, $foundIds));
+        if ($missingIds !== []) {
+            throw new RuntimeException('Некоторые выбранные товары недоступны в корзине пользователя (IDs: '.implode(', ', $missingIds).").");
+        }
+
         foreach ($cartItems as $item) {
             $product = $item->product;
 

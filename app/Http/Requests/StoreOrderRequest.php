@@ -19,7 +19,7 @@ class StoreOrderRequest extends FormRequest
     {
         return [
             'shipping_address' => 'required|string',
-            'selected_item_ids' => 'required|array',
+            'selected_item_ids' => 'required|array|min:1',
             'selected_item_ids.*' => 'exists:cart_items,id',
         ];
     }

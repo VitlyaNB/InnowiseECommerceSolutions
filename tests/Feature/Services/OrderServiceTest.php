@@ -3,6 +3,7 @@
 namespace Tests\Feature\Services;
 
 use App\Dto\OrderDto;
+use App\Dto\UserDto;
 use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\User;
@@ -23,6 +24,17 @@ class OrderServiceTest extends TestCase
         $this->orderService = app(OrderService::class);
     }
 
+    private function makeUserDto(User $user): UserDto
+    {
+        return new UserDto(
+            id: $user->id,
+            name: $user->name,
+            email: $user->email,
+            role: $user->role,
+            balance: (float) $user->balance,
+        );
+    }
+
     public function test_order_fails_if_insufficient_balance()
     {
         $user = User::factory()->create(['balance' => 0]);
@@ -38,7 +50,7 @@ class OrderServiceTest extends TestCase
         $this->expectExceptionMessage('Недостаточно средств на кошельке.');
 
         $this->orderService->createOrder(
-            $user->id,
+            $this->makeUserDto($user),
             new OrderDto(
                 selectedItemIds: [$cartItem->id],
                 shippingAddress: 'Test Street 1'
@@ -58,7 +70,7 @@ class OrderServiceTest extends TestCase
         ]);
 
         $this->orderService->createOrder(
-            $user->id,
+            $this->makeUserDto($user),
             new OrderDto(
                 selectedItemIds: [$cartItem->id],
                 shippingAddress: 'Test Street 1'
@@ -66,5 +78,33 @@ class OrderServiceTest extends TestCase
         );
 
         $this->assertEquals(3, $product->fresh()->quantity);
+    }
+
+    public function test_order_fails_when_part_of_selected_items_is_missing_in_user_cart()
+    {
+        $user = User::factory()->create(['balance' => 1000]);
+        $product = Product::factory()->create(['price' => 100, 'quantity' => 5]);
+        $userCartItem = CartItem::query()->create([
+            'user_id' => $user->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+        ]);
+        $otherUser = User::factory()->create();
+        $otherCartItem = CartItem::query()->create([
+            'user_id' => $otherUser->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+        ]);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Некоторые выбранные товары недоступны в корзине пользователя');
+
+        $this->orderService->createOrder(
+            $this->makeUserDto($user),
+            new OrderDto(
+                selectedItemIds: [$userCartItem->id, $otherCartItem->id],
+                shippingAddress: 'Test Street 1'
+            )
+        );
     }
 }
