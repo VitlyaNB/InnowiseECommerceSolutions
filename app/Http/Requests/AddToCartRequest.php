@@ -29,7 +29,7 @@ class AddToCartRequest extends FormRequest
         $data = $this->validated();
 
         return new CartItemDto(
-            id: 0,
+            id: null,
             productId: (int) $data['product_id'],
             quantity: (int) ($data['quantity'] ?? 1),
         );

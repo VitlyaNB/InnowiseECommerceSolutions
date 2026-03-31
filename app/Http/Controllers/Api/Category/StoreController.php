@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Resources\CategoryResource;
 use App\Services\CategoryService;
+use Throwable;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 
@@ -57,7 +58,7 @@ final class StoreController extends Controller
             return (new CategoryResource($category))
                 ->response()
                 ->setStatusCode(201);
-        } catch (\Throwable $e) {
+        } catch (Throwable) {
             return response()->json([
                 'message' => 'Не удалось создать категорию. Попробуйте позже.',
             ], 500);

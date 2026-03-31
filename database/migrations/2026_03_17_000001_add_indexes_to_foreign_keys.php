@@ -50,23 +50,15 @@ return new class extends Migration
 
     private function addIndexIfMissing(string $table, string $column, string $indexName): void
     {
-        try {
-            Schema::table($table, function (Blueprint $blueprint) use ($column, $indexName) {
-                $blueprint->index($column, $indexName);
-            });
-        } catch (Throwable $e) {
-            report($e);
-        }
+        Schema::table($table, function (Blueprint $blueprint) use ($column, $indexName) {
+            $blueprint->index($column, $indexName);
+        });
     }
 
     private function dropIndexIfExists(string $table, string $indexName): void
     {
-        try {
-            Schema::table($table, function (Blueprint $blueprint) use ($indexName) {
-                $blueprint->dropIndex($indexName);
-            });
-        } catch (Throwable $e) {
-            report($e);
-        }
+        Schema::table($table, function (Blueprint $blueprint) use ($indexName) {
+            $blueprint->dropIndex($indexName);
+        });
     }
 };

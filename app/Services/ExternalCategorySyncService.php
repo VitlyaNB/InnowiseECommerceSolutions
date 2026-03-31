@@ -5,8 +5,9 @@ namespace App\Services;
 use App\Dto\CategoryDto;
 use App\Dto\ExternalCategorySyncResultDto;
 use App\Repositories\Interfaces\CategoryRepositoryInterface;
+use Throwable;
 
-final class ExternalCategorySyncService
+final readonly class ExternalCategorySyncService
 {
     public function __construct(
         private CategoryRepositoryInterface $categoryRepository,
@@ -40,7 +41,7 @@ final class ExternalCategorySyncService
                 synced: $synced,
                 status: 200,
             );
-        } catch (\Throwable $exception) {
+        } catch (Throwable) {
             return new ExternalCategorySyncResultDto(
                 ok: false,
                 message: 'Не удалось синхронизировать категории. Попробуйте позже.',

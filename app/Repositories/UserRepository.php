@@ -8,7 +8,7 @@ use App\Dto\UserDto;
 use App\Models\User;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 
-class UserRepository implements UserRepositoryInterface
+final class UserRepository implements UserRepositoryInterface
 {
     /** @return array<int, UserDto> */
     public function getAll(): array
@@ -39,14 +39,6 @@ class UserRepository implements UserRepositoryInterface
     {
         /** @var User|null $user */
         $user = User::query()->where('email', $email)->first();
-
-        return $user ? $this->mapToDtoWithPassword($user) : null;
-    }
-
-    public function findByIdWithPassword(int $id): ?UserDto
-    {
-        /** @var User|null $user */
-        $user = User::query()->find($id);
 
         return $user ? $this->mapToDtoWithPassword($user) : null;
     }

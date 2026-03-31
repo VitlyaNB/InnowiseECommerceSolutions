@@ -9,6 +9,7 @@ use App\Repositories\Interfaces\CartItemRepositoryInterface;
 use App\Services\CartService;
 use Mockery;
 use Mockery\MockInterface;
+use ReflectionClass;
 use Tests\TestCase;
 
 class CartServiceTest extends TestCase
@@ -34,11 +35,7 @@ class CartServiceTest extends TestCase
 
         $items = [$item1, $item2];
 
-        // We need to access the private method via Reflection or just test it via getCart if we want to be strict.
-        // But the original test was calling it directly (which it shouldn't be able to if it's private).
-        // Let's check if calculateTotals is private.
-
-        $reflection = new \ReflectionClass(CartService::class);
+        $reflection = new ReflectionClass(CartService::class);
         $method = $reflection->getMethod('calculateTotals');
         $method->setAccessible(true);
 

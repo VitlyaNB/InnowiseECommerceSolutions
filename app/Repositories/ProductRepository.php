@@ -11,9 +11,8 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
-use Illuminate\Support\Facades\DB;
 
-class ProductRepository implements ProductRepositoryInterface
+final class ProductRepository implements ProductRepositoryInterface
 {
     public function getAll(ProductFiltersDto $filters, int $perPage = 15): PaginatedResultDto
     {
@@ -161,7 +160,8 @@ class ProductRepository implements ProductRepositoryInterface
             ->join('order_items as oi2', 'oi.order_id', '=', 'oi2.order_id')
             ->where('oi.product_id', $productId)
             ->where('oi2.product_id', '!=', $productId)
-            ->select('oi2.product_id', DB::raw('COUNT(*) as freq'))
+            ->select('oi2.product_id')
+            ->selectRaw('COUNT(*) as freq')
             ->groupBy('oi2.product_id')
             ->orderByDesc('freq')
             ->limit($limit)

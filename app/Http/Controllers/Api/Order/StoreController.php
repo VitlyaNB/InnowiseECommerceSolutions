@@ -8,6 +8,7 @@ use App\Http\Requests\StoreOrderRequest;
 use App\Http\Support\CartSessionResolver;
 use App\Models\User;
 use App\Repositories\Interfaces\CartItemRepositoryInterface;
+use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
 use Throwable;
@@ -17,6 +18,7 @@ final class StoreController extends Controller
     public function __construct(
         private readonly OrderService $orderService,
         private readonly CartItemRepositoryInterface $cartItemRepository,
+        private readonly UserRepositoryInterface $userRepository,
         private readonly CartSessionResolver $cartSessionResolver,
     ) {}
 
@@ -34,13 +36,12 @@ final class StoreController extends Controller
                 balance: (float) $user->balance,
             );
 
-            // Merge guest cart into user cart before checkout to avoid stale guest item IDs.
             $sessionId = $this->cartSessionResolver->resolveSessionId($request);
             $this->cartItemRepository->mergeSessionToUser($sessionId, $user->id);
 
             $order = $this->orderService->createOrder($userDto, $request->toDto(), $sessionId);
-            $freshUser = $user->fresh();
-            $newBalance = $freshUser ? (float) $freshUser->balance : (float) $user->balance;
+            $updatedUser = $this->userRepository->findById($user->id);
+            $newBalance = $updatedUser?->balance ?? (float) $user->balance;
 
             return response()->json([
                 'message' => 'Заказ успешно оформлен',

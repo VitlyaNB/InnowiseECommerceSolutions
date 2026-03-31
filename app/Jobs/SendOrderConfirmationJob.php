@@ -14,10 +14,7 @@ use Illuminate\Support\Facades\Mail;
 
 final class SendOrderConfirmationJob implements ShouldQueue
 {
-    use Dispatchable;
-    use InteractsWithQueue;
-    use Queueable;
-    use SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public function __construct(
         public readonly int $orderId,

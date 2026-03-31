@@ -195,7 +195,9 @@ final readonly class ProductService
         $ids = [];
         foreach ($hitItems as $hit) {
             $id = $hit['_id'] ?? null;
-            $ids[] = is_numeric($id) ? (int) $id : 0;
+            if (is_numeric($id)) {
+                $ids[] = (int) $id;
+            }
         }
 
         /** @var array<int, ProductDto> $products */
