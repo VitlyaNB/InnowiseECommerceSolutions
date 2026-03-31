@@ -7,7 +7,7 @@ use App\Services\Interfaces\FileServiceInterface;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
-final readonly class FileService implements FileServiceInterface
+readonly class FileService implements FileServiceInterface
 {
     public function upload(UploadImageDto $dto): string
     {
