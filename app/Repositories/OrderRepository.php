@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Dto\OrderDetailsDto;
 use App\Dto\OrderItemDto;
+use App\Dto\ProductDto;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Repositories\Interfaces\OrderRepositoryInterface;
@@ -75,6 +76,21 @@ final class OrderRepository implements OrderRepositoryInterface
                     productId: (int) $item->product_id,
                     quantity: (int) $item->quantity,
                     price: (float) $item->price,
+                    id: (int) $item->id,
+                    product: $item->relationLoaded('product') && $item->product !== null
+                        ? new ProductDto(
+                            id: (int) $item->product->id,
+                            name: (string) $item->product->name,
+                            description: (string) ($item->product->description ?? ''),
+                            price: (float) $item->product->price,
+                            oldPrice: $item->product->old_price !== null ? (float) $item->product->old_price : null,
+                            quantity: (int) $item->product->quantity,
+                            categoryId: (int) $item->product->category_id,
+                            images: $item->product->relationLoaded('images')
+                                ? $item->product->images->pluck('image_path')->all()
+                                : [],
+                        )
+                        : null,
                 ))
                 ->all()
             : [];

@@ -14,6 +14,7 @@ use App\Infrastructure\Interfaces\TransactionManagerInterface;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
 use App\Services\Interfaces\FileServiceInterface;
 use Exception;
+use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -92,8 +93,15 @@ final readonly class ProductService
             throw new ModelNotFoundException("Product with ID {$id} not found.");
         }
 
-        $this->productRepository->deleteImages($id);
-        $this->productRepository->delete($id);
+        try {
+            $this->productRepository->deleteImages($id);
+            $this->productRepository->delete($id);
+        } catch (QueryException) {
+            // If product is linked to historical order items, keep data integrity and hide it from catalog.
+            $this->productRepository->update($id, new ProductDto(
+                isActive: false,
+            ));
+        }
     }
 
     public function search(ProductSearchQueryDto $queryDto): ProductSearchResultDto

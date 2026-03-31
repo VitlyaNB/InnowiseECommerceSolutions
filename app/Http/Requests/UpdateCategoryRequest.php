@@ -18,7 +18,7 @@ class UpdateCategoryRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route('id');
+        $id = $this->route('id') ?? $this->route('category');
 
         return [
             'name' => ['sometimes', 'string', 'max:255', 'unique:categories,name,'.(is_scalar($id) ? (string) $id : '')],
@@ -31,9 +31,10 @@ class UpdateCategoryRequest extends FormRequest
         /** @var string|null $name */
         $name = $this->input('name');
         $image = $this->file('image');
+        $normalizedName = is_string($name) ? trim($name) : null;
 
         return new CategoryDto(
-            name: $name ?? '',
+            name: $normalizedName !== null && $normalizedName !== '' ? $normalizedName : '',
             image: $image instanceof UploadedFile ? $image : null,
         );
     }

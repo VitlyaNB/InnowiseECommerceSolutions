@@ -8,5 +8,7 @@ final readonly class OrderItemDto extends BaseDto
         public int $productId,
         public int $quantity,
         public float $price,
+        public ?int $id = null,
+        public ?ProductDto $product = null,
     ) {}
 }

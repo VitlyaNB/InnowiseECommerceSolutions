@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import api from '../api';
 import { useAuth } from '../contexts/AuthContext';
 import { Trash2, Plus, Minus, ShoppingBag, CreditCard, Wallet, AlertCircle, CheckSquare, Square } from 'lucide-react';
@@ -17,6 +17,7 @@ export default function CartPage() {
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
     const [error, setError] = useState('');
+    const hasInitializedSelection = useRef(false);
     const navigate = useNavigate();
 
     // Форматирование адреса для отправки на сервер
@@ -48,18 +49,28 @@ export default function CartPage() {
                     items: items,
                     totals: res.data.totals || { total: 0 }
                 });
-                // По умолчанию выбираем всё, если список пуст был (удобство)
-                if (selectedItems.size === 0 && items.length > 0) {
-                    setSelectedItems(new Set(items.map(i => i.id)));
-                }
+
+                const itemIds = new Set(items.map(item => item.id));
+                setSelectedItems(prev => {
+                    const synced = new Set([...prev].filter(id => itemIds.has(id)));
+
+                    if (!hasInitializedSelection.current) {
+                        hasInitializedSelection.current = true;
+
+                        return synced.size > 0 ? synced : new Set(items.map(item => item.id));
+                    }
+
+                    return synced;
+                });
             })
             .catch(err => console.error(err))
             .finally(() => setLoading(false));
     };
 
     useEffect(() => {
+        hasInitializedSelection.current = false;
         fetchCart();
-    }, []);
+    }, [user?.id]);
 
     // Логика галочек
     const toggleItem = (id) => {
@@ -107,6 +118,16 @@ export default function CartPage() {
     const handleCheckout = async () => {
         if (!user) { navigate('/login'); return; }
         if (selectedItems.size === 0) { setError('Выберите товары для покупки'); return; }
+
+        const selectedIds = cartData.items
+            .filter(item => selectedItems.has(item.id))
+            .map(item => item.id);
+        if (selectedIds.length === 0) {
+            setError('Выбранные товары устарели. Обновите корзину и повторите попытку.');
+            fetchCart();
+
+            return;
+        }
         
         if (!validateAddress()) { 
             setError('Пожалуйста, заполните адрес полностью в формате: г. Минск ул. Ленина д. 7'); 
@@ -119,7 +140,7 @@ export default function CartPage() {
         try {
             const finalAddress = formattedAddress();
             const res = await api.post('/orders', {
-                selected_item_ids: Array.from(selectedItems),
+                selected_item_ids: selectedIds,
                 shipping_address: finalAddress
             });
 
@@ -135,12 +156,13 @@ export default function CartPage() {
             fetchCart();
         } catch (err) {
             setError(err.response?.data?.message || 'Ошибка при оформлении заказа');
+            fetchCart();
         } finally {
             setProcessing(false);
         }
     };
 
-    const canAfford = user ? parseFloat(user.balance) >= selectedTotal : false;
+    const canAfford = user ? parseFloat(user.balance) >= selectedTotal && selectedTotal > 0 : false;
 
     if (loading) return <div className="p-20 text-center font-bold text-gray-500">Загрузка...</div>;
 

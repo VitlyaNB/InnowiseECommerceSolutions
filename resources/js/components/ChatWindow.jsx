@@ -33,6 +33,7 @@ export default function ChatWindow({ chatId, onClose, isAdmin = false }) {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(false);
+    const [chatError, setChatError] = useState('');
     const messagesEndRef = useRef(null);
     const [currentChatId, setCurrentChatId] = useState(chatId);
 
@@ -49,12 +50,17 @@ export default function ChatWindow({ chatId, onClose, isAdmin = false }) {
     useEffect(() => {
         if (!currentChatId && !isAdmin && currentUser) {
             // Start or get user's own chat
-            api.post('/chats/start').then(res => {
-                const payload = res.data?.data || res.data;
-                if (payload?.id) {
-                    setCurrentChatId(payload.id);
-                }
-            });
+            setChatError('');
+            api.post('/chats/start')
+                .then(res => {
+                    const payload = res.data?.data || res.data;
+                    if (payload?.id) {
+                        setCurrentChatId(payload.id);
+                    }
+                })
+                .catch(() => {
+                    setChatError('Не удалось инициализировать чат. Попробуйте еще раз.');
+                });
         }
     }, [currentChatId, isAdmin, currentUser]);
 
@@ -87,6 +93,7 @@ export default function ChatWindow({ chatId, onClose, isAdmin = false }) {
 
     const fetchMessages = async () => {
         setLoading(true);
+        setChatError('');
         try {
             const res = await api.get(`/chats/${currentChatId}`);
             const payload = res.data?.data || res.data;
@@ -97,6 +104,7 @@ export default function ChatWindow({ chatId, onClose, isAdmin = false }) {
             setMessages(normalized);
         } catch (err) {
             console.error("Failed to fetch messages", err);
+            setChatError('Не удалось загрузить сообщения.');
         } finally {
             setLoading(false);
         }
@@ -118,6 +126,7 @@ export default function ChatWindow({ chatId, onClose, isAdmin = false }) {
             }
         } catch (err) {
             console.error("Failed to send message", err);
+            setChatError('Не удалось отправить сообщение.');
         }
     };
 
@@ -145,6 +154,11 @@ export default function ChatWindow({ chatId, onClose, isAdmin = false }) {
 
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[300px] max-h-[600px] custom-scrollbar">
+                {chatError && (
+                    <div className="text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-xl">
+                        {chatError}
+                    </div>
+                )}
                 {messages.length === 0 && !loading && (
                     <div className="text-center text-slate-400 mt-20 text-xs font-bold uppercase tracking-widest opacity-50">
                         Начните диалог первым

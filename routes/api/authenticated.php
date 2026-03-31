@@ -12,10 +12,12 @@ use App\Http\Controllers\Api\Review\CanReviewController;
 use App\Http\Controllers\Api\Review\StoreController as ReviewStoreController;
 use App\Http\Controllers\Api\Review\ToggleLikeController;
 use App\Http\Controllers\Api\Wallet\TopUpController;
+use Illuminate\Broadcasting\BroadcastController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/me', MeController::class);
 Route::post('/logout', LogoutController::class);
+Route::post('/broadcasting/auth', [BroadcastController::class, 'authenticate']);
 Route::post('/wallet/top-up', TopUpController::class);
 Route::post('/orders', OrderStoreController::class);
 Route::get('/orders', OrderIndexController::class);

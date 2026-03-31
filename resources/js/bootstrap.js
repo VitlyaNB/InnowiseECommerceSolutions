@@ -11,6 +11,7 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import api from './api';
 
 window.Pusher = Pusher;
 
@@ -26,7 +27,7 @@ window.Echo = new Echo({
     authorizer: (channel, options) => {
         return {
             authorize: (socketId, callback) => {
-                axios.post('/api/broadcasting/auth', {
+                api.post('/broadcasting/auth', {
                     socket_id: socketId,
                     channel_name: channel.name
                 })
@@ -34,7 +35,7 @@ window.Echo = new Echo({
                     callback(false, response.data);
                 })
                 .catch(error => {
-                    callback(true, error);
+                    callback(true, error?.response?.data || error);
                 });
             }
         };

@@ -119,7 +119,7 @@ export default function AdminPage() {
     const handleCategoryEdit = (category) => {
         setEditingCategory(category);
         setCategoryName(category.name);
-        setCategoryPreview(category.image_path);
+        setCategoryPreview(category.image_url || category.image_path || null);
         setCategoryImage(null);
         setActiveTab('categories');
     };
@@ -142,7 +142,12 @@ export default function AdminPage() {
             setEditingUser(null);
             fetchAll();
         } catch (err) {
-            setMsg({ text: err.response?.data?.message || 'Ошибка обновления', isError: true });
+            const backendMessage = err.response?.data?.message;
+            const validationErrors = err.response?.data?.errors;
+            const firstValidationError = validationErrors
+                ? Object.values(validationErrors).flat()[0]
+                : null;
+            setMsg({ text: firstValidationError || backendMessage || 'Ошибка обновления', isError: true });
         }
     };
 
@@ -204,7 +209,7 @@ export default function AdminPage() {
         try {
             await api.delete(`/users/${id}`);
             fetchAll();
-        } catch (err) { alert('Ошибка удаления'); }
+        } catch (err) { setMsg({ text: err.response?.data?.message || 'Ошибка удаления', isError: true }); }
     };
 
     return (
@@ -310,7 +315,14 @@ export default function AdminPage() {
                                                     <button onClick={() => handleUserEdit(u)} className="p-2 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl transition-all">
                                                         <RefreshCw size={18}/>
                                                     </button>
-                                                    <button onClick={() => api.delete(`/users/${u.id}`).then(fetchAll)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all">
+                                                    <button onClick={async () => {
+                                                        try {
+                                                            await api.delete(`/users/${u.id}`);
+                                                            fetchAll();
+                                                        } catch (err) {
+                                                            setMsg({ text: err.response?.data?.message || 'Ошибка удаления пользователя', isError: true });
+                                                        }
+                                                    }} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all">
                                                         <Trash2 size={18}/>
                                                     </button>
                                                 </div>
@@ -396,13 +408,20 @@ export default function AdminPage() {
                                     <div key={c.id} className="flex justify-between items-center p-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all group">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-900 overflow-hidden">
-                                                {c.image_path && <img src={c.image_path} className="w-full h-full object-cover" />}
+                                                {(c.image_url || c.image_path) && <img src={c.image_url || c.image_path} className="w-full h-full object-cover" />}
                                             </div>
                                             <span className="font-bold text-slate-800 dark:text-slate-200">{c.name}</span>
                                         </div>
                                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button onClick={() => handleCategoryEdit(c)} className="text-indigo-400 hover:text-indigo-600 p-2 rounded-lg transition-colors"><RefreshCw size={18}/></button>
-                                            <button onClick={() => api.delete(`/categories/${c.id}`).then(fetchAll)} className="text-red-400 hover:text-red-600 p-2 rounded-lg transition-colors"><Trash2 size={18}/></button>
+                                            <button onClick={async () => {
+                                                try {
+                                                    await api.delete(`/categories/${c.id}`);
+                                                    fetchAll();
+                                                } catch (err) {
+                                                    setMsg({ text: err.response?.data?.message || 'Ошибка удаления категории', isError: true });
+                                                }
+                                            }} className="text-red-400 hover:text-red-600 p-2 rounded-lg transition-colors"><Trash2 size={18}/></button>
                                         </div>
                                     </div>
                                 ))}
@@ -440,7 +459,14 @@ export default function AdminPage() {
                                                 <button onClick={() => handleProductEdit(p)} className="p-2 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl transition-all">
                                                     <RefreshCw size={18}/>
                                                 </button>
-                                                <button onClick={() => api.delete(`/products/${p.id}`).then(fetchAll)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all">
+                                                <button onClick={async () => {
+                                                    try {
+                                                        await api.delete(`/products/${p.id}`);
+                                                        fetchAll();
+                                                    } catch (err) {
+                                                        setMsg({ text: err.response?.data?.message || 'Ошибка удаления товара', isError: true });
+                                                    }
+                                                }} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all">
                                                     <Trash2 size={18}/>
                                                 </button>
                                             </div>

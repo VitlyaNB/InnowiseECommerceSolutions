@@ -80,7 +80,7 @@ final readonly class CategoryService
         }
 
         $dtoToUpdate = new CategoryDto(
-            name: $data->name,
+            name: $data->name !== '' ? $data->name : $category->name,
             imagePath: $imagePath
         );
 

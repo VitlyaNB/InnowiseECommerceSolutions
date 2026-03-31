@@ -55,12 +55,12 @@ class UpdateProductRequest extends FormRequest
         $typedImages = array_values($validImages);
 
         return new ProductDto(
-            name: $name ?? '',
+            name: $name,
             description: $description,
             price: $price,
             oldPrice: $oldPrice,
             quantity: $quantity,
-            categoryId: $categoryId ?? 0,
+            categoryId: $categoryId,
             images: $typedImages,
         );
     }

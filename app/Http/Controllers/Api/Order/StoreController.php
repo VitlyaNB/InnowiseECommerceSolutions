@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api\Order;
 use App\Dto\UserDto;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
+use App\Http\Support\CartSessionResolver;
 use App\Models\User;
+use App\Repositories\Interfaces\CartItemRepositoryInterface;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
 use Throwable;
@@ -13,7 +15,9 @@ use Throwable;
 final class StoreController extends Controller
 {
     public function __construct(
-        private OrderService $orderService
+        private readonly OrderService $orderService,
+        private readonly CartItemRepositoryInterface $cartItemRepository,
+        private readonly CartSessionResolver $cartSessionResolver,
     ) {}
 
     public function __invoke(StoreOrderRequest $request): JsonResponse
@@ -29,6 +33,10 @@ final class StoreController extends Controller
                 role: $user->role,
                 balance: (float) $user->balance,
             );
+
+            // Merge guest cart into user cart before checkout to avoid stale guest item IDs.
+            $sessionId = $this->cartSessionResolver->resolveSessionId($request);
+            $this->cartItemRepository->mergeSessionToUser($sessionId, $user->id);
 
             $order = $this->orderService->createOrder($userDto, $request->toDto());
             $freshUser = $user->fresh();

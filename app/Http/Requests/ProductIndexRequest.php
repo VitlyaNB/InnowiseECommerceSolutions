@@ -24,6 +24,7 @@ class ProductIndexRequest extends FormRequest
             'price_min' => ['nullable', 'numeric', 'min:0'],
             'price_max' => ['nullable', 'numeric', 'min:0'],
             'in_stock' => ['nullable', 'boolean'],
+            'is_active' => ['nullable', 'boolean'],
         ];
     }
 
@@ -40,6 +41,8 @@ class ProductIndexRequest extends FormRequest
         $priceMax = isset($data['price_max']) ? (float) $data['price_max'] : null;
         /** @var bool|null $inStock */
         $inStock = isset($data['in_stock']) ? (bool) $data['in_stock'] : null;
+        /** @var bool $isActive */
+        $isActive = isset($data['is_active']) ? (bool) $data['is_active'] : true;
         /** @var int $perPage */
         $perPage = (int) ($data['per_page'] ?? 15);
 
@@ -49,6 +52,7 @@ class ProductIndexRequest extends FormRequest
                 priceMin: $priceMin,
                 priceMax: $priceMax,
                 inStock: $inStock,
+                isActive: $isActive,
             ),
             perPage: $perPage,
         );

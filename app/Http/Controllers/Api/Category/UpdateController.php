@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Category;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateCategoryRequest;
 use App\Http\Resources\CategoryResource;
-use App\Models\Category;
 use App\Services\CategoryService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
@@ -51,9 +50,9 @@ final class UpdateController extends Controller
             new OA\Response(response: 422, description: 'Validation error'),
         ]
     )]
-    public function __invoke(UpdateCategoryRequest $request, Category $category): JsonResponse
+    public function __invoke(UpdateCategoryRequest $request, int $id): JsonResponse
     {
-        $updatedCategory = $this->categoryService->updateCategory($category->id, $request->toDto());
+        $updatedCategory = $this->categoryService->updateCategory($id, $request->toDto());
 
         return response()->json(new CategoryResource($updatedCategory));
     }

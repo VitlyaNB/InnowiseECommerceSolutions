@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Admin\User;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateUserRequest;
-use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
@@ -47,9 +46,12 @@ final class UpdateController extends Controller
             new OA\Response(response: 422, description: 'Validation error'),
         ]
     )]
-    public function __invoke(UpdateUserRequest $request, User $user): JsonResponse
+    public function __invoke(UpdateUserRequest $request, int $id): JsonResponse
     {
-        $this->userRepository->update($user->id, $request->toDto());
+        $updated = $this->userRepository->update($id, $request->toDto());
+        if (! $updated) {
+            return response()->json(['message' => 'Пользователь не найден'], 404);
+        }
 
         return response()->json(['message' => 'User updated successfully']);
     }

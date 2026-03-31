@@ -2,6 +2,8 @@
 
 namespace App\Http\Resources;
 
+use App\Dto\OrderDetailsDto;
+use App\Dto\OrderItemDto;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -48,6 +50,25 @@ class OrderResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        if ($this->resource instanceof OrderDetailsDto) {
+            return [
+                'id' => $this->resource->id,
+                'total_amount' => $this->resource->totalAmount,
+                'status' => $this->resource->status,
+                'shipping_address' => $this->resource->shippingAddress,
+                'created_at' => $this->resource->createdAt,
+                'items' => array_map(static function (OrderItemDto $item): array {
+                    return [
+                        'id' => $item->id,
+                        'product_id' => $item->productId,
+                        'quantity' => $item->quantity,
+                        'price' => $item->price,
+                        'product' => $item->product !== null ? (new ProductResource($item->product))->resolve() : null,
+                    ];
+                }, $this->resource->items),
+            ];
+        }
+
         return [
             'id' => $this->id,
             'total_amount' => (float) $this->total_amount,
