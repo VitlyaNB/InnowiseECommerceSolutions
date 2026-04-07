@@ -21,7 +21,7 @@ final class ShowController extends Controller
 
         $chatDto = $this->chatService->getChat($chat, $user->id);
         if (! $chatDto) {
-            return response()->json(['message' => 'Чат не найден'], 404);
+            return response()->json(['message' => 'Chat not found'], 404);
         }
 
         return response()->json($chatDto->toArray());

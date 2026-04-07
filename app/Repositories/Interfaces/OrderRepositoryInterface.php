@@ -3,11 +3,12 @@
 namespace App\Repositories\Interfaces;
 
 use App\Dto\OrderDetailsDto;
+use App\Dto\OrderCreateDto;
 use App\Dto\OrderItemDto;
 
 interface OrderRepositoryInterface
 {
-    public function create(int $userId, float $totalAmount, string $shippingAddress, string $status = 'paid'): OrderDetailsDto;
+    public function create(OrderCreateDto $dto): OrderDetailsDto;
 
     public function createItem(int $orderId, OrderItemDto $item): void;
 

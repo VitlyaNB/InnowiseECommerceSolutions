@@ -50,7 +50,7 @@ final class UpdateController extends Controller
     {
         $updated = $this->userRepository->update($id, $request->toDto());
         if (! $updated) {
-            return response()->json(['message' => 'Пользователь не найден'], 404);
+            return response()->json(['message' => 'User not found'], 404);
         }
 
         return response()->json(['message' => 'User updated successfully']);

@@ -28,8 +28,9 @@ final class SyncController extends Controller
         $result = $this->externalCategorySyncService->sync();
 
         return response()->json([
+            'status' => $result->status,
             'message' => $result->message,
             'synced' => $result->synced,
-        ], $result->status);
+        ], $result->httpStatus);
     }
 }

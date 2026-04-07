@@ -5,9 +5,6 @@ namespace App\Http\Controllers\Api\Order;
 use App\Dto\UserDto;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
-use App\Http\Support\CartSessionResolver;
-use App\Models\User;
-use App\Repositories\Interfaces\CartItemRepositoryInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
@@ -17,19 +14,14 @@ final class StoreController extends Controller
 {
     public function __construct(
         private readonly OrderService $orderService,
-        private readonly CartItemRepositoryInterface $cartItemRepository,
         private readonly UserRepositoryInterface $userRepository,
-        private readonly CartSessionResolver $cartSessionResolver,
     ) {}
 
     public function __invoke(StoreOrderRequest $request): JsonResponse
     {
         try {
+            /** @var \App\Models\User $user */
             $user = $request->user();
-            if (! $user instanceof User) {
-                return response()->json(['message' => 'Unauthorized'], 401);
-            }
-
             $userDto = new UserDto(
                 id: $user->id,
                 name: $user->name,
@@ -38,15 +30,12 @@ final class StoreController extends Controller
                 balance: (float) $user->balance,
             );
 
-            $sessionId = $this->cartSessionResolver->resolveSessionId($request);
-            $this->cartItemRepository->mergeSessionToUser($sessionId, $user->id);
-
-            $order = $this->orderService->createOrder($userDto, $request->toDto(), $sessionId);
+            $order = $this->orderService->createOrder($userDto, $request->toDto());
             $updatedUser = $this->userRepository->findById($user->id);
             $newBalance = $updatedUser !== null ? $updatedUser->balance : (float) $user->balance;
 
             return response()->json([
-                'message' => 'Заказ успешно оформлен',
+                'message' => 'Order placed successfully',
                 'order' => $order->toArray(),
                 'new_balance' => $newBalance,
             ], 201);

@@ -26,7 +26,7 @@ class SyncExternalCategoriesJobTest extends TestCase
     {
         $this->mockService->shouldReceive('sync')
             ->once()
-            ->andReturn(new ExternalCategorySyncResultDto(ok: true, message: 'Success', synced: 0, status: 200));
+            ->andReturn(new ExternalCategorySyncResultDto(status: true, message: 'Success', synced: 0, httpStatus: 200));
 
         $this->app->instance(ExternalCategorySyncServiceInterface::class, $this->mockService);
 

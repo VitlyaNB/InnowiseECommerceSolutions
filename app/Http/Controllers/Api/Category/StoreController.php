@@ -60,7 +60,7 @@ final class StoreController extends Controller
                 ->setStatusCode(201);
         } catch (Throwable) {
             return response()->json([
-                'message' => 'Не удалось создать категорию. Попробуйте позже.',
+                'message' => 'Failed to create category. Please try again later.',
             ], 500);
         }
     }

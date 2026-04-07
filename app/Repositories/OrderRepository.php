@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Dto\OrderCreateDto;
 use App\Dto\OrderDetailsDto;
 use App\Dto\OrderItemDto;
 use App\Dto\ProductDto;
@@ -11,14 +12,14 @@ use App\Repositories\Interfaces\OrderRepositoryInterface;
 
 final class OrderRepository implements OrderRepositoryInterface
 {
-    public function create(int $userId, float $totalAmount, string $shippingAddress, string $status = 'paid'): OrderDetailsDto
+    public function create(OrderCreateDto $dto): OrderDetailsDto
     {
         /** @var Order $order */
         $order = Order::query()->create([
-            'user_id' => $userId,
-            'total_amount' => $totalAmount,
-            'status' => $status,
-            'shipping_address' => $shippingAddress,
+            'user_id' => $dto->userId,
+            'total_amount' => $dto->totalAmount,
+            'status' => $dto->status,
+            'shipping_address' => $dto->shippingAddress,
         ]);
 
         return $this->mapToDetailsDto($order);

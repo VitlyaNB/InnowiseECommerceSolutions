@@ -15,7 +15,7 @@ class CheckAdmin
         $user = $request->user();
 
         if (! $user || $user->role !== 'admin') {
-            return response()->json(['message' => 'Доступ запрещен'], 403);
+            return response()->json(['message' => 'Forbidden'], 403);
         }
 
         return $next($request);

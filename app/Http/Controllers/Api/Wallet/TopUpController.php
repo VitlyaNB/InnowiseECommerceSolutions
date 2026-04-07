@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Wallet;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TopUpRequest;
 use App\Http\Resources\UserResource;
-use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
@@ -36,7 +35,7 @@ final class TopUpController extends Controller
                 description: 'Balance topped up successfully',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'message', type: 'string', example: 'Баланс пополнен'),
+                        new OA\Property(property: 'message', type: 'string', example: 'Balance topped up'),
                         new OA\Property(property: 'user', type: 'object'),
                     ]
                 )
@@ -47,15 +46,12 @@ final class TopUpController extends Controller
     )]
     public function __invoke(TopUpRequest $request): JsonResponse
     {
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if (! $user instanceof User) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
         $updatedUserDto = $this->userRepository->topUp($user->id, $request->toDto()->amount);
 
         return response()->json([
-            'message' => 'Баланс пополнен',
+            'message' => 'Balance topped up',
             'user' => new UserResource($updatedUserDto),
         ]);
     }

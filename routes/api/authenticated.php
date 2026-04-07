@@ -2,6 +2,11 @@
 
 use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\MeController;
+use App\Http\Controllers\Api\Cart\ClearController as CartClearController;
+use App\Http\Controllers\Api\Cart\DestroyController as CartDestroyController;
+use App\Http\Controllers\Api\Cart\IndexController as CartIndexController;
+use App\Http\Controllers\Api\Cart\StoreController as CartStoreController;
+use App\Http\Controllers\Api\Cart\UpdateController as CartUpdateController;
 use App\Http\Controllers\Api\Chat\ShowController as ChatShowController;
 use App\Http\Controllers\Api\Chat\StartController as ChatStartController;
 use App\Http\Controllers\Api\Chat\StoreMessageController as ChatStoreMessageController;
@@ -28,3 +33,9 @@ Route::get('/chats', UserChatIndexController::class);
 Route::get('/chats/{chat}', ChatShowController::class)->middleware('chat.access');
 Route::post('/chats/{chat}/messages', ChatStoreMessageController::class)->middleware('chat.access');
 Route::post('/chats/start', ChatStartController::class);
+
+Route::get('/cart', CartIndexController::class);
+Route::post('/cart', CartStoreController::class);
+Route::put('/cart/{id}', CartUpdateController::class);
+Route::delete('/cart/{id}', CartDestroyController::class);
+Route::delete('/cart', CartClearController::class);

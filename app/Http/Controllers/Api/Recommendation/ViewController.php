@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\Recommendation;
 
-use App\Http\Support\ViewSessionResolver;
+use App\Http\Resolvers\ViewSessionResolver;
 use App\Models\User;
 use App\Services\RecommendationService;
 use Illuminate\Http\JsonResponse;

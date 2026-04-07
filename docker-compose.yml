@@ -6,6 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: shop_app
+    networks:
+      - default
     ports:
       - "8000:8000"
       - "5173:5173"
@@ -28,6 +30,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: shop_worker
+    networks:
+      - default
     volumes:
       - .:/var/www/html
     depends_on:

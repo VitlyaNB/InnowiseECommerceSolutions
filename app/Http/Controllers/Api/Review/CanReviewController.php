@@ -3,23 +3,20 @@
 namespace App\Http\Controllers\Api\Review;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Repositories\ReviewRepository;
+use App\Repositories\Interfaces\ReviewRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 final class CanReviewController extends Controller
 {
     public function __construct(
-        private ReviewRepository $reviewRepository
+        private ReviewRepositoryInterface $reviewRepository
     ) {}
 
     public function __invoke(Request $request, int $productId): JsonResponse
     {
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if (! $user instanceof User) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
 
         $userId = $user->id;
         $canReview = $this->reviewRepository->canReview($userId, $productId);

@@ -24,7 +24,7 @@ final class StoreController extends Controller
             $review = $this->reviewService->createReview($user->id, $request->toDto());
 
             return response()->json([
-                'message' => 'Отзыв опубликован',
+                'message' => 'Review published',
                 'data' => $review->toArray(),
             ], 201);
         } catch (Throwable $exception) {

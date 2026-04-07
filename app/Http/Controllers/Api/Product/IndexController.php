@@ -5,14 +5,14 @@ namespace App\Http\Controllers\Api\Product;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductIndexRequest;
 use App\Http\Resources\ProductResource;
-use App\Services\ProductService;
+use App\Repositories\Interfaces\ProductRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 
 final class IndexController extends Controller
 {
     public function __construct(
-        private readonly ProductService $productService
+        private readonly ProductRepositoryInterface $productRepository
     ) {}
 
     #[OA\Get(
@@ -43,7 +43,8 @@ final class IndexController extends Controller
     )]
     public function __invoke(ProductIndexRequest $request): JsonResponse
     {
-        $products = $this->productService->getAllProducts($request->toDto());
+        $queryDto = $request->toDto();
+        $products = $this->productRepository->getAll($queryDto->filters, $queryDto->perPage);
 
         return response()->json([
             'data' => ProductResource::collection($products->items)->resolve(),

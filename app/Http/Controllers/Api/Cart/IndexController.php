@@ -4,25 +4,23 @@ namespace App\Http\Controllers\Api\Cart;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CartResource;
-use App\Http\Support\CartSessionResolver;
 use App\Services\CartService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use OpenApi\Attributes as OA;
 
 final class IndexController extends Controller
 {
     public function __construct(
         private readonly CartService $cartService,
-        private readonly CartSessionResolver $sessionService
     ) {}
 
     #[OA\Get(
         path: '/api/cart',
         summary: 'Get current cart contents',
-        description: 'Returns cart items (identified by user ID for authenticated users, or session cookie for guests) along with subtotal, tax, and total.',
+        description: 'Returns cart items for the authenticated user along with subtotal, tax, and total.',
         tags: ['Cart'],
+        security: [['bearerAuth' => []]],
         responses: [
             new OA\Response(
                 response: 200,
@@ -53,15 +51,13 @@ final class IndexController extends Controller
                     ]
                 )
             ),
+            new OA\Response(response: 401, description: 'Unauthorized'),
         ]
     )]
     public function __invoke(Request $request): JsonResponse
     {
-        $userIdRaw = Auth::id();
-        $userId = $userIdRaw !== null ? (int) $userIdRaw : null;
-        $sessionId = $userId !== null ? null : $this->sessionService->resolveSessionId($request);
-
-        $cartDto = $this->cartService->getCart($userId, $sessionId);
+        $userId = $request->user()->id;
+        $cartDto = $this->cartService->getCart($userId);
 
         return response()->json([
             'items' => CartResource::collection($cartDto->items)->resolve(),

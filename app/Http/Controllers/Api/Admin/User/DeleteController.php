@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Admin\User;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -40,10 +39,8 @@ final class DeleteController extends Controller
     )]
     public function __invoke(Request $request, int $id): JsonResponse
     {
+        /** @var \App\Models\User $currentUser */
         $currentUser = $request->user();
-        if (! $currentUser instanceof User) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
 
         try {
             $deleted = $this->authService->deleteUser($id, $currentUser->id);
@@ -55,7 +52,7 @@ final class DeleteController extends Controller
         }
 
         if (! $deleted) {
-            return response()->json(['message' => 'Пользователь не найден'], 404);
+            return response()->json(['message' => 'User not found'], 404);
         }
 
         return response()->json(['message' => 'User deleted successfully']);

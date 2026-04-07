@@ -9,7 +9,6 @@ final readonly class CartItemDto extends BaseDto
         public int $productId,
         public int $quantity,
         public ?int $userId = null,
-        public ?string $sessionId = null,
         public ?ProductDto $product = null,
     ) {}
 }

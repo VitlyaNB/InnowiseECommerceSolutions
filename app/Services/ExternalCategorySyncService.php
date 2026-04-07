@@ -17,16 +17,11 @@ final readonly class ExternalCategorySyncService
     public function sync(): ExternalCategorySyncResultDto
     {
         try {
-            $categories = $this->apiClient->fetchCategories();
+            $responseDto = $this->apiClient->fetchCategories();
 
             $synced = 0;
-            foreach ($categories as $item) {
-                /** @var string|null $name */
-                $name = is_array($item) ? ($item['name'] ?? $item['title'] ?? null) : (is_string($item) ? $item : null);
-                if (empty($name)) {
-                    continue;
-                }
-
+            foreach ($responseDto->categories as $item) {
+                $name = $item->name;
                 if ($this->categoryRepository->existsByName($name)) {
                     continue;
                 }
@@ -36,17 +31,17 @@ final readonly class ExternalCategorySyncService
             }
 
             return new ExternalCategorySyncResultDto(
-                ok: true,
-                message: "Синхронизировано {$synced} новых категорий.",
+                status: true,
+                message: "Synchronized {$synced} new categories.",
                 synced: $synced,
-                status: 200,
+                httpStatus: 200,
             );
         } catch (Throwable) {
             return new ExternalCategorySyncResultDto(
-                ok: false,
-                message: 'Не удалось синхронизировать категории. Попробуйте позже.',
+                status: false,
+                message: 'Failed to synchronize categories. Please try again later.',
                 synced: 0,
-                status: 500,
+                httpStatus: 500,
             );
         }
     }

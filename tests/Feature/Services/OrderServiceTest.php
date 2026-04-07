@@ -47,7 +47,7 @@ class OrderServiceTest extends TestCase
         ]);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Недостаточно средств на кошельке.');
+        $this->expectExceptionMessage('Insufficient wallet balance.');
 
         $this->orderService->createOrder(
             $this->makeUserDto($user),
@@ -97,7 +97,7 @@ class OrderServiceTest extends TestCase
         ]);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Некоторые выбранные товары недоступны в корзине пользователя');
+        $this->expectExceptionMessage('Some selected items are not available in the user cart');
 
         $this->orderService->createOrder(
             $this->makeUserDto($user),

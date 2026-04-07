@@ -42,7 +42,7 @@ final class ShowController extends Controller
         $product = $this->productRepository->findById($id);
 
         if (! $product) {
-            return response()->json(['message' => 'Товар не найден'], 404);
+            return response()->json(['message' => 'Product not found'], 404);
         }
 
         return (new ProductResource($product))

@@ -2,15 +2,14 @@
 
 namespace App\Services;
 
+use App\Dto\ExternalCategoryApiResponseDto;
+use App\Dto\ExternalCategoryItemDto;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
 final class ExternalCategoryApiClient
 {
-    /**
-     * @return array<int, array<string, mixed>|string>
-     */
-    public function fetchCategories(): array
+    public function fetchCategories(): ExternalCategoryApiResponseDto
     {
         /** @var string|null $apiUrl */
         $apiUrl = config('services.external_project.api_url');
@@ -19,7 +18,7 @@ final class ExternalCategoryApiClient
         $apiKey = config('services.external_project.api_key');
 
         if (empty($apiUrl)) {
-            throw new RuntimeException('API URL не настроен. Проверьте конфигурацию системы.');
+            throw new RuntimeException('API URL is not configured. Check system configuration.');
         }
 
         $headers = ['Accept' => 'application/json'];
@@ -30,7 +29,7 @@ final class ExternalCategoryApiClient
         $response = Http::withHeaders($headers)->get((string) $apiUrl);
 
         if (! $response->successful()) {
-            throw new RuntimeException('Не удалось получить данные от внешнего сервиса.');
+            throw new RuntimeException('Failed to fetch data from external service.');
         }
 
         /** @var mixed $data */
@@ -40,10 +39,20 @@ final class ExternalCategoryApiClient
         $categories = is_array($data) ? ($data['data'] ?? $data['categories'] ?? $data) : [];
 
         if (! is_array($categories)) {
-            throw new RuntimeException('Некорректный формат данных от внешнего сервиса.');
+            throw new RuntimeException('Invalid external service data format.');
         }
 
-        /** @var array<int, array<string, mixed>|string> $categories */
-        return $categories;
+        /** @var array<int, ExternalCategoryItemDto> $items */
+        $items = [];
+        foreach ($categories as $item) {
+            /** @var string|null $name */
+            $name = is_array($item) ? ($item['name'] ?? $item['title'] ?? null) : (is_string($item) ? $item : null);
+            if (! is_string($name) || $name === '') {
+                continue;
+            }
+            $items[] = new ExternalCategoryItemDto($name);
+        }
+
+        return new ExternalCategoryApiResponseDto(categories: $items);
     }
 }

@@ -51,8 +51,8 @@ class ExternalCategorySyncServiceTest extends TestCase
 
         $result = $this->service->sync();
 
-        $this->assertTrue($result->ok);
+        $this->assertTrue($result->status);
         $this->assertSame(2, $result->synced);
-        $this->assertSame(200, $result->status);
+        $this->assertSame(200, $result->httpStatus);
     }
 }

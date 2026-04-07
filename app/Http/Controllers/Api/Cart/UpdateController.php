@@ -5,24 +5,22 @@ namespace App\Http\Controllers\Api\Cart;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateCartItemRequest;
 use App\Http\Resources\CartResource;
-use App\Http\Support\CartSessionResolver;
 use App\Services\CartService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
 use OpenApi\Attributes as OA;
 
 final class UpdateController extends Controller
 {
     public function __construct(
         private readonly CartService $cartService,
-        private readonly CartSessionResolver $sessionService
     ) {}
 
     #[OA\Put(
         path: '/api/cart/{id}',
         summary: 'Update the quantity of a cart item',
-        description: 'Updates quantity. If quantity is 0, the item is removed from the cart.',
+        description: 'Updates quantity for the authenticated user. If quantity is 0, the item is removed.',
         tags: ['Cart'],
+        security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -43,18 +41,16 @@ final class UpdateController extends Controller
         ),
         responses: [
             new OA\Response(response: 200, description: 'Cart item updated or removed'),
+            new OA\Response(response: 401, description: 'Unauthorized'),
             new OA\Response(response: 404, description: 'Cart item not found'),
             new OA\Response(response: 422, description: 'Validation error'),
         ]
     )]
     public function __invoke(UpdateCartItemRequest $request, int $id): JsonResponse
     {
-        $userIdRaw = Auth::id();
-        $userId = $userIdRaw !== null ? (int) $userIdRaw : null;
-        $sessionId = $userId !== null ? null : $this->sessionService->resolveSessionId($request);
-
+        $userId = $request->user()->id;
         $quantity = $request->toDto()->quantity;
-        $item = $this->cartService->updateQuantity($id, $quantity, $userId, $sessionId);
+        $item = $this->cartService->updateQuantity($id, $quantity, $userId);
 
         if (! $item) {
             return response()->json([

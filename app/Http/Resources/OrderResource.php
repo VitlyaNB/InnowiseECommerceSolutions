@@ -15,12 +15,12 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'OrderResource',
     title: 'Order',
-    description: 'Схема ресурса заказа',
+    description: 'Order resource schema',
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 1),
         new OA\Property(property: 'total_amount', type: 'number', format: 'float', example: 299.99),
         new OA\Property(property: 'status', type: 'string', example: 'paid'),
-        new OA\Property(property: 'shipping_address', type: 'string', example: 'г. Минск, ул. Пушкина 10'),
+        new OA\Property(property: 'shipping_address', type: 'string', example: '10 Pushkin St, Minsk'),
         new OA\Property(property: 'created_at', type: 'string', format: 'date-time', example: '2023-10-25 15:00:00'),
         new OA\Property(
             property: 'items',
@@ -34,7 +34,7 @@ use OpenApi\Attributes as OA;
                     new OA\Property(
                         property: 'product',
                         type: 'object',
-                        description: 'Данные товара (ProductResource)'
+                        description: 'Product data (ProductResource)'
                     ),
                 ]
             )

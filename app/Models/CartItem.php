@@ -10,8 +10,7 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int|null $user_id
- * @property string|null $session_id
+ * @property int $user_id
  * @property int $product_id
  * @property int $quantity
  * @property Carbon $created_at
@@ -32,7 +31,6 @@ class CartItem extends Model
 
     protected $fillable = [
         'user_id',
-        'session_id',
         'product_id',
         'quantity',
     ];

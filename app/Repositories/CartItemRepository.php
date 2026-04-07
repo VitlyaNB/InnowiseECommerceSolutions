@@ -29,24 +29,6 @@ class CartItemRepository implements CartItemRepositoryInterface
     }
 
     /** @return array<int, CartItemDto> */
-    public function getBySession(string $sessionId): array
-    {
-        $collection = CartItem::query()
-            ->with(['product.images'])
-            ->where('session_id', $sessionId)
-            ->get();
-
-        /** @var array<int, CartItemDto> $result */
-        $result = [];
-        foreach ($collection as $item) {
-            /** @var CartItem $item */
-            $result[] = $this->mapToDto($item);
-        }
-
-        return $result;
-    }
-
-    /** @return array<int, CartItemDto> */
     public function getSelectedByUser(int $userId, SelectedIdsDto $ids): array
     {
         $collection = CartItem::query()
@@ -92,17 +74,6 @@ class CartItemRepository implements CartItemRepositoryInterface
         return $item ? $this->mapToDto($item) : null;
     }
 
-    public function findBySessionAndProduct(string $sessionId, int $productId): ?CartItemDto
-    {
-        /** @var CartItem|null $item */
-        $item = CartItem::query()
-            ->where('session_id', $sessionId)
-            ->where('product_id', $productId)
-            ->first();
-
-        return $item ? $this->mapToDto($item) : null;
-    }
-
     public function create(CartItemDto $data): CartItemDto
     {
         /** @var CartItem $item */
@@ -110,7 +81,6 @@ class CartItemRepository implements CartItemRepositoryInterface
             'product_id' => $data->productId,
             'quantity' => $data->quantity,
             'user_id' => $data->userId,
-            'session_id' => $data->sessionId,
         ]);
 
         return $this->mapToDto($item->load('product.images'));
@@ -143,21 +113,6 @@ class CartItemRepository implements CartItemRepositoryInterface
         return (bool) CartItem::query()->where('user_id', $userId)->delete();
     }
 
-    public function clearBySession(string $sessionId): bool
-    {
-        return (bool) CartItem::query()->where('session_id', $sessionId)->delete();
-    }
-
-    public function mergeSessionToUser(string $sessionId, int $userId): void
-    {
-        CartItem::query()
-            ->where('session_id', $sessionId)
-            ->update([
-                'user_id' => $userId,
-                'session_id' => null,
-            ]);
-    }
-
     private function mapToDto(CartItem $item): CartItemDto
     {
         $productDto = null;
@@ -178,7 +133,6 @@ class CartItemRepository implements CartItemRepositoryInterface
             productId: $item->product_id,
             quantity: $item->quantity,
             userId: $item->user_id,
-            sessionId: $item->session_id,
             product: $productDto,
         );
     }

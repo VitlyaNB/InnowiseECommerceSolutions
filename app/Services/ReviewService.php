@@ -21,11 +21,11 @@ final readonly class ReviewService
     {
         if ($data->parentId === null) {
             if (! $this->reviewRepository->canReview($userId, $data->productId)) {
-                throw new RuntimeException('Вы можете оставлять отзывы только на купленные товары.');
+                throw new RuntimeException('You can review only purchased products.');
             }
 
             if ($this->reviewRepository->hasTopLevelReview($userId, $data->productId)) {
-                throw new RuntimeException('Вы уже оставили отзыв на этот товар.');
+                throw new RuntimeException('You already left a review for this product.');
             }
         }
 
@@ -49,13 +49,5 @@ final readonly class ReviewService
         $this->reviewRepository->createLike($userId, $reviewId);
 
         return true;
-    }
-
-    /**
-     * @return array<int, ReviewDto>
-     */
-    public function getProductReviews(int $productId, ?int $viewerUserId = null): array
-    {
-        return $this->reviewRepository->getProductReviews($productId, $viewerUserId);
     }
 }

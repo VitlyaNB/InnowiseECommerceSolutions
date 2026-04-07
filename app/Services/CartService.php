@@ -13,15 +13,9 @@ final readonly class CartService
         private CartItemRepositoryInterface $cartRepository
     ) {}
 
-    public function addToCart(CartItemDto $dto, ?int $userId, ?string $sessionId): ?CartItemDto
+    public function addToCart(CartItemDto $dto, int $userId): ?CartItemDto
     {
-        $existingCartItem = null;
-
-        if ($userId !== null) {
-            $existingCartItem = $this->cartRepository->findByUserAndProduct($userId, $dto->productId);
-        } elseif ($sessionId !== null) {
-            $existingCartItem = $this->cartRepository->findBySessionAndProduct($sessionId, $dto->productId);
-        }
+        $existingCartItem = $this->cartRepository->findByUserAndProduct($userId, $dto->productId);
 
         if ($existingCartItem) {
             if ($existingCartItem->id === null) {
@@ -38,19 +32,12 @@ final readonly class CartService
             productId: $dto->productId,
             quantity: $dto->quantity,
             userId: $userId,
-            sessionId: $sessionId,
         ));
     }
 
-    public function getCart(?int $userId, ?string $sessionId): CartDto
+    public function getCart(int $userId): CartDto
     {
-        $items = [];
-
-        if ($userId !== null) {
-            $items = $this->cartRepository->getByUser($userId);
-        } elseif ($sessionId !== null) {
-            $items = $this->cartRepository->getBySession($sessionId);
-        }
+        $items = $this->cartRepository->getByUser($userId);
 
         return new CartDto(
             items: $items,
@@ -58,11 +45,11 @@ final readonly class CartService
         );
     }
 
-    public function updateQuantity(int $id, int $quantity, ?int $userId, ?string $sessionId): ?CartItemDto
+    public function updateQuantity(int $id, int $quantity, int $userId): ?CartItemDto
     {
         $item = $this->cartRepository->findById($id);
 
-        if (! $item || ! $this->itemBelongsTo($item, $userId, $sessionId)) {
+        if (! $item || $item->userId !== $userId) {
             return null;
         }
 
@@ -77,38 +64,19 @@ final readonly class CartService
         return $this->cartRepository->findById($id);
     }
 
-    public function removeItem(int $id, ?int $userId, ?string $sessionId): bool
+    public function removeItem(int $id, int $userId): bool
     {
         $item = $this->cartRepository->findById($id);
-        if (! $item || ! $this->itemBelongsTo($item, $userId, $sessionId)) {
+        if (! $item || $item->userId !== $userId) {
             return false;
         }
 
         return $this->cartRepository->delete($id);
     }
 
-    public function clearCart(?int $userId, ?string $sessionId): bool
+    public function clearCart(int $userId): bool
     {
-        if ($userId) {
-            return $this->cartRepository->clearByUser($userId);
-        }
-        if ($sessionId) {
-            return $this->cartRepository->clearBySession($sessionId);
-        }
-
-        return true;
-    }
-
-    private function itemBelongsTo(CartItemDto $item, ?int $userId, ?string $sessionId): bool
-    {
-        if ($userId) {
-            return $item->userId === $userId;
-        }
-        if ($sessionId) {
-            return $item->sessionId === $sessionId;
-        }
-
-        return false;
+        return $this->cartRepository->clearByUser($userId);
     }
 
     /**

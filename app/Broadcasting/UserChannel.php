@@ -4,7 +4,7 @@ namespace App\Broadcasting;
 
 use App\Models\User;
 
-final class UserChannelв
+final class UserChannel
 {
     public function join(User $user, int|string $id): bool
     {

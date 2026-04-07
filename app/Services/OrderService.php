@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Dto\CartItemDto;
+use App\Dto\OrderCreateDto;
 use App\Dto\OrderDetailsDto;
 use App\Dto\OrderDto;
 use App\Dto\OrderItemDto;
@@ -27,17 +28,13 @@ final readonly class OrderService
         private TransactionManagerInterface $transactionManager,
     ) {}
 
-    public function createOrder(UserDto $user, OrderDto $orderDto, ?string $sessionId = null): OrderDetailsDto
+    public function createOrder(UserDto $user, OrderDto $orderDto): OrderDetailsDto
     {
         $this->transactionManager->beginTransaction();
 
         try {
             $selectedIdsDto = new SelectedIdsDto($orderDto->selectedItemIds);
             $cartItems = $this->cartItemRepository->getSelectedByUser($user->id, $selectedIdsDto);
-            if ($cartItems === [] && $sessionId !== null && $sessionId !== '') {
-                $this->cartItemRepository->mergeSessionToUser($sessionId, $user->id);
-                $cartItems = $this->cartItemRepository->getSelectedByUser($user->id, $selectedIdsDto);
-            }
 
             $this->validateCartItems($cartItems, $orderDto->selectedItemIds, $user->id);
 
@@ -57,7 +54,7 @@ final readonly class OrderService
 
             $savedOrder = $this->orderRepository->findByIdWithItems($order->id);
             if ($savedOrder === null) {
-                throw new RuntimeException('Не удалось получить созданный заказ.');
+                throw new RuntimeException('Failed to load the created order.');
             }
 
             return $savedOrder;
@@ -75,7 +72,7 @@ final readonly class OrderService
     private function validateCartItems(array $cartItems, array $selectedIds, int $userId): void
     {
         if ($cartItems === []) {
-            throw new RuntimeException('Выбранные товары (IDs: '.implode(', ', $selectedIds).") не найдены в корзине пользователя (user_id: {$userId}).");
+            throw new RuntimeException('Selected items (IDs: '.implode(', ', $selectedIds).") were not found in the user cart (user_id: {$userId}).");
         }
 
         $selectedUniqueIds = array_values(array_unique(array_map(static fn (int|string $id): int => (int) $id, $selectedIds)));
@@ -87,18 +84,18 @@ final readonly class OrderService
         }
         $missingIds = array_values(array_diff($selectedUniqueIds, $foundIds));
         if ($missingIds !== []) {
-            throw new RuntimeException('Некоторые выбранные товары недоступны в корзине пользователя (IDs: '.implode(', ', $missingIds).").");
+            throw new RuntimeException('Some selected items are not available in the user cart (IDs: '.implode(', ', $missingIds).').');
         }
 
         foreach ($cartItems as $item) {
             $product = $item->product;
 
             if (! $product || $product->price === null || $product->quantity === null) {
-                throw new RuntimeException('Товар в корзине недоступен.');
+                throw new RuntimeException('A cart item product is unavailable.');
             }
 
             if ($product->quantity < $item->quantity) {
-                throw new RuntimeException("Товара {$product->name} недостаточно на складе.");
+                throw new RuntimeException("Not enough stock for {$product->name}.");
             }
         }
     }
@@ -122,7 +119,7 @@ final readonly class OrderService
     private function validateUserBalance(UserDto $user, float $totalAmount): void
     {
         if ($user->balance < $totalAmount) {
-            throw new RuntimeException('Недостаточно средств на кошельке.');
+            throw new RuntimeException('Insufficient wallet balance.');
         }
     }
 
@@ -130,7 +127,7 @@ final readonly class OrderService
     {
         $balanceUpdated = $this->userRepository->decrementBalance($userId, $totalAmount);
         if (! $balanceUpdated) {
-            throw new RuntimeException('Не удалось списать средства.');
+            throw new RuntimeException('Failed to deduct funds.');
         }
     }
 
@@ -141,23 +138,23 @@ final readonly class OrderService
     {
         $totalAmount = $this->calculateTotalAmount($cartItems);
 
-        $order = $this->orderRepository->create(
+        $order = $this->orderRepository->create(new OrderCreateDto(
             userId: $userId,
             totalAmount: $totalAmount,
             shippingAddress: $orderDto->shippingAddress,
             status: 'paid',
-        );
+        ));
 
         foreach ($cartItems as $item) {
             $product = $item->product;
 
             if (! $product || $product->price === null) {
-                throw new RuntimeException('Товар в корзине недоступен.');
+                throw new RuntimeException('A cart item product is unavailable.');
             }
 
             $stockUpdated = $this->productRepository->decrementStock($item->productId, $item->quantity);
             if (! $stockUpdated) {
-                throw new RuntimeException("Товара {$product->name} недостаточно на складе.");
+                throw new RuntimeException("Not enough stock for {$product->name}.");
             }
 
             $this->orderRepository->createItem(
