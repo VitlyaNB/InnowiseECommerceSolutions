@@ -16,9 +16,9 @@ final class ProductRepository implements ProductRepositoryInterface
 {
     public function getAll(ProductFiltersDto $filters, int $perPage = 15): PaginatedResultDto
     {
-        $paginator = Product::query()
-            ->with(['images', 'category'])
-            ->filter($filters)
+        $query = Product::query()->with(['images', 'category']);
+
+        $paginator = (new Product)->scopeFilter($query, $filters)
             ->latest()
             ->paginate($perPage);
 

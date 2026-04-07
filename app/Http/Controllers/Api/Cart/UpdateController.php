@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Cart;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateCartItemRequest;
 use App\Http\Resources\CartResource;
+use App\Models\User;
 use App\Services\CartService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
@@ -48,7 +49,9 @@ final class UpdateController extends Controller
     )]
     public function __invoke(UpdateCartItemRequest $request, int $id): JsonResponse
     {
-        $userId = $request->user()->id;
+        /** @var User $user */
+        $user = $request->user();
+        $userId = $user->id;
         $quantity = $request->toDto()->quantity;
         $item = $this->cartService->updateQuantity($id, $quantity, $userId);
 

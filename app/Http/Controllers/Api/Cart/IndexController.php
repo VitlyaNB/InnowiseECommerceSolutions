@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Cart;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CartResource;
+use App\Models\User;
 use App\Services\CartService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -56,7 +57,9 @@ final class IndexController extends Controller
     )]
     public function __invoke(Request $request): JsonResponse
     {
-        $userId = $request->user()->id;
+        /** @var User $user */
+        $user = $request->user();
+        $userId = $user->id;
         $cartDto = $this->cartService->getCart($userId);
 
         return response()->json([

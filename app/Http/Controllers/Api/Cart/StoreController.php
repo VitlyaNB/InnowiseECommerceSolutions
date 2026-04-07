@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Cart;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AddToCartRequest;
 use App\Http\Resources\CartResource;
+use App\Models\User;
 use App\Services\CartService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
@@ -43,7 +44,9 @@ final class StoreController extends Controller
     )]
     public function __invoke(AddToCartRequest $request): JsonResponse
     {
-        $userId = $request->user()->id;
+        /** @var User $user */
+        $user = $request->user();
+        $userId = $user->id;
         $item = $this->cartService->addToCart($request->toDto(), $userId);
 
         return (new CartResource($item))

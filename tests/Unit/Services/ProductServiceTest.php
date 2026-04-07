@@ -3,10 +3,10 @@
 namespace Tests\Unit\Services;
 
 use App\Dto\ProductDto;
-use App\Infrastructure\Interfaces\ElasticsearchClientInterface;
 use App\Infrastructure\Interfaces\TransactionManagerInterface;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
 use App\Services\Interfaces\FileServiceInterface;
+use App\Services\Interfaces\ProductSearcherInterface;
 use App\Services\ProductService;
 use PHPUnit\Framework\MockObject\MockObject;
 use Tests\TestCase;
@@ -19,7 +19,7 @@ class ProductServiceTest extends TestCase
 
     private TransactionManagerInterface&MockObject $transactionManager;
 
-    private ElasticsearchClientInterface&MockObject $elastic;
+    private ProductSearcherInterface&MockObject $productSearcher;
 
     private ProductService $service;
 
@@ -29,8 +29,8 @@ class ProductServiceTest extends TestCase
         $this->repo = $this->createMock(ProductRepositoryInterface::class);
         $this->fileService = $this->createMock(FileServiceInterface::class);
         $this->transactionManager = $this->createMock(TransactionManagerInterface::class);
-        $this->elastic = $this->createMock(ElasticsearchClientInterface::class);
-        $this->service = new ProductService($this->repo, $this->fileService, $this->transactionManager, $this->elastic);
+        $this->productSearcher = $this->createMock(ProductSearcherInterface::class);
+        $this->service = new ProductService($this->repo, $this->fileService, $this->transactionManager, $this->productSearcher);
     }
 
     public function test_create_product_calls_repository(): void
@@ -89,9 +89,19 @@ class ProductServiceTest extends TestCase
 
         $this->repo
             ->expects($this->once())
+            ->method('deleteOrderItemsByProductId')
+            ->with(1);
+
+        $this->repo
+            ->expects($this->once())
             ->method('delete')
             ->with(1)
             ->willReturn(true);
+
+        $this->transactionManager
+            ->expects($this->once())
+            ->method('transaction')
+            ->willReturnCallback(static fn (callable $callback) => $callback());
 
         $this->service->deleteProduct(1);
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Cart;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\CartService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,7 +28,9 @@ final class ClearController extends Controller
     )]
     public function __invoke(Request $request): JsonResponse
     {
-        $userId = $request->user()->id;
+        /** @var User $user */
+        $user = $request->user();
+        $userId = $user->id;
         $this->cartService->clearCart($userId);
 
         return response()->json(['message' => 'Cart cleared']);

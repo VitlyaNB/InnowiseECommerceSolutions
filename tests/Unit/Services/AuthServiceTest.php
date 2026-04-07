@@ -4,7 +4,6 @@ namespace Tests\Unit\Services;
 
 use App\Dto\RegisterDto;
 use App\Dto\UserDto;
-use App\Repositories\Interfaces\CartItemRepositoryInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Services\AuthService;
 use App\Services\Interfaces\AuthTokenServiceInterface;
@@ -15,8 +14,6 @@ class AuthServiceTest extends TestCase
 {
     private UserRepositoryInterface&MockObject $userRepository;
 
-    private CartItemRepositoryInterface&MockObject $cartRepository;
-
     private AuthTokenServiceInterface&MockObject $authTokenService;
 
     private AuthService $authService;
@@ -25,9 +22,8 @@ class AuthServiceTest extends TestCase
     {
         parent::setUp();
         $this->userRepository = $this->createMock(UserRepositoryInterface::class);
-        $this->cartRepository = $this->createMock(CartItemRepositoryInterface::class);
         $this->authTokenService = $this->createMock(AuthTokenServiceInterface::class);
-        $this->authService = new AuthService($this->userRepository, $this->cartRepository, $this->authTokenService);
+        $this->authService = new AuthService($this->userRepository, $this->authTokenService);
     }
 
     public function test_it_registers_a_new_user(): void

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Mail;
 
-use App\Dto\OrderDetailsDto;
 use App\Mail\OrderPaidMail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -13,15 +12,7 @@ class OrderPaidMailTest extends TestCase
 
     public function test_email_contains_order_details(): void
     {
-        $orderDto = new OrderDetailsDto(
-            id: 1,
-            userId: 1,
-            totalAmount: 123.45,
-            status: 'paid',
-            shippingAddress: 'Test Street 1',
-        );
-
-        $mailable = new OrderPaidMail($orderDto);
+        $mailable = new OrderPaidMail(1, 123.45);
 
         $mailable->assertSeeInHtml('1');
         $mailable->assertSeeInHtml('123.45');
