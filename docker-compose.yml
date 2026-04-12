@@ -39,6 +39,18 @@ services:
       - elasticsearch
     command: sh -c "composer install && php artisan queue:work --tries=1 --timeout=0"
 
+  vite:
+    image: node:21-alpine
+    container_name: shop_vite
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/var/www/html
+    working_dir: /var/www/html
+    command: npm run dev -- --host
+    depends_on:
+      - app
+
   nginx:
     image: nginx:alpine
     container_name: shop_nginx
@@ -60,11 +72,9 @@ services:
     environment:
       MYSQL_DATABASE: shop_db
       MYSQL_ROOT_PASSWORD: pass
-    command: >
-      bash -c "mysql -u root -p$$MYSQL_ROOT_PASSWORD -e 'CREATE DATABASE IF NOT EXISTS shop_db_testing;'
-      && mysqld --default-authentication-plugin=mysql_native_password"
     volumes:
       - db_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
 
   minio:
     image: minio/minio:latest
