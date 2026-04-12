@@ -9,10 +9,13 @@ use App\Http\Controllers\Api\Recommendation\ViewController as ProductViewControl
 use App\Http\Controllers\Api\Review\IndexController as ProductReviewsController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/products/search', ProductSearchController::class);
-Route::get('/products', ProductIndexController::class);
-Route::get('/products/{id}', ProductShowController::class);
-Route::get('/products/{id}/recommendations', ProductRecommendationsController::class);
-Route::post('/products/{id}/view', ProductViewController::class);
-Route::get('/products/{productId}/reviews', ProductReviewsController::class);
-Route::get('/categories/{categoryId}/products', CategoryProductsController::class);
+Route::prefix('products')->group(function (): void {
+    Route::get('search', ProductSearchController::class);
+    Route::get('', ProductIndexController::class);
+    Route::get('{id}', ProductShowController::class);
+    Route::get('{id}/recommendations', ProductRecommendationsController::class);
+    Route::post('{id}/view', ProductViewController::class);
+    Route::get('{id}/reviews', ProductReviewsController::class);
+});
+
+Route::get('categories/{categoryId}/products', CategoryProductsController::class);
