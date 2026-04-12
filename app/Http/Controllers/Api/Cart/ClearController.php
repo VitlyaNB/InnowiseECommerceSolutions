@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Cart;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Services\CartService;
+use App\Repositories\Interfaces\CartItemRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
@@ -12,7 +12,7 @@ use OpenApi\Attributes as OA;
 final class ClearController extends Controller
 {
     public function __construct(
-        private readonly CartService $cartService,
+        private readonly CartItemRepositoryInterface $cartRepository,
     ) {}
 
     #[OA\Delete(
@@ -31,7 +31,7 @@ final class ClearController extends Controller
         /** @var User $user */
         $user = $request->user();
         $userId = $user->id;
-        $this->cartService->clearCart($userId);
+        $this->cartRepository->clearByUser($userId);
 
         return response()->json(['message' => 'Cart cleared']);
     }

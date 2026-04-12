@@ -3,13 +3,10 @@
 namespace App\Services;
 
 use App\Dto\ProductDto;
-use App\Dto\ProductSearchQueryDto;
-use App\Dto\ProductSearchResultDto;
 use App\Dto\UploadImageDto;
 use App\Infrastructure\Interfaces\TransactionManagerInterface;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
 use App\Services\Interfaces\FileServiceInterface;
-use App\Services\Interfaces\ProductSearcherInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\UploadedFile;
 
@@ -19,7 +16,6 @@ final readonly class ProductService
         private ProductRepositoryInterface $productRepository,
         private FileServiceInterface $fileService,
         private TransactionManagerInterface $transactionManager,
-        private ProductSearcherInterface $productSearcher
     ) {}
 
     public function createProduct(ProductDto $dto): ?ProductDto
@@ -75,11 +71,6 @@ final readonly class ProductService
             $this->productRepository->deleteOrderItemsByProductId($id);
             $this->productRepository->delete($id);
         });
-    }
-
-    public function search(ProductSearchQueryDto $queryDto): ProductSearchResultDto
-    {
-        return $this->productSearcher->search($queryDto);
     }
 
     /**

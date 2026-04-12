@@ -19,12 +19,6 @@ final readonly class CategoryService
         private TransactionManagerInterface $transactionManager
     ) {}
 
-    /** @return array<int, CategoryDto> */
-    public function getAllCategories(): array
-    {
-        return $this->categoryRepository->getAll();
-    }
-
     public function getCategoryById(int $id): CategoryDto
     {
         $category = $this->categoryRepository->findById($id);

@@ -74,11 +74,6 @@ final readonly class CartService
         return $this->cartRepository->delete($id);
     }
 
-    public function clearCart(int $userId): bool
-    {
-        return $this->cartRepository->clearByUser($userId);
-    }
-
     /**
      * @param  array<int, CartItemDto>  $items
      */

@@ -6,7 +6,6 @@ use App\Dto\ProductDto;
 use App\Infrastructure\Interfaces\TransactionManagerInterface;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
 use App\Services\Interfaces\FileServiceInterface;
-use App\Services\Interfaces\ProductSearcherInterface;
 use App\Services\ProductService;
 use PHPUnit\Framework\MockObject\MockObject;
 use Tests\TestCase;
@@ -19,8 +18,6 @@ class ProductServiceTest extends TestCase
 
     private TransactionManagerInterface&MockObject $transactionManager;
 
-    private ProductSearcherInterface&MockObject $productSearcher;
-
     private ProductService $service;
 
     protected function setUp(): void
@@ -29,8 +26,7 @@ class ProductServiceTest extends TestCase
         $this->repo = $this->createMock(ProductRepositoryInterface::class);
         $this->fileService = $this->createMock(FileServiceInterface::class);
         $this->transactionManager = $this->createMock(TransactionManagerInterface::class);
-        $this->productSearcher = $this->createMock(ProductSearcherInterface::class);
-        $this->service = new ProductService($this->repo, $this->fileService, $this->transactionManager, $this->productSearcher);
+        $this->service = new ProductService($this->repo, $this->fileService, $this->transactionManager);
     }
 
     public function test_create_product_calls_repository(): void

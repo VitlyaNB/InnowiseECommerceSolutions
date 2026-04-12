@@ -12,11 +12,6 @@ final readonly class ReviewService
         private ReviewRepositoryInterface $reviewRepository
     ) {}
 
-    public function canReview(int $userId, int $productId): bool
-    {
-        return $this->reviewRepository->canReview($userId, $productId);
-    }
-
     public function createReview(int $userId, ReviewDto $data): ReviewDto
     {
         if ($data->parentId === null) {

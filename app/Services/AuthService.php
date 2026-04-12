@@ -26,14 +26,6 @@ final readonly class AuthService
         return new AuthDto(user: $userDto, token: $token);
     }
 
-    /**
-     * @return array<int, UserDto>
-     */
-    public function getAllUsers(): array
-    {
-        return $this->userRepository->getAll();
-    }
-
     public function login(LoginDto $dto): AuthDto
     {
         $userDto = $this->verifyCredentials($dto->email, $dto->password);
@@ -86,8 +78,4 @@ final readonly class AuthService
         return $this->userRepository->delete($userIdToDelete);
     }
 
-    public function logout(int $userId): void
-    {
-        $this->userRepository->deleteTokens($userId);
-    }
 }

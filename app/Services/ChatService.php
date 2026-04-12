@@ -12,12 +12,6 @@ final readonly class ChatService
         private ChatRepositoryInterface $chatRepository
     ) {}
 
-    /** @return array<int, ChatDto> */
-    public function getAdminChats(): array
-    {
-        return $this->chatRepository->getAllWithMessages();
-    }
-
     public function getChat(int $chatId, int $userId): ?ChatDto
     {
         $this->chatRepository->markMessagesAsReadExceptUser($chatId, $userId);

@@ -4,14 +4,14 @@ namespace App\Http\Controllers\Api\Admin\User;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
-use App\Services\AuthService;
+use App\Repositories\Interfaces\UserRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 
 final class IndexController extends Controller
 {
     public function __construct(
-        private readonly AuthService $authService
+        private readonly UserRepositoryInterface $userRepository
     ) {}
 
     #[OA\Get(
@@ -35,7 +35,7 @@ final class IndexController extends Controller
     )]
     public function __invoke(): JsonResponse
     {
-        $users = $this->authService->getAllUsers();
+        $users = $this->userRepository->getAll();
 
         return UserResource::collection($users)->response();
     }

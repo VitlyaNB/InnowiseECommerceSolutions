@@ -24,18 +24,32 @@ Route::get('/me', MeController::class);
 Route::post('/logout', LogoutController::class);
 Route::post('/broadcasting/auth', [BroadcastController::class, 'authenticate']);
 Route::post('/wallet/top-up', TopUpController::class);
-Route::post('/orders', OrderStoreController::class);
-Route::get('/orders', OrderIndexController::class);
-Route::post('/reviews', ReviewStoreController::class);
-Route::post('/reviews/{id}/like', ToggleLikeController::class);
-Route::get('/products/{productId}/can-review', CanReviewController::class);
-Route::get('/chats', UserChatIndexController::class);
-Route::get('/chats/{chat}', ChatShowController::class)->middleware('chat.access');
-Route::post('/chats/{chat}/messages', ChatStoreMessageController::class)->middleware('chat.access');
-Route::post('/chats/start', ChatStartController::class);
 
-Route::get('/cart', CartIndexController::class);
-Route::post('/cart', CartStoreController::class);
-Route::put('/cart/{id}', CartUpdateController::class);
-Route::delete('/cart/{id}', CartDestroyController::class);
-Route::delete('/cart', CartClearController::class);
+Route::prefix('orders')->group(function (): void {
+    Route::post('', OrderStoreController::class);
+    Route::get('', OrderIndexController::class);
+});
+
+Route::prefix('reviews')->group(function (): void {
+    Route::post('', ReviewStoreController::class);
+    Route::post('{id}/like', ToggleLikeController::class);
+});
+
+Route::prefix('products')->group(function (): void {
+    Route::get('{productId}/can-review', CanReviewController::class);
+});
+
+Route::prefix('chats')->group(function (): void {
+    Route::get('', UserChatIndexController::class);
+    Route::post('start', ChatStartController::class);
+    Route::get('{chat}', ChatShowController::class)->middleware('chat.access');
+    Route::post('{chat}/messages', ChatStoreMessageController::class)->middleware('chat.access');
+});
+
+Route::prefix('cart')->group(function (): void {
+    Route::get('', CartIndexController::class);
+    Route::post('', CartStoreController::class);
+    Route::put('{id}', CartUpdateController::class);
+    Route::delete('{id}', CartDestroyController::class);
+    Route::delete('', CartClearController::class);
+});

@@ -31,9 +31,11 @@ use App\Repositories\UserRepository;
 use App\Services\AuthTokenService;
 use App\Services\FileService;
 use App\Services\ProductSearcher;
+use App\Services\RecommendationSearcher;
 use App\Services\Interfaces\AuthTokenServiceInterface;
 use App\Services\Interfaces\FileServiceInterface;
 use App\Services\Interfaces\ProductSearcherInterface;
+use App\Services\Interfaces\RecommendationSearcherInterface;
 use Elastic\Elasticsearch\Client;
 use Elastic\Elasticsearch\ClientBuilder;
 use GuzzleHttp\Client as GuzzleClient;
@@ -65,6 +67,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(FileServiceInterface::class, FileService::class);
         $this->app->bind(AuthTokenServiceInterface::class, AuthTokenService::class);
         $this->app->bind(ProductSearcherInterface::class, ProductSearcher::class);
+        $this->app->bind(RecommendationSearcherInterface::class, RecommendationSearcher::class);
 
         $this->app->bind(ProductRepositoryInterface::class, ProductRepository::class);
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);

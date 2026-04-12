@@ -128,28 +128,24 @@ final class ProductRepository implements ProductRepositoryInterface
             ->where('is_active', true)
             ->get();
 
-        /** @var array<int, ProductDto> $products */
-        $products = [];
-        foreach ($collection as $product) {
-            /** @var Product $product */
-            $products[] = $this->mapToDto($product);
-        }
+        /** @var \Illuminate\Support\Collection<int, ProductDto> $productsById */
+        $productsById = $collection->mapWithKeys(fn (Product $product): array => [
+            (int) $product->id => $this->mapToDto($product),
+        ]);
 
         if (! $query->keepOrder) {
+            /** @var array<int, ProductDto> $products */
+            $products = array_values($productsById->all());
+
             return $products;
         }
 
-        $mapped = [];
-        foreach ($products as $dto) {
-            $mapped[$dto->id] = $dto;
-        }
-
-        $ordered = [];
-        foreach ($ids as $id) {
-            if (isset($mapped[$id])) {
-                $ordered[] = $mapped[$id];
-            }
-        }
+        /** @var array<int, ProductDto> $ordered */
+        $ordered = collect($ids)
+            ->map(fn (int $id): ?ProductDto => $productsById->get($id))
+            ->filter()
+            ->values()
+            ->all();
 
         return $ordered;
     }
