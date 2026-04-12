@@ -1,4 +1,4 @@
-FROM php:8.3-cli-alpine
+FROM php:8.3-fpm-alpine
 
 RUN apk add --no-cache \
     curl \
@@ -18,4 +18,4 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-CMD sh -c "composer install && npm install && npm run dev & php artisan serve --host=0.0.0.0 --port=8000"
+CMD ["php-fpm"]

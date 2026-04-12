@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('cart_items', function (Blueprint $table) {
+            $table->dropForeign(['user_id']);
             $table->dropColumn('session_id');
-            
-            // Revert user_id to be non-nullable as we only support authenticated carts now
             $table->unsignedBigInteger('user_id')->nullable(false)->change();
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
@@ -25,8 +25,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('cart_items', function (Blueprint $table) {
+            $table->dropForeign(['user_id']);
             $table->string('session_id', 64)->nullable()->after('id');
             $table->unsignedBigInteger('user_id')->nullable(true)->change();
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 };

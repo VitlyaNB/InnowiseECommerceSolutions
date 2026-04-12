@@ -13,18 +13,29 @@ use App\Http\Controllers\Api\Product\StoreController as ProductStoreController;
 use App\Http\Controllers\Api\Product\UpdateController as ProductUpdateController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/users', AdminUserIndexController::class);
-Route::put('/users/{id}', AdminUserUpdateController::class);
-Route::delete('/users/{id}', AdminUserDeleteController::class);
-Route::get('/admin/chats', AdminChatIndexController::class);
-Route::post('/products', ProductStoreController::class);
-Route::put('/products/{id}', ProductUpdateController::class);
-Route::patch('/products/{id}', ProductUpdateController::class);
-Route::post('/products/{id}', ProductUpdateController::class);
-Route::delete('/products/{id}', ProductDestroyController::class);
-Route::post('/categories', CategoryStoreController::class);
-Route::put('/categories/{id}', CategoryUpdateController::class);
-Route::patch('/categories/{id}', CategoryUpdateController::class);
-Route::post('/categories/{id}', CategoryUpdateController::class);
-Route::delete('/categories/{id}', CategoryDestroyController::class);
-Route::post('/categories/sync', CategorySyncController::class);
+Route::prefix('users')->group(function (): void {
+    Route::get('', AdminUserIndexController::class);
+    Route::put('{id}', AdminUserUpdateController::class);
+    Route::delete('{id}', AdminUserDeleteController::class);
+});
+
+Route::prefix('chats')->group(function (): void {
+    Route::get('', AdminChatIndexController::class);
+});
+
+Route::prefix('products')->group(function (): void {
+    Route::post('', ProductStoreController::class);
+    Route::put('{id}', ProductUpdateController::class);
+    Route::patch('{id}', ProductUpdateController::class);
+    Route::post('{id}', ProductUpdateController::class);
+    Route::delete('{id}', ProductDestroyController::class);
+});
+
+Route::prefix('categories')->group(function (): void {
+    Route::post('', CategoryStoreController::class);
+    Route::put('{id}', CategoryUpdateController::class);
+    Route::patch('{id}', CategoryUpdateController::class);
+    Route::post('{id}', CategoryUpdateController::class);
+    Route::delete('{id}', CategoryDestroyController::class);
+    Route::post('sync', CategorySyncController::class);
+});
