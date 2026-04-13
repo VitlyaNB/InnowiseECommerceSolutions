@@ -88,7 +88,7 @@ final class ReviewRepository implements ReviewRepositoryInterface
             'comment' => $data->comment ?? '',
         ]);
 
-        return $this->mapToDto($review);
+        return $this->mapToDto($review->load('user'));
     }
 
     private function mapToDto(Review $review, ?int $viewerUserId = null): ReviewDto
@@ -98,6 +98,7 @@ final class ReviewRepository implements ReviewRepositoryInterface
                 return new ReviewDto(
                     id: $reply->id,
                     userId: $reply->user_id,
+                    userName: $reply->user?->name,
                     productId: $reply->product_id,
                     parentId: $reply->parent_id,
                     rating: $reply->rating,
@@ -114,6 +115,7 @@ final class ReviewRepository implements ReviewRepositoryInterface
         return new ReviewDto(
             id: $review->id,
             userId: $review->user_id,
+            userName: $review->user?->name,
             productId: $review->product_id,
             parentId: $review->parent_id,
             rating: $review->rating,

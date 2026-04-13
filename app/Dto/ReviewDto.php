@@ -10,6 +10,7 @@ final readonly class ReviewDto extends BaseDto
     public function __construct(
         public int $id = 0,
         public int $userId = 0,
+        public ?string $userName = null,
         public int $productId = 0,
         public ?int $parentId = null,
         public ?int $rating = null,

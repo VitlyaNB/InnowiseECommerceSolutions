@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Review;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ReviewResource;
 use App\Models\User;
 use App\Repositories\Interfaces\ReviewRepositoryInterface;
 use Illuminate\Http\JsonResponse;
@@ -19,10 +20,12 @@ final class IndexController extends Controller
         /** @var User|null $user */
         $user = $request->user();
 
+        $reviews = $this->reviewRepository->getProductReviews($productId, $user?->id);
+
         return response()->json([
             'data' => array_map(
-                static fn ($reviewDto) => $reviewDto->toArray(),
-                $this->reviewRepository->getProductReviews($productId, $user?->id)
+                static fn ($reviewDto) => (new ReviewResource($reviewDto))->toArray($request),
+                $reviews
             ),
         ]);
     }

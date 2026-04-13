@@ -65,6 +65,17 @@ export default function Reviews({ productId }) {
         }
     };
 
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '';
+        return date.toLocaleDateString('ru-RU', { 
+            day: 'numeric', 
+            month: 'long', 
+            year: 'numeric' 
+        });
+    };
+
     const renderStars = (rating, interactive = false) => {
         return (
             <div className="flex gap-1">
@@ -119,7 +130,7 @@ export default function Reviews({ productId }) {
                                         <h4 className="font-bold dark:text-white">{review.user?.name || 'Аноним'}</h4>
                                         <div className="flex gap-2 text-xs text-gray-400 mt-1">
                                             {renderStars(review.rating)}
-                                            <span>• {new Date(review.created_at).toLocaleDateString()}</span>
+                                            <span>• {formatDate(review.created_at)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -155,7 +166,7 @@ export default function Reviews({ productId }) {
                                             <div key={reply.id} className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
                                                 <div className="flex gap-2 items-center mb-2">
                                                     <span className="font-bold text-sm dark:text-white">{reply.user?.name || 'Аноним'}</span>
-                                                    <span className="text-xs text-gray-400">{new Date(reply.created_at).toLocaleDateString()}</span>
+                                                    <span className="text-xs text-gray-400">{formatDate(reply.created_at)}</span>
                                                 </div>
                                                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{reply.comment}</p>
                                                 <button onClick={() => toggleLike(reply.id)} className={`text-xs flex items-center gap-1 font-bold transition-colors ${reply.is_liked ? 'text-indigo-600' : 'text-gray-400'}`}>
