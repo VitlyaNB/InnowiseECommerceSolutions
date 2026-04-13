@@ -19,7 +19,7 @@ Route::prefix('users')->group(function (): void {
     Route::delete('{id}', AdminUserDeleteController::class);
 });
 
-Route::prefix('chats')->group(function (): void {
+Route::prefix('admin/chats')->group(function (): void {
     Route::get('', AdminChatIndexController::class);
 });
 

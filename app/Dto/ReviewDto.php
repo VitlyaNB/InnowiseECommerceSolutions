@@ -17,5 +17,6 @@ final readonly class ReviewDto extends BaseDto
         public int $likesCount = 0,
         public bool $isLiked = false,
         public array $replies = [],
+        public ?string $createdAt = null,
     ) {}
 }

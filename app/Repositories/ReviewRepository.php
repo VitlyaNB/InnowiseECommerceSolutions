@@ -106,6 +106,7 @@ final class ReviewRepository implements ReviewRepositoryInterface
                     isLiked: $viewerUserId !== null
                         ? $reply->likes()->where('user_id', $viewerUserId)->exists()
                         : false,
+                    createdAt: $reply->created_at?->toDateTimeString(),
                 );
             })->all()
             : [];
@@ -122,6 +123,7 @@ final class ReviewRepository implements ReviewRepositoryInterface
                 ? $review->likes()->where('user_id', $viewerUserId)->exists()
                 : false,
             replies: $replies,
+            createdAt: $review->created_at?->toDateTimeString(),
         );
     }
 }
