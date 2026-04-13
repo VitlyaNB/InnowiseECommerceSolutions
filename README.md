@@ -50,6 +50,11 @@ docker-compose exec app php artisan migrate --seed
 docker-compose exec app php artisan scout:import "App\Models\Product"
 ```
 
+## 📊7.  Демонстрационные данные (Seeding)
+
+После выполнения команды `php artisan migrate --seed`, ваша база данных будет наполнена реалистичными данными для тестирования всех функций платформы.
+```
+
 ---
 
 ## 🌐 Доступ к сервисам
