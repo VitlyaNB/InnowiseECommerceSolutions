@@ -55,8 +55,6 @@ docker-compose exec app php artisan scout:import "App\Models\Product"
 После выполнения команды `php artisan migrate --seed`, ваша база данных будет наполнена реалистичными данными для тестирования всех функций платформы.
 ```
 
----
-
 ## 🌐 Доступ к сервисам
 
 * **Веб-сайт (React) и API (Laravel):** [http://localhost:8000](http://localhost:8000)
