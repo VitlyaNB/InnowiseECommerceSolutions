@@ -15,7 +15,7 @@ Route::prefix('products')->group(function (): void {
     Route::get('{id}', ProductShowController::class);
     Route::get('{id}/recommendations', ProductRecommendationsController::class);
     Route::post('{id}/view', ProductViewController::class);
-    Route::get('{id}/reviews', ProductReviewsController::class);
+    Route::get('{id}/reviews', ProductReviewsController::class)->middleware('auth:sanctum');
 });
 
 Route::get('categories/{categoryId}/products', CategoryProductsController::class);

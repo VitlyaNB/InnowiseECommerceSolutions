@@ -18,7 +18,10 @@ export default function Reviews({ productId }) {
 
     const loadReviews = () => {
         api.get(`/products/${productId}/reviews`)
-            .then(res => setReviews(res.data.data))
+            .then(res => {
+                console.log('Reviews loaded, user in context:', user);
+                setReviews(res.data.data);
+            })
             .catch(err => console.error("Ошибка загрузки отзывов:", err));
     };
 
@@ -58,8 +61,10 @@ export default function Reviews({ productId }) {
     const toggleLike = async (reviewId) => {
         if (!user) return alert('Войдите, чтобы ставить лайки');
         try {
+            console.log('Toggling like for review:', reviewId);
             await api.post(`/reviews/${reviewId}/like`);
-            loadReviews();
+            await loadReviews();
+            console.log('Like toggled, reviews reloaded');
         } catch (err) {
             console.error("Ошибка при лайке:", err);
         }
