@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -39,7 +40,7 @@ final class DeleteController extends Controller
     )]
     public function __invoke(Request $request, int $id): JsonResponse
     {
-        /** @var \App\Models\User $currentUser */
+        /** @var User $currentUser */
         $currentUser = $request->user();
 
         try {

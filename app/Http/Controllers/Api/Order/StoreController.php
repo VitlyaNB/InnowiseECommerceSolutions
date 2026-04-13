@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Order;
 use App\Dto\UserDto;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
+use App\Models\User;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
@@ -20,7 +21,7 @@ final class StoreController extends Controller
     public function __invoke(StoreOrderRequest $request): JsonResponse
     {
         try {
-            /** @var \App\Models\User $user */
+            /** @var User $user */
             $user = $request->user();
             $userDto = new UserDto(
                 id: $user->id,

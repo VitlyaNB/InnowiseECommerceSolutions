@@ -6,7 +6,9 @@ use App\Dto\ReviewDto;
 use App\Models\OrderItem;
 use App\Models\Review;
 use App\Models\ReviewLike;
+use App\Models\User;
 use App\Repositories\Interfaces\ReviewRepositoryInterface;
+use Illuminate\Support\Carbon;
 
 final class ReviewRepository implements ReviewRepositoryInterface
 {
@@ -93,12 +95,16 @@ final class ReviewRepository implements ReviewRepositoryInterface
 
     private function mapToDto(Review $review, ?int $viewerUserId = null): ReviewDto
     {
-        $replies = $review->relationLoaded('replies')
-            ? $review->replies->map(function (Review $reply) use ($viewerUserId): ReviewDto {
-                return new ReviewDto(
+        $replies = [];
+        if ($review->relationLoaded('replies')) {
+            foreach ($review->replies as $reply) {
+                $replyUserName = $reply->user instanceof User ? $reply->user->name : null;
+                $replyCreatedAt = $reply->created_at instanceof Carbon ? $reply->created_at->toDateTimeString() : null;
+
+                $replies[] = new ReviewDto(
                     id: $reply->id,
                     userId: $reply->user_id,
-                    userName: $reply->user?->name,
+                    userName: $replyUserName,
                     productId: $reply->product_id,
                     parentId: $reply->parent_id,
                     rating: $reply->rating,
@@ -107,15 +113,18 @@ final class ReviewRepository implements ReviewRepositoryInterface
                     isLiked: $viewerUserId !== null
                         ? $reply->likes()->where('user_id', $viewerUserId)->exists()
                         : false,
-                    createdAt: $reply->created_at?->toDateTimeString(),
+                    createdAt: $replyCreatedAt,
                 );
-            })->all()
-            : [];
+            }
+        }
+
+        $reviewUserName = $review->user instanceof User ? $review->user->name : null;
+        $reviewCreatedAt = $review->created_at instanceof Carbon ? $review->created_at->toDateTimeString() : null;
 
         return new ReviewDto(
             id: $review->id,
             userId: $review->user_id,
-            userName: $review->user?->name,
+            userName: $reviewUserName,
             productId: $review->product_id,
             parentId: $review->parent_id,
             rating: $review->rating,
@@ -125,7 +134,7 @@ final class ReviewRepository implements ReviewRepositoryInterface
                 ? $review->likes()->where('user_id', $viewerUserId)->exists()
                 : false,
             replies: $replies,
-            createdAt: $review->created_at?->toDateTimeString(),
+            createdAt: $reviewCreatedAt,
         );
     }
 }

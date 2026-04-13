@@ -2,8 +2,8 @@
 
 namespace App\Repositories\Interfaces;
 
-use App\Dto\OrderDetailsDto;
 use App\Dto\OrderCreateDto;
+use App\Dto\OrderDetailsDto;
 use App\Dto\OrderItemDto;
 
 interface OrderRepositoryInterface

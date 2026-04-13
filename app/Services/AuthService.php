@@ -77,5 +77,4 @@ final readonly class AuthService
 
         return $this->userRepository->delete($userIdToDelete);
     }
-
 }

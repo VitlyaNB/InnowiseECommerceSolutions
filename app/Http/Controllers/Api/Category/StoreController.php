@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Resources\CategoryResource;
 use App\Services\CategoryService;
-use Throwable;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
+use Throwable;
 
 final class StoreController extends Controller
 {

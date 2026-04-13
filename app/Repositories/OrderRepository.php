@@ -86,15 +86,15 @@ final class OrderRepository implements OrderRepositoryInterface
                                 : [];
 
                             return new ProductDto(
-                            id: (int) $item->product->id,
-                            name: (string) $item->product->name,
-                            description: (string) ($item->product->description ?? ''),
-                            price: (float) $item->product->price,
-                            quantity: (int) $item->product->quantity,
-                            categoryId: (int) $item->product->category_id,
-                            categoryName: $item->product->category !== null ? (string) $item->product->category->name : null,
-                            images: $imagePaths,
-                        );
+                                id: (int) $item->product->id,
+                                name: (string) $item->product->name,
+                                description: (string) ($item->product->description ?? ''),
+                                price: (float) $item->product->price,
+                                quantity: (int) $item->product->quantity,
+                                categoryId: (int) $item->product->category_id,
+                                categoryName: $item->product->category !== null ? (string) $item->product->category->name : null,
+                                images: $imagePaths,
+                            );
                         })()
                         : null,
                 ))

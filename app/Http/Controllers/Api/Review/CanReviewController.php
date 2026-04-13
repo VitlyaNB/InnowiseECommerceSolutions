@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Review;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Repositories\Interfaces\ReviewRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,7 +16,7 @@ final class CanReviewController extends Controller
 
     public function __invoke(Request $request, int $productId): JsonResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         $userId = $user->id;

@@ -25,6 +25,7 @@ use Laravel\Scout\Searchable;
  * @property Carbon $updated_at
  * @property Category $category
  * @property Collection<int, ProductImage> $images
+ *
  * @method static Builder<Product> filter(ProductFiltersDto $filters)
  */
 class Product extends Model
