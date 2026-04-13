@@ -26,15 +26,15 @@ cp .env.example .env
 
 **3. Запустите Docker-контейнеры:**
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 > **Внимание:** При первом запуске контейнер `app` будет автоматически выполнять загрузку зависимостей (`composer install` и `npm install`). Это может занять несколько минут. Вы можете следить за процессом с помощью команды `docker-compose logs -f app`.
 
 **4. Сгенерируйте ключ приложения и запустите миграции с сидерами:**
 Когда контейнеры успешно запустятся (и база данных будет готова к приему соединений), выполните следующие команды:
 ```bash
-docker-compose exec app php artisan key:generate
-docker-compose exec app php artisan migrate --seed
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate --seed
 ```
 
 **5. Создайте бакет в MinIO:**
@@ -47,7 +47,7 @@ docker-compose exec app php artisan migrate --seed
 **6. Проиндексируйте данные для поиска (Elasticsearch):**
 Для корректной работы каталога и поиска, загрузите сгенерированные сидером товары в индекс:
 ```bash
-docker-compose exec app php artisan scout:import "App\Models\Product"
+docker compose exec app php artisan scout:import "App\Models\Product"
 ```
 
 ## 7.  Демонстрационные данные (Seeding)
@@ -91,5 +91,5 @@ docker-compose restart worker
 
 Запуск тестов внутри контейнера:
 ```bash
-docker-compose exec app php artisan test
+docker compose exec app php artisan test
 ```
