@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api, { refreshCsrfToken } from '../api';
 
 export const AuthContext = createContext();
 
@@ -9,40 +9,43 @@ export const AuthProvider = ({ children }) => {
     const [isChatOpen, setChatOpen] = useState(false);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        const token = localStorage.getItem('auth_token');
+        const initAuth = async () => {
+            const storedUser = localStorage.getItem('user');
+            const token = localStorage.getItem('auth_token');
 
-        if (storedUser && token) {
-            setUser(JSON.parse(storedUser));
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            if (storedUser && token) {
+                await refreshCsrfToken();
+                setUser(JSON.parse(storedUser));
+                api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-            // Синхронизируем состояние с сервером для актуального баланса
-            axios.get('/api/me')
-                .then(res => {
+                try {
+                    const res = await api.get('/me');
                     const freshUser = res.data.user;
                     setUser(freshUser);
                     localStorage.setItem('user', JSON.stringify(freshUser));
-                })
-                .catch(err => {
+                } catch (err) {
                     if (err.response?.status === 401) {
                         logout();
                     }
-                });
-        }
-        setLoading(false);
+                }
+            }
+            setLoading(false);
+        };
+
+        initAuth();
     }, []);
 
     const login = (userData, token) => {
         localStorage.setItem('user', JSON.stringify(userData));
         localStorage.setItem('auth_token', token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         setUser(userData);
     };
 
     const logout = () => {
         localStorage.removeItem('user');
         localStorage.removeItem('auth_token');
-        delete axios.defaults.headers.common['Authorization'];
+        delete api.defaults.headers.common['Authorization'];
         setUser(null);
     };
 

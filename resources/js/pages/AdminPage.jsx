@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api';
+import api, { refreshCsrfToken } from '../api';
 import { Link } from 'react-router-dom';
 import ChatWindow from '../components/ChatWindow';
 import {
@@ -83,7 +83,10 @@ export default function AdminPage() {
         }
     };
 
-    useEffect(() => { fetchAll(); }, [activeTab]);
+    useEffect(() => { 
+        refreshCsrfToken();
+        fetchAll(); 
+    }, [activeTab]);
 
     const handleProductFiles = (e) => {
         const files = Array.from(e.target.files);
