@@ -7,6 +7,20 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isChatOpen, setChatOpen] = useState(false);
+    const [cartCount, setCartCount] = useState(0);
+
+    const loadCartCount = async () => {
+        if (!user) {
+            setCartCount(0);
+            return;
+        }
+        try {
+            const res = await api.get('/cart');
+            setCartCount(res.data.items_count || 0);
+        } catch (err) {
+            setCartCount(0);
+        }
+    };
 
     useEffect(() => {
         const initAuth = async () => {
@@ -35,6 +49,10 @@ export const AuthProvider = ({ children }) => {
         initAuth();
     }, []);
 
+    useEffect(() => {
+        loadCartCount();
+    }, [user]);
+
     const login = (userData, token) => {
         localStorage.setItem('user', JSON.stringify(userData));
         localStorage.setItem('auth_token', token);
@@ -47,10 +65,13 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('auth_token');
         delete api.defaults.headers.common['Authorization'];
         setUser(null);
+        setCartCount(0);
     };
 
+    const updateCartCount = (count) => setCartCount(count);
+
     return (
-        <AuthContext.Provider value={{ user, login, logout, loading, isChatOpen, setChatOpen }}>
+        <AuthContext.Provider value={{ user, login, logout, loading, isChatOpen, setChatOpen, cartCount, updateCartCount, loadCartCount }}>
             {children}
         </AuthContext.Provider>
     );

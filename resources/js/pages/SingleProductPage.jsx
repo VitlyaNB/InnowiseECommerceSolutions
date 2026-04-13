@@ -4,6 +4,7 @@ import api from '../api';
 import { ShoppingCart, ArrowLeft, Check } from 'lucide-react';
 import Reviews from '../components/Reviews';
 import RecommendationGrid from '../components/RecommendationGrid';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function SingleProductPage() {
     const { id } = useParams();
@@ -11,6 +12,7 @@ export default function SingleProductPage() {
     const [loading, setLoading] = useState(true);
     const [mainImage, setMainImage] = useState(null);
     const [recs, setRecs] = useState({ also_bought: [], similar: [], recently_viewed: [] });
+    const { loadCartCount } = useAuth();
 
     useEffect(() => {
         setLoading(true);
@@ -40,6 +42,7 @@ export default function SingleProductPage() {
     const addToCart = async () => {
         try {
             await api.post('/cart', { product_id: product.id, quantity: 1 });
+            await loadCartCount();
             alert('Товар успешно добавлен в корзину');
         } catch (err) {
             alert(err.response?.data?.message || 'Ошибка при добавлении товара');

@@ -9,7 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function Navbar() {
     const { theme, toggleTheme } = useTheme();
-    const { user } = useAuth();
+    const { user, cartCount, loadCartCount } = useAuth();
     const [searchQuery, setSearchQuery] = useState('');
     const [products, setProducts] = useState([]);
     const [suggestions, setSuggestions] = useState([]);
@@ -167,8 +167,13 @@ export default function Navbar() {
                         {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                     </button>
 
-                    <Link to="/cart" className="relative p-2 text-slate-500 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all shadow-sm">
+                    <Link to="/cart" onClick={loadCartCount} className="relative p-2 text-slate-500 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all shadow-sm">
                         <ShoppingCart className="h-5 w-5" />
+                        {cartCount > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md">
+                                {cartCount > 99 ? '99+' : cartCount}
+                            </span>
+                        )}
                     </Link>
 
                     {user ? (

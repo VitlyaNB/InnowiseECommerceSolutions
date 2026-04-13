@@ -65,6 +65,7 @@ final class IndexController extends Controller
         return response()->json([
             'items' => CartResource::collection($cartDto->items)->resolve(),
             'totals' => $cartDto->totals->toArray(),
+            'items_count' => $cartDto->itemsCount,
         ]);
     }
 }

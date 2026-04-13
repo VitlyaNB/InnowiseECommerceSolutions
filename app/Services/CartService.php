@@ -38,10 +38,12 @@ final readonly class CartService
     public function getCart(int $userId): CartDto
     {
         $items = $this->cartRepository->getByUser($userId);
+        $itemsCount = array_reduce($items, static fn (int $carry, CartItemDto $item) => $carry + $item->quantity, 0);
 
         return new CartDto(
             items: $items,
             totals: $this->calculateTotals($items),
+            itemsCount: $itemsCount,
         );
     }
 

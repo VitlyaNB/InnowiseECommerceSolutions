@@ -137,7 +137,7 @@ export default function Reviews({ productId }) {
                                 <p className="text-gray-700 dark:text-gray-300 mb-3 leading-relaxed">{review.comment}</p>
 
                                 <div className="flex gap-4 items-center text-sm">
-                                    <button onClick={() => toggleLike(review.id)} className={`flex items-center gap-1.5 font-bold transition-colors ${review.is_liked ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}>
+                                    <button onClick={() => toggleLike(review.id)} className={`flex items-center gap-1.5 font-bold transition-colors ${review.is_liked ? 'text-red-500' : 'text-gray-400 hover:text-gray-600'}`}>
                                         <ThumbsUp className={`w-4 h-4 ${review.is_liked ? 'fill-current' : ''}`} /> {review.likes_count || 0}
                                     </button>
                                     <button onClick={() => setReplyTo(replyTo === review.id ? null : review.id)} className="flex items-center gap-1.5 text-gray-400 hover:text-indigo-600 font-bold transition-colors">
@@ -169,7 +169,7 @@ export default function Reviews({ productId }) {
                                                     <span className="text-xs text-gray-400">{formatDate(reply.created_at)}</span>
                                                 </div>
                                                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{reply.comment}</p>
-                                                <button onClick={() => toggleLike(reply.id)} className={`text-xs flex items-center gap-1 font-bold transition-colors ${reply.is_liked ? 'text-indigo-600' : 'text-gray-400'}`}>
+                                                <button onClick={() => toggleLike(reply.id)} className={`text-xs flex items-center gap-1 font-bold transition-colors ${reply.is_liked ? 'text-red-500' : 'text-gray-400'}`}>
                                                     <ThumbsUp className={`w-3 h-3 ${reply.is_liked ? 'fill-current' : ''}`} /> {reply.likes_count || 0}
                                                 </button>
                                             </div>

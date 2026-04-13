@@ -10,5 +10,6 @@ final readonly class CartDto extends BaseDto
     public function __construct(
         public array $items,
         public TotalsDto $totals,
+        public int $itemsCount = 0,
     ) {}
 }

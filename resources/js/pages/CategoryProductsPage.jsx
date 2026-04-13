@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api';
 import { ShoppingCart, ArrowLeft } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function CategoryProductsPage() {
     const { id } = useParams();
     const [products, setProducts] = useState([]);
     const [categoryName, setCategoryName] = useState('');
     const [loading, setLoading] = useState(true);
+    const { loadCartCount } = useAuth();
 
     useEffect(() => {
         setLoading(true);
@@ -31,6 +33,7 @@ export default function CategoryProductsPage() {
         e.preventDefault(); // Предотвращаем переход по ссылке
         try {
             await api.post('/cart', { product_id: productId, quantity: 1 });
+            await loadCartCount();
             alert('Добавлено в корзину');
         } catch (err) {
             console.error(err);

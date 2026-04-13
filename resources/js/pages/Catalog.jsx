@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ShoppingCart } from 'lucide-react';
 import Hero from '../components/Hero';
 import RecommendationGrid from '../components/RecommendationGrid';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Catalog() {
     const [products, setProducts] = useState([]);
@@ -15,6 +16,7 @@ export default function Catalog() {
     const [filters, setFilters] = useState({ categoryId: '', priceMin: '', priceMax: '', inStock: false });
     const [pendingFilters, setPendingFilters] = useState({ categoryId: '', priceMin: '', priceMax: '', inStock: false });
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const { loadCartCount } = useAuth();
 
     useEffect(() => {
         api.get('/recommendations/home')
@@ -74,6 +76,7 @@ export default function Catalog() {
         e.preventDefault();
         try {
             await api.post('/cart', { product_id: productId, quantity: 1 });
+            await loadCartCount();
             alert('Добавлено в корзину');
         } catch (error) {
             alert(error.response?.data?.message || 'Ошибка');
