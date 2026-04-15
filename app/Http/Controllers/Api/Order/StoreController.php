@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
+use OpenApi\Attributes as OA;
 use Throwable;
 
 final class StoreController extends Controller
@@ -18,6 +19,28 @@ final class StoreController extends Controller
         private readonly UserRepositoryInterface $userRepository,
     ) {}
 
+    #[OA\Post(
+        path: '/api/orders',
+        summary: 'Create a new order',
+        description: 'Places a new order using items from the user cart. Deducts payment from user balance.',
+        tags: ['Orders'],
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Order placed successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Order placed successfully'),
+                        new OA\Property(property: 'order', type: 'object'),
+                        new OA\Property(property: 'new_balance', type: 'number', format: 'float', example: 850.00),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthorized'),
+            new OA\Response(response: 400, description: 'Order creation failed'),
+        ]
+    )]
     public function __invoke(StoreOrderRequest $request): JsonResponse
     {
         try {

@@ -41,12 +41,9 @@ final readonly class ElasticsearchClientWrapper implements ElasticsearchClientIn
      */
     public function index(array $params): array
     {
-        /** @var array<string, mixed> $indexParams */
-        $indexParams = $params;
-
         try {
             /** @var Elasticsearch $response */
-            $response = $this->client->index($indexParams);
+            $response = $this->client->index($params);
         } catch (ClientResponseException $e) {
             return [];
         }

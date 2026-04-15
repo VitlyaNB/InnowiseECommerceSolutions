@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Repositories\Interfaces\OrderRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use OpenApi\Attributes as OA;
 
 final class IndexController extends Controller
 {
@@ -15,6 +16,25 @@ final class IndexController extends Controller
         private readonly OrderRepositoryInterface $orderRepository
     ) {}
 
+    #[OA\Get(
+        path: '/api/orders',
+        summary: 'Get user orders',
+        description: 'Retrieves all orders for the authenticated user.',
+        tags: ['Orders'],
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'List of user orders',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/OrderResource')),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthorized'),
+        ]
+    )]
     public function __invoke(Request $request): JsonResponse
     {
         /** @var User $user */
