@@ -54,6 +54,20 @@ docker compose exec app php artisan scout:import "App\Models\Product"
 
 После выполнения команды `php artisan migrate --seed`, ваша база данных будет наполнена реалистичными данными для тестирования всех функций платформы.
 ```
+### 1. Laravel Pint (Style Guide)
+Используется для автоматического исправления стиля кода PHP в соответствии со стандартами Laravel.
+
+* **Проверка стиля (без изменений):**
+  ```bash
+  docker compose exec app ./vendor/bin/pint --test
+  
+  ### Дополнительная информация для вас:
+* **Laravel Pint** настроен как проект по умолчанию и готов к работе.
+* **PHPStan** использует конфигурацию из файла `phpstan.neon`, где установлены пути сканирования и игнорируемые ошибки.
+* Вы также можете запускать тесты одной командой, так как скрипт `test` уже прописан в `composer.json`:
+  ```bash
+  docker compose exec app composer test
+
 
 ## 🌐 Доступ к сервисам
 
