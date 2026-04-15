@@ -93,3 +93,15 @@ docker-compose restart worker
 ```bash
 docker compose exec app php artisan test
 ```
+
+## 🧹 Запуск линтеров
+
+Проверка код-стайла (Laravel Pint):
+```bash
+docker compose exec app ./vendor/bin/pint
+```
+
+Статический анализ (PHPStan):
+```bash
+docker compose exec app ./vendor/bin/phpstan analyse
+```
