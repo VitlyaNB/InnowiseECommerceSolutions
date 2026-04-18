@@ -76,7 +76,7 @@ docker compose exec app php artisan scout:import "App\Models\Product"
 
 ## 🏗 Архитектура контейнеров (`docker-compose.yml`)
 
-1. **`app`** (PHP 8.3 + Node.js) — Серверная часть Laravel и Frontend сборщик (Vite).
+1. **`app`** (PHP 8.5 + Node.js) — Серверная часть Laravel и Frontend сборщик (Vite).
 2. **`worker`** — Демон Laravel очередей (`queue:work`), отвечающий за отправку Email-уведомлений и асинхронную синхронизацию категорий.
 3. **`db`** — База данных MySQL 8.0.
 4. **`minio`** — Локальный S3-сервер.
@@ -103,5 +103,5 @@ docker compose exec app ./vendor/bin/pint
 
 Статический анализ (PHPStan):
 ```bash
-docker compose exec app ./vendor/bin/phpstan analyse
+docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=1G
 ```

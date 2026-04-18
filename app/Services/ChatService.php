@@ -39,14 +39,4 @@ final readonly class ChatService
 
         return $enriched ?? $createdMessage;
     }
-
-    public function hasAccess(int $chatId, int $userId, bool $isAdmin): bool
-    {
-        return $this->chatRepository->hasAccess($chatId, $userId, $isAdmin);
-    }
-
-    public function exists(int $chatId): bool
-    {
-        return $this->chatRepository->existsById($chatId);
-    }
 }

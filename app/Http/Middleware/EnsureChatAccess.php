@@ -3,7 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\User;
-use App\Services\ChatService;
+use App\Repositories\Interfaces\ChatRepositoryInterface;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 class EnsureChatAccess
 {
     public function __construct(
-        private readonly ChatService $chatService
+        private readonly ChatRepositoryInterface $chatRepository
     ) {}
 
     /**
@@ -31,12 +31,12 @@ class EnsureChatAccess
             abort(404);
         }
 
-        if (! $this->chatService->exists($chatId)) {
+        if (! $this->chatRepository->existsById($chatId)) {
             abort(404);
         }
 
         $isAdmin = $user->role === 'admin';
-        $hasAccess = $this->chatService->hasAccess($chatId, $user->id, $isAdmin);
+        $hasAccess = $this->chatRepository->hasAccess($chatId, $user->id, $isAdmin);
         if (! $hasAccess) {
             abort(403);
         }
