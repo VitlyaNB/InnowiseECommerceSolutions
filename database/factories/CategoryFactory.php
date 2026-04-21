@@ -15,10 +15,17 @@ class CategoryFactory extends Factory
      *
      * @return array<string, mixed>
      */
+    private const CATEGORIES = [
+        'electronics', 'clothing', 'books', 'home', 'sports', 'toys', 'food', 'beauty', 'garden', 'automotive',
+    ];
+
     public function definition(): array
     {
+        $category = fake()->randomElement(self::CATEGORIES);
+
         return [
             'name' => fake()->unique()->word(),
+            'image_path' => "https://loremflickr.com/640/480/{$category}",
         ];
     }
 }

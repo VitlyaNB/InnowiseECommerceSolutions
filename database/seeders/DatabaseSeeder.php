@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
 
         /** @var Collection<int, Category> $categories */
         $categories = Category::factory(6)->create();
+
         /** @var Collection<int, Product> $products */
         $products = Product::factory(20)->create([
             'category_id' => fn () => $categories->random()->id,
