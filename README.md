@@ -43,12 +43,21 @@ docker compose exec app php artisan migrate --seed
 2. Введите логин: `minioadmin`, пароль: `minioadmin`
 3. Перейдите в раздел **Buckets** и создайте бакет с названием `shop`.
 4. В настройках созданного бакета (`Summary` -> `Access Policy`) установите политику доступа на **Public**, чтобы картинки успешно отображались на сайте.
+> **Важно:** Если вы создали бакет как private, сделайте его публичным через CLI:
+> ```bash
+> docker compose exec minio mc alias set local http://127.0.0.1:9000 minioadmin minioadmin
+> docker compose exec minio mc anonymous set public local/shop
+> ```
 
 **6. Проиндексируйте данные для поиска (Elasticsearch):**
 Для корректной работы каталога и поиска, загрузите сгенерированные сидером товары в индекс:
 ```bash
 docker compose exec app php artisan scout:import "App\Models\Product"
 ```
+> **Важно:** Если при повторном импорте возникнет ошибка `invalid_alias_name_exception`, удалите старые индексы вручную:
+> ```bash
+> curl -X DELETE http://localhost:9200/products_index_*
+> ```
 
 ## 7.  Демонстрационные данные (Seeding)
 
