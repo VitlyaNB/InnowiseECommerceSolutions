@@ -28,14 +28,15 @@ cp .env.example .env
 ```bash
 docker compose up -d --build
 ```
-> **Внимание:** При первом запуске контейнер `app` будет автоматически выполнять загрузку зависимостей (`composer install` и `npm install`). Это может занять несколько минут. Вы можете следить за процессом с помощью команды `docker-compose logs -f app`.
+> **Внимание:** При первом запуске контейнер `app` будет автоматически выполнять загрузку зависимостей (`composer install` и `npm install`). Это может занять несколько минут. Вы можете следить за процессом с помощью команды `docker compose logs -f app`.
 
 **4. Сгенерируйте ключ приложения и запустите миграции с сидерами:**
 Когда контейнеры успешно запустятся (и база данных будет готова к приему соединений), выполните следующие команды:
 ```bash
 docker compose exec app php artisan key:generate
-docker compose exec app php artisan migrate --seed
+docker compose exec app php artisan migrate:fresh --seed
 ```
+> Команда `migrate:fresh --seed` удалит все данные и создаст новые с нуля.
 
 **5. Создайте бакет в MinIO:**
 Приложение настроено на сохранение изображений в S3 хранилище. Вам нужно создать стартовый бакет:
@@ -54,15 +55,16 @@ docker compose exec app php artisan migrate --seed
 ```bash
 docker compose exec app php artisan scout:import "App\Models\Product"
 ```
-> **Важно:** Если при повторном импорте возникнет ошибка `invalid_alias_name_exception`, удалите старые индексы вручную:
+> Если при повторном импорте возникнет ошибка `invalid_alias_name_exception`, удалите старые индексы:
 > ```bash
-> curl -X DELETE http://localhost:9200/products_index_*
+> docker compose exec app php artisan scout:import -F "App\Models\Product"
 > ```
 
 ## 7.  Демонстрационные данные (Seeding)
 
-После выполнения команды `php artisan migrate --seed`, ваша база данных будет наполнена реалистичными данными для тестирования всех функций платформы.
-```
+После выполнения команды `php artisan migrate:fresh --seed`, ваша база данных будет наполнена реалистичными данными для тестирования всех функций платформы.
+
+При сидировании автоматически загружаются рандомные фотографии с Flickr для категорий и товаров из коллекции LoremFlickr.
 
 ## 🌐 Доступ к сервисам
 
@@ -95,7 +97,7 @@ docker compose exec app php artisan scout:import "App\Models\Product"
 
 Перезапуск воркеров (если были изменены классы Job):
 ```bash
-docker-compose restart worker
+docker compose restart worker
 ```
 
 Запуск тестов внутри контейнера:
